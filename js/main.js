@@ -3,9 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-var w = 1280,
+var w = $(window).width()-20,
     h = 800,
     node,
+    nodeWidth = 80,
+    nodeHeight = 25,
     link,
     root;
 
@@ -49,10 +51,10 @@ function update() {
   // Enter any new links.
   link.enter().insert("svg:line", ".node")
       .attr("class", "link")
-      .attr("x1", function(d) { return d.source.x; })
-      .attr("y1", function(d) { return d.source.y; })
-      .attr("x2", function(d) { return d.target.x; })
-      .attr("y2", function(d) { return d.target.y; });
+      .attr("x1", function(d) { return d.source.x + nodeWidth/2; })
+      .attr("y1", function(d) { return d.source.y + nodeHeight/2; })
+      .attr("x2", function(d) { return d.target.x + nodeWidth/2; })
+      .attr("y2", function(d) { return d.target.y + nodeHeight/2; });
 
   // Exit any old links.
   link.exit().remove();
@@ -60,36 +62,41 @@ function update() {
   // Update the nodes…
   node = vis.selectAll("rect.node")
       .data(nodes, function(d) { return d.id; })
-      .style("fill", color)
+      .enter().append("g")
+      .attr("class", "node")
       .call(drag);
 
   /*node.transition()
       .attr("r", function(d) { return d.children ? 4.5 : Math.sqrt(d.size) / 10; });
     */
   // Enter any new nodes.
-  node.enter().append("svg:rect")
-      .attr("class", "node")
-      .attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; })
-      .attr("width", 50)
-      .attr("height", 10)
+  node.append("rect")
+      .attr("x", 0)//function(d) { return d.x; })
+      .attr("y", 0)//function(d) { return d.y; })
+      .attr("width", nodeWidth)
+      .attr("height", nodeHeight)
       //.attr("r", function(d) { return d.children ? 4.5 : Math.sqrt(d.size) / 10; })
       .style("fill", color)
       .on("dblclick", click)
       .call(force.drag);
+      
+      node.append("text")
+              .attr("dx", 5)
+              .attr("dy", nodeHeight - 5)
+              .text("1644658")
+              .attr({"font-weight":"normal","font-size":"11px"});
 
   // Exit any old nodes.
   node.exit().remove();
 }
 
 function tick() {
-  link.attr("x1", function(d) { return d.source.x; })
-      .attr("y1", function(d) { return d.source.y; })
-      .attr("x2", function(d) { return d.target.x; })
-      .attr("y2", function(d) { return d.target.y; });
+  link.attr("x1", function(d) { return d.source.x + nodeWidth/2; })
+      .attr("y1", function(d) { return d.source.y + nodeHeight/2; })
+      .attr("x2", function(d) { return d.target.x + nodeWidth/2; })
+      .attr("y2", function(d) { return d.target.y + nodeHeight/2; });
 
-  node.attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; });
+  node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 }
 
 // Color leaf nodes orange, and packages white or blue.

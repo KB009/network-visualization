@@ -9,6 +9,7 @@ and open the template in the editor.
 */
 body {
     margin: 0;
+    font-family: Trebuchet MS;
 }
 .node {
   stroke: #000;
@@ -26,4 +27,5 @@ body {
   width: 100%;
   background-color: gray;
   min-height: 20px;
+  opacity: .8;
 }
