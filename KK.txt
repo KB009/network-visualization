@@ -1,4 +1,4 @@
-Force layout API
+﻿Force layout API
 https://github.com/mbostock/d3/wiki/Force-Layout
 
 jQuery
@@ -17,3 +17,6 @@ https://github.com/municz/study-materials/wiki/Lecture-03---About-git
 
 příklady
 http://bl.ocks.org/mbostock/950642
+
+A successful Git branching model
+http://nvie.com/posts/a-successful-git-branching-model/
