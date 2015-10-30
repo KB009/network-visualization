@@ -1,0 +1,16 @@
+Force layout API
+https://github.com/mbostock/d3/wiki/Force-Layout
+
+jQuery
+http://api.jquery.com/
+http://api.jqueryui.com/
+
+jQuery UI, "výroba" vzhledu
+http://jqueryui.com/themeroller/
+
+FlowMon
+https://demo.invea.cz/ads/event-visualization/?eventId=4962945
+jméno: guest
+
+GIT
+https://github.com/municz/study-materials/wiki/Lecture-03---About-git

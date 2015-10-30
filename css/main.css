@@ -7,3 +7,23 @@ and open the template in the editor.
     Created on : 29.10.2015, 10:19:47
     Author     : KB009
 */
+body {
+    margin: 0;
+}
+.node {
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+.menu {
+  display: block;
+  position: fixed;
+  width: 100%;
+  background-color: gray;
+  min-height: 20px;
+}
