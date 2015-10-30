@@ -7,16 +7,16 @@
     {
      "name": "cluster",
      "children": [
-      {"name": "AgglomerativeCluster", "size": 3938},
-      {"name": "CommunityStructure", "size": 3812},
-      {"name": "HierarchicalCluster", "size": 6714},
+      {"name": "AgglCluster", "size": 3938},
+      {"name": "CommStructure", "size": 3812},
+      {"name": "HierCluster", "size": 6714},
       {"name": "MergeEdge", "size": 743}
      ]
     },
     {
      "name": "graph",
      "children": [
-      {"name": "BetweennessCentrality", "size": 3534},
+      {"name": "BetwCentrality", "size": 3534},
       {"name": "LinkDistance", "size": 5731},
       {"name": "MaxFlowMinCut", "size": 7840},
       {"name": "ShortestPaths", "size": 5914},
@@ -26,7 +26,7 @@
     {
      "name": "optimization",
      "children": [
-      {"name": "AspectRatioBanker", "size": 7074}
+      {"name": "AspectRatio", "size": 7074}
      ]
     }
    ]
@@ -35,14 +35,14 @@
    "name": "animate",
    "children": [
     {"name": "Easing", "size": 17010},
-    {"name": "FunctionSequence", "size": 5842},
+    {"name": "Function", "size": 5842},
     {
      "name": "interpolate",
      "children": [
-      {"name": "ArrayInterpolator", "size": 1983},
-      {"name": "ColorInterpolator", "size": 2047},
-      {"name": "PointInterpolator", "size": 1675},
-      {"name": "RectangleInterpolator", "size": 2042}
+      {"name": "ArrayInterpol", "size": 1983},
+      {"name": "ColorInterpol", "size": 2047},
+      {"name": "PointInterpol", "size": 1675},
+      {"name": "RectInterpol", "size": 2042}
      ]
     },
     {"name": "ISchedulable", "size": 1041},
@@ -56,8 +56,8 @@
      "name": "converters",
      "children": [
       {"name": "Converters", "size": 721},
-      {"name": "DelimitedTextConverter", "size": 4294},
-      {"name": "GraphMLConverter", "size": 9800},
+      {"name": "TextConverter", "size": 4294},
+      {"name": "MLConverter", "size": 9800},
       {"name": "IDataConverter", "size": 1314},
       {"name": "JSONConverter", "size": 2220}
      ]
@@ -88,11 +88,11 @@
   {
    "name": "query",
    "children": [
-    {"name": "AggregateExpression", "size": 1616},
+    {"name": "Expression", "size": 1616},
     {"name": "And", "size": 1027},
     {"name": "Arithmetic", "size": 3891},
     {"name": "Average", "size": 891},
-    {"name": "BinaryExpression", "size": 2893},
+    {"name": "Binary", "size": 2893},
     {
      "name": "methods",
      "children": [
