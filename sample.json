@@ -1,126 +1,78 @@
 {
- "name": "flare",
- "children": [
-  {
-   "name": "analytics",
-   "children": [
-    {
-     "name": "cluster",
-     "children": [
-      {"name": "AgglCluster", "size": 3938},
-      {"name": "CommStructure", "size": 3812},
-      {"name": "HierCluster", "size": 6714},
-      {"name": "MergeEdge", "size": 743}
-     ]
-    },
-    {
-     "name": "graph",
-     "children": [
-      {"name": "BetwCentrality", "size": 3534},
-      {"name": "LinkDistance", "size": 5731},
-      {"name": "MaxFlowMinCut", "size": 7840},
-      {"name": "ShortestPaths", "size": 5914},
-      {"name": "SpanningTree", "size": 3416}
-     ]
-    },
-    {
-     "name": "optimization",
-     "children": [
-      {"name": "AspectRatio", "size": 7074}
-     ]
-    }
+  "nodes": [
+     {
+       "id": "192.168.51.254",
+       "flows": 127,
+       "data": 39774
+     },
+     {
+       "id": "192.168.51.47",
+       "flows": 156,
+       "data": 92242836,
+       "isCentral": true
+     },
+     {
+       "id": "192.168.3.50",
+       "flows": 18,
+       "data": 5168
+     },
+     {
+       "id": "147.229.255.74",
+       "flows": 6,
+       "data": 59387924
+     },
+     {
+       "id": "195.113.232.91",
+       "flows": 3,
+       "data": 32803436
+     },
+     {
+       "id": "195.113.232.82",
+       "flows": 2,
+       "data": 6534
+     },
+     {
+       "id": "192.168.3.254",
+       "flows": 2,
+       "data": 1312
+     }
+   ],
+   "edges": [
+     {
+       "from": "192.168.51.254",
+       "to": "192.168.51.47",
+       "flows": 127,
+       "data": 39774
+     },
+     {
+       "from": "192.168.3.50",
+       "to": "192.168.51.47",
+       "flows": 18,
+       "data": 5168
+     },
+     {
+       "from": "147.229.255.74",
+       "to": "192.168.51.47",
+       "flows": 6,
+       "data": 59387924
+     },
+     {
+       "from": "192.168.51.47",
+       "to": "195.113.232.91",
+       "flows": 3,
+       "data": 32803436
+     },
+     {
+       "from": "192.168.51.47",
+       "to": "195.113.232.82",
+       "flows": 2,
+       "data": 6534
+     },
+     {
+       "from": "192.168.3.254",
+       "to": "192.168.51.47",
+       "flows": 2,
+       "data": 1312
+     }
    ]
-  },
-  {
-   "name": "animate",
-   "children": [
-    {"name": "Easing", "size": 17010},
-    {"name": "Function", "size": 5842},
-    {
-     "name": "interpolate",
-     "children": [
-      {"name": "ArrayInterpol", "size": 1983},
-      {"name": "ColorInterpol", "size": 2047},
-      {"name": "PointInterpol", "size": 1675},
-      {"name": "RectInterpol", "size": 2042}
-     ]
-    },
-    {"name": "ISchedulable", "size": 1041},
-    {"name": "Parallel", "size": 5176}
-   ]
-  },
-  {
-   "name": "data",
-   "children": [
-    {
-     "name": "converters",
-     "children": [
-      {"name": "Converters", "size": 721},
-      {"name": "TextConverter", "size": 4294},
-      {"name": "MLConverter", "size": 9800},
-      {"name": "IDataConverter", "size": 1314},
-      {"name": "JSONConverter", "size": 2220}
-     ]
-    },
-    {"name": "DataField", "size": 1759},
-    {"name": "DataSchema", "size": 2165},
-    {"name": "DataSet", "size": 586},
-    {"name": "DataSource", "size": 3331},
-    {"name": "DataTable", "size": 772},
-    {"name": "DataUtil", "size": 3322}
-   ]
-  },
-  {
-   "name": "display",
-   "children": [
-    {"name": "DirtySprite", "size": 8833},
-    {"name": "LineSprite", "size": 1732},
-    {"name": "RectSprite", "size": 3623},
-    {"name": "TextSprite", "size": 10066}
-   ]
-  },
-  {
-   "name": "flex",
-   "children": [
-    {"name": "FlareVis", "size": 4116}
-   ]
-  },
-  {
-   "name": "query",
-   "children": [
-    {"name": "Expression", "size": 1616},
-    {"name": "And", "size": 1027},
-    {"name": "Arithmetic", "size": 3891},
-    {"name": "Average", "size": 891},
-    {"name": "Binary", "size": 2893},
-    {
-     "name": "methods",
-     "children": [
-      {"name": "add", "size": 593},
-      {"name": "and", "size": 330},
-      {"name": "average", "size": 287}
-     ]
-    },
-    {"name": "Minimum", "size": 843},
-    {"name": "Not", "size": 1554},
-    {"name": "Or", "size": 970},
-    {"name": "Query", "size": 13896},
-    {"name": "Range", "size": 1594},
-    {"name": "StringUtil", "size": 4130},
-    {"name": "Sum", "size": 791},
-    {"name": "Variable", "size": 1124},
-    {"name": "Variance", "size": 1876},
-    {"name": "Xor", "size": 1101}
-   ]
-  },
-  {
-   "name": "scale",
-   "children": [
-    {"name": "IScaleMap", "size": 2105},
-    {"name": "LinearScale", "size": 1316},
-    {"name": "LogScale", "size": 3151},
-    {"name": "OrdinalScale", "size": 3770}
-   ]
-  }
- ]
 }
