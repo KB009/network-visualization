@@ -14,6 +14,7 @@ $(window).load(function () {
         nodeWidth = 90,
         nodeHeight = 25,
         links,
+        childrenLinks = [],
         root;
 
     var force = d3.layout.force()
@@ -27,89 +28,163 @@ $(window).load(function () {
         .attr("width", w)
         .attr("height", h);
 
-    var drag = force.drag()
-        .on("dragstart", dragstart);
-
     d3.json("data/sample.json", function (json) {
-    root = json;
-    root.fixed = true;
-    root.x = w / 2;
-    root.y = h / 2 - 80;
-    update();
-});
-    
-    function update() {
-        nodes = flatten(root)[0].nodes;
-        links = flatten(root)[0].edges;
-    
-    links.forEach(function(d) {
-        nodes.forEach(function(e) {
-            e.weight = 1;
-            if (d.from === e.id)
-                d.source = e;
-            else if (d.to === e.id)
-                d.target = e;
-        });
+        root = json;
+        root.fixed = true;
+        root.x = w / 2;
+        root.y = h / 2 - 80; 
+        var allNodesLength = root.nodes.length; //excluding children
+        var allNodesIds = [];
+        var currentNodes = 0;
+        
+        root.nodes.forEach(function (node) {
+            allNodesIds.push(node.id);
+            node.weight = 1;
+        }); 
+        
+        root.nodes.forEach(function (node) {
+            d3.json("data/"+node.id+".moreData.json", function(error, json){
+                if (error === null && json !== null) {
+                    node.hasChildren = true;
+                    var childrenNodes = json.nodes;
+                    var childrenEdges = json.edges;
+                    childrenNodes.forEach(function(nChild) {                       
+                        if(allNodesIds.indexOf(nChild.id) === -1) {
+                            allNodesIds.push(nChild.id);
+                            nChild.weight = 1;
+                            if(node._children)
+                                node._children.push(nChild);
+                            else
+                                node._children = [nChild];
+                        }
+                    });
+                    
+                    childrenEdges.forEach(function(eChild) {
+                        childrenLinks.push(eChild);    
+                    });
+                }
+                currentNodes++;
+                if (currentNodes === allNodesLength)  
+                    update();
+            });
+        }); 
     });
     
-    // Restart the force layout.
-    force.nodes(nodes)
-            .links(links)
-            .start();
+    function update() {
+        nodes = flatten(root.nodes);
+        links = root.edges;
+                
+        vis.selectAll(".link").remove();
+        vis.selectAll(".node").remove();
+              
+        //bind doubleclick for specific nodes to be collabsible
+        //vis.selectAll(".collapsible").on("dblclick", click);
+        // Restart the force layout.
+             
+        var nodeIds = [], linkIds = [];
+        
+        nodes.forEach(function(n) {
+            nodeIds.push(n.id);
+            links.forEach(function(l) {
+                if (l.from === n.id)
+                    l.source = n;
+                else if (l.to === n.id)
+                    l.target = n;
+            });
 
-    // Update the links…
-    link = vis.selectAll(".link")
-            .data(links, function (d) {return (d.from + d.to);})
-            .enter().append("g")
-            .attr("class", "link")
-            .append("line")
-            .attr("class", "link-line")
-            .style("stroke-width", 2);
-       
-    // Exit any old links.
- 
-    // Update the nodes…
-    node = vis.selectAll("g.node")
+            childrenLinks.forEach(function(childLink) {
+                //if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
+                    if (childLink.from === n.id) {
+                        childLink.source = n;
+                    }
+                    else if (childLink.to === n.id) {
+                        childLink.target = n;
+                    }
+                //}
+            });          
+        });  
+        
+        childrenLinks.forEach(function(childLink) {
+           if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
+               if(linkIds.indexOf(childLink.from+", "+childLink.to) === -1)
+                    linkIds.push(childLink.source.id+", "+childLink.target.id);
+                    links.push(childLink);
+            } 
+        });
+        
+        // Update the links…
+        link = vis.selectAll(".link")
+                .data(links, function (d) {return (d.from + d.to);})
+                .enter().append("g")
+                .attr("class", "link")
+                .append("line")
+                .attr("class", "link-line")
+                .style("stroke-width", 2);
+
+        circle = vis.selectAll(".link")
+                .append("circle")
+                .attr("class","info")
+                .attr("cx", 100)
+                .attr("cy", 100)
+                .attr("r", 5)
+                .style({"fill": color, "stroke-width": 2}); 
+                    
+        // Update the nodes…
+        node = vis.selectAll("g.node")
             .data(nodes, function (d) { return d.id;});
     
-    var group_nodes = node.enter().append("g")
-            .attr("class", "node")
-            .attr("id", function (d) { return d.id;})
-            //.on("dblclick", click)
-            .call(force.drag);
+        var groupNodes = node.enter().append("g")
+                .attr("class", function(d) {
+                    if(d.hasChildren) 
+                        return "node collapsible";
+                    else 
+                        return "node";
+                })
+                .attr("id", function (d) { return d.id;})
+                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
+                .call(force.drag);
 
-    // Enter any new nodes.
-    group_nodes.append("rect")
-            .attr("x", 0)//function(d) { return d.x; })
-            .attr("y", 0)//function(d) { return d.y; })
-            .attr("width", nodeWidth)
-            .attr("height", nodeHeight)
-            .style("fill", color);          
+        // Enter any new nodes.
+        groupNodes.append("rect")
+                .attr("x", 0)//function(d) { return d.x; })
+                .attr("y", 0)//function(d) { return d.y; })
+                .attr("width", nodeWidth)
+                .attr("height", nodeHeight)
+                .style("stroke-dasharray", function(d){
+                    if(d.isCentral)
+                        return "5,5";
+                })
+                .style("fill", color);          
     
-    group_nodes.append("rect")
-            .attr("x", nodeWidth)
-            .attr("y", 0)
-            .attr("width", nodeHeight)
-            .attr("height", nodeHeight)
-            .style("fill", "#b2b2b2");
+        groupNodes.append("rect")
+                .attr("x", nodeWidth)
+                .attr("y", 0)
+                .attr("width", nodeHeight)
+                .attr("height", nodeHeight)
+                .style("fill", "#b2b2b2");
     
-    //name of node
-    group_nodes.append("text")
-            .attr("dx", 5)
-            .attr("dy", nodeHeight - 5)
-            .text(function(d) { return d.id;})
-            .style("font-size","11px");
-    
-    // Exit any old nodes.
-    node.exit().remove();
-}
+        //name of node
+        groupNodes.append("text")
+                .attr("dx", 5)
+                .attr("dy", nodeHeight - 5)
+                .text(function(d) { return d.id;})
+                .style("font-size","11px");
+           
+        force.nodes(nodes)
+                .links(links)
+                .start();
+        
+    }
 
     function tick() {
     link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
             .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
             .attr("x2", function (d) { return d.target.x + nodeWidth / 2;})
             .attr("y2", function (d) { return d.target.y + nodeHeight / 2;});
-        
+
+    circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
+            .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
+          
     node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
 }
 
@@ -118,35 +193,35 @@ $(window).load(function () {
     }
 
     // Toggle children on click.
-    /*function click(d) {
-    if (d.children) {
-        d._children = d.children;
-        d.children = null;
+    function click(d) {
+        if (d.children) {
+            d._children = d.children;
+            d.children = null;
+            links.forEach(function(link, i){
+                if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
+                    links.splice(i);
+                }
+            });
+        } else {
+            d.children = d._children;
+            d._children = null;
+        }
         update();
-    } else {
-        d.children = d._children;
-        d._children = null;
-        update();
-    }
-    update();
-}*/
-
-    // Returns a list of all nodes under the root.
-    function flatten(root) {
-    var nodes = [], i = 0;
-
-    function recurse(node) {
-        if (node.children)
-            node.size = node.children.reduce( function (p, v) {return p + recurse(v);}, 0);
-        if (!node.id)
-            node.id = ++i;
-        nodes.push(node);
-        return node.size;
-    }
-
-    root.size = recurse(root);
-    return nodes;
 }
+
+    // Returns a list of all nodes under the root.   
+    function flatten(root) {
+        var nodes = [], i = 0;
+
+        function recurse(node) {
+            if (node.children) node.children.forEach(recurse);
+            if (!node.id) node.id = ++i;
+            nodes.push(node);
+        }
+
+        root.forEach(function(node){ recurse(node);});
+        return nodes;
+    }
 
     function dragstart(d) {
         d3.select(this).classed("fixed", d.fixed = true);
