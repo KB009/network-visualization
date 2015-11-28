@@ -1,0 +1,75 @@
+body {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.column {
+  width: 19%;
+  height: 150px;
+  float: left;
+  margin-top: 20px;
+}
+
+button {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 180px;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: bolder;
+  margin-bottom: ;
+}
+
+h3 {
+  font-size: 13px;
+  font-weight: normal;
+  margin-bottom: 0.4em;
+  margin-left: 10px;
+}
+
+.buttonset {
+  margin-bottom: 20px;
+}
+
+.slider {
+  margin-left: 10px;
+  width: 70%
+}
+
+#button-pin {
+  float: right;
+  width: 50px;
+  margin-top: -1%;
+  /*margin-right: -15%;*/
+}
+
+#pinButton {
+  /*width: 100%;*/
+}
+
+#topmenu {
+  background-color: #d1cdcd;
+  height: 200px;
+  width: auto;
+  /*border: 1px solid black;*/
+}
+
+.radiobutton-display {
+  width:300px;
+}
+
+.radioset{
+  /*font-size: 12px;*/
+  /*width: 400px;*/
+
+}
+
+.radiobutton{
+  width: 250px;
+}
+
+.slider {
+  width : 200px;
+}
