@@ -3,13 +3,6 @@ body {
   font-size: 12px;
 }
 
-.column {
-  width: 19%;
-  height: 150px;
-  float: left;
-  margin-top: 20px;
-}
-
 button {
   margin-top: 5px;
   margin-bottom: 5px;
@@ -29,47 +22,46 @@ h3 {
   margin-left: 10px;
 }
 
+.column {
+  width: 19%;
+  /*height: 150px;*/
+  float: left;
+  margin-top: 20px;
+}
 .buttonset {
   margin-bottom: 20px;
 }
 
 .slider {
+  width: 200px;
   margin-left: 10px;
   width: 70%
-}
-
-#button-pin {
-  float: right;
-  width: 50px;
-  margin-top: -1%;
-  /*margin-right: -15%;*/
-}
-
-#pinButton {
-  /*width: 100%;*/
-}
-
-#topmenu {
-  background-color: #d1cdcd;
-  height: 200px;
-  width: auto;
-  /*border: 1px solid black;*/
-}
-
-.radiobutton-display {
-  width:300px;
-}
-
-.radioset{
-  /*font-size: 12px;*/
-  /*width: 400px;*/
-
 }
 
 .radiobutton{
   width: 250px;
 }
 
-.slider {
-  width : 200px;
+#div-radiobutton-display {
+  width:300px;
+}
+
+#div-button-pin {
+  /*float: ;*/
+  height: 20px;
+
+}
+
+#button-pin {
+  float: right;
+  width: 50px;
+  margin-top: -1%;
+  margin-right: 20px;
+}
+
+#topmenu {
+  /*background-color: #d1cdcd;*/
+  /*height: 250px;*/
+  width: auto;
+  /*border: 1px solid black;*/
 }

@@ -6,6 +6,7 @@ $(function() {
   $('#button-order-prefix').button();
   $('#button-balance').button();
   $('#button-pin').button();
+  $('#Pum').button();
 });
 
 // ------ SLIDERS ---------
@@ -36,14 +37,15 @@ $(function() {
 
 $(function () {
   function runEffect() {
-    $("#topmenu").hide("slide", {direction: "up"}, 1000/*, callback*/ );
+    // $("#topmenu").hide("slide", {direction: "up"}, 1000, callback );
+    $("#topmenu").slideToggle();
   };
 
-  /*function callback() {
+  function callback() {
     setTimeout(function() {
       $("#topmenu").removeAttr( "style" ).hide().fadeIn();
     }, 1000);
-  };*/
+  };
 
   $( "#button-pin" ).click(function() {
     runEffect();
