@@ -7,19 +7,92 @@ and open the template in the editor.
 <html>
     <head>
         <title>Network visualization</title>
-        <meta charset="UTF-8"> 
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="images/favicon.png" rel="icon" type="image/png" />
         <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link rel="stylesheet" type="text/css" href="css/menu.css">
+        <link rel="stylesheet" href="js/lib/jquery-ui-1.11.4.custom/jquery-ui.css">
 
         <script type="text/javascript" src="js/lib/jquery-1.11.3.min.js"></script>
         <script type="text/javascript" src="js/lib/jquery-ui.min.js"></script>
         <script type="text/javascript" src="js/lib/d3.v3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="js/main.js"></script>
+        <script type="text/javascript" src="js/menu.js"></script>
         </head>
     <body>
         <div class="menu">
-            <!--div></div-->
+          <div id="topmenu" runat="server">
+            <form>
+              <div class="column" style="margin-left: 2%; margin-right: -5%">
+                <div id="radiobutton-display" title="Barva" class="buttonset">
+                  <h2>Barva</h2>
+                  <input type="radio" name="radio" id="radio1">
+                  <label for="radio1">Počty toků</label>
+                  <br>
+                  <input type="radio" name="radio" id="radio2" checked>
+                  <label for="radio2">Objem dat</label>
+
+                </div>
+                <div id="radiobutton-node" class="buttonset">
+                  <h2>Uzel</h2>
+                  <input type="radio" name="radio2" id="node-radio1" checked>
+                  <label for="node-radio1">IP adresa</label>
+                  <br>
+                  <input type="radio" name="radio2" id="node-radio2">
+                  <label for="node-radio2">Doménové jméno</label>
+                </div>
+              </div>
+
+              <div class="column buttonset" id="checkbox-mapto" style="margin-right: -5%">
+                <h2>Mapovat na</h2>
+
+                <input type="checkbox" id="check1" checked>
+                <label for="check1">Uzly</label>
+                <br>
+                <input type="checkbox" id="check2">
+                <label for="check2">Spojnice</label>
+              </div>
+
+              <div class="column" id="colorSchemes">
+                <h2>Barevné škály</h2>
+                <button id="customColor">Vlastní...</button>
+              </div>
+
+              <div class="column" style="width: 29%">
+                <div style="float: left; width: 50%">
+                  <h2>Filtrovat</h2>
+
+                  <h3>Počty toků:</h3>
+                  <div id="slider-flows" class="slider"></div>
+                  <h3>Objem dat:</h3>
+                  <div id="slider-dataVolume" class="slider"></div>
+
+                </div>
+                <div style="float: left; width:50%">
+                  <h2>Velikost uzlů:</h2>
+                  <div id="slider-nodeSize" class="slider"></div>
+                </div>
+
+
+
+              </div>
+
+              <div class="column" style="margin-top: 61px; float: right">
+                <button id="button-order-prefix">Seřadit podle prefixu</button>
+                <br>
+                <button id="button-balance">Vyvážít</button>
+                <br>
+              </div>
+            </form>
+
+          </div>
+
+          <div id="pinButton">
+            <button id="button-pin">Pin</button>
+          </div>
+
         </div>
         <script type="text/javascript" src="js/main.js"></script>
     </body>
