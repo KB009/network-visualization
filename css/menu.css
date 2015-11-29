@@ -33,9 +33,9 @@ h3 {
 }
 
 .slider {
-  width: 200px;
-  margin-left: 10px;
-  width: 70%
+  width: 100%;
+  margin: 0 10px;
+  /*width: 70%*/
 }
 
 .radiobutton{
@@ -68,4 +68,18 @@ h3 {
   /*height: 250px;*/
   width: auto;
   /*border: 1px solid black;*/
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-flow: row nowrap;
+  margin: 10px 0;
+  width: 250px;
+  justify-content: space-between;
+}
+
+.slider-wrapper > span {
+  margin: 0 10px;
+  width: 1em;
+  font-weight: bold;
 }

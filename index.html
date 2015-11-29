@@ -66,27 +66,31 @@ and open the template in the editor.
                   <h2>Filtrovat</h2>
 
                   <div id="div-flows">
-                  <h3>Počty toků:</h3>
-                  <!-- <p class="label" style="float: left"><span id="slider-value-flow-min">20</span></p> -->
-                  <div id="slider-flows" class="slider" style="float: left; margin: 7px;"></div>
-                  <p class="label"><span id="slider-value-flow-max"></span><br></p>
-                </div>
+                    <h3>Počty toků:</h3>
+                    <div class="slider-wrapper">
+                      <span id="slider-value-flow-min"></span>
+                      <div id="slider-flows" class="slider"></div>
+                      <span id="slider-value-flow-max"></span>
+                    </div>
+                  </div>
 
-                <div>
-                  <h3>Objem dat:</h3>
-                  <!-- <p class="label" style="float: left"><span id="slider-value-volume-min"></span></p> -->
-                  <div id="slider-dataVolume" class="slider" style="float:left; margin: 7px"></div>
-                  <p class="label"><span id="slider-value-volume-max"></span><br></p>
+                  <div>
+                    <h3>Objem dat:</h3>
+                    <div class="slider-wrapper">
+                      <span id="slider-value-volume-min"></span>
+                      <div id="slider-dataVolume" class="slider"></div>
+                      <span id="slider-value-volume-max"></span>
+                    </div>
                 </div>
+              </div>
 
-                </div>
                 <div style="float: left; width:50%">
                   <h2>Velikost uzlů:</h2>
-                  <div id="slider-nodeSize" class="slider" style="float: left; margin-right: 5px">
+                    <h3> &nbsp </h3>
+                  <div class="slider-wrapper">
+                    <div id="slider-nodeSize" class="slider"></div>
+                    <span id="slider-value-nodeSize"></span>
                   </div>
-                  <p class="label">
-                     <span id="slider-value-nodeSize"></span>
-                  </p>
                 </div>
 
               </div>
