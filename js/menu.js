@@ -43,11 +43,29 @@ $(function() {
     slide: function( event, ui ) {
       $( "#slider-value-nodeSize" ).html( ui.value );
     }
+
   });
 });
 
+
+$("menu").load(function() {
+  alert("Menu loaded!");
+});
+
+/*  POKUSY NA NASTAVENI INICIALNI HODNOTY
+$( "#slider-nodeSize" ).on( "slidecreate", function( event, ui ) {
+  $( "#slider-value-nodeSize" ).html( ui.value );
+} );
+
 $( "#slider-value-nodeSize" ).html(  $('#slider-nodeSize').slider('value') );
 
+$( "#div-flows").onLoad(function() {
+  alert("ha");
+  $("#slider-value-nodeSize").html(function() {
+    $("#slider-nodeSize").slider("option", "max");
+  });
+});
+*/
 
 //
 // // Getter
