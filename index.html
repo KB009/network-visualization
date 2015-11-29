@@ -20,11 +20,12 @@ and open the template in the editor.
         <script type="text/javascript" src="js/lib/d3.v3.min.js" charset="utf-8"></script>
         <!-- <script type="text/javascript" src="js/main.js"></script> -->
         <script type="text/javascript" src="js/menu.js"></script>
-        </head>
+
+    </head>
     <body>
         <div class="menu">
           <div id="topmenu" style="height: 200px">   <!-- runat="server" -->
-            <!-- <form> -->
+            <form id="menu-form">
               <div class="column" style="margin-left: 2%; margin-right: -5%;">
                 <div id="div-radiobutton-display" title="Barva" class="buttonset">
                   <h2>Barva</h2>
@@ -64,15 +65,28 @@ and open the template in the editor.
                 <div style="float: left; width: 50%">
                   <h2>Filtrovat</h2>
 
+                  <div>
                   <h3>Počty toků:</h3>
-                  <div id="slider-flows" class="slider"></div>
+                  <!-- <p class="label" style="float: left"><span id="slider-value-flow-min">20</span></p> -->
+                  <div id="slider-flows" class="slider" style="float: left; margin: 7px;"></div>
+                  <p class="label"><span id="slider-value-flow-max"></span><br></p>
+                </div>
+
+                <div>
                   <h3>Objem dat:</h3>
-                  <div id="slider-dataVolume" class="slider"></div>
+                  <!-- <p class="label" style="float: left"><span id="slider-value-volume-min"></span></p> -->
+                  <div id="slider-dataVolume" class="slider" style="float:left; margin: 7px"></div>
+                  <p class="label"><span id="slider-value-volume-max"></span><br></p>
+                </div>
 
                 </div>
                 <div style="float: left; width:50%">
                   <h2>Velikost uzlů:</h2>
-                  <div id="slider-nodeSize" class="slider"></div>
+                  <div id="slider-nodeSize" class="slider" style="float: left; margin-right: 5px">
+                  </div>
+                  <p class="label">
+                     <span id="slider-value-nodeSize"></span>
+                  </p>
                 </div>
 
               </div>
@@ -83,7 +97,7 @@ and open the template in the editor.
                 <button id="button-balance">Vyvážít</button>
                 <br>
               </div>
-            <!-- </form> -->
+            </form>
 
 
           </div>
@@ -93,6 +107,7 @@ and open the template in the editor.
           </div>
 
         </div>
-        <script type="text/javascript" src="js/main.js"></script>
+
+        <!-- <script type="text/javascript" src="js/main.js"></script> -->
     </body>
 </html>

@@ -1,3 +1,7 @@
+$("#button-order-prefix").click(function() {
+  alert("HA!");
+});
+
 $(function() {
   // $('#radiobutton-display').buttonset();
   // $('#radiobutton-node').buttonset();
@@ -11,23 +15,40 @@ $(function() {
 
 // ------ SLIDERS ---------
 
+$("#slider-value-flow-min").val(5);
+
 $(function() {
   $('#slider-flows').slider({
     max: 150,
     range: true,
-    values: [ 5, 150 ]
+    values: [ 5, 150 ],
+    slide: function( event, ui ) {
+      $("#slider-value-flow-min").html(ui.values[0]);
+      $("#slider-value-flow-max").html(ui.values[1]);
+    }
   });
   $('#slider-dataVolume').slider({
     max: 200,
     range: true,
-    values: [ 1, 200 ]
+    values: [ 1, 200 ],
+    slide: function( event, ui ) {
+      $("#slider-value-volume-min").html(ui.values[0]);
+      $("#slider-value-volume-max").html(ui.values[1]);
+    }
   });
   $('#slider-nodeSize').slider({
     value: 45,
     min: 10,
-    max: 70
+    max: 70,
+    slide: function( event, ui ) {
+      $( "#slider-value-nodeSize" ).html( ui.value );
+    }
   });
 });
+
+$( "#slider-value-nodeSize" ).html(  $('#slider-nodeSize').slider('value') );
+
+
 //
 // // Getter
 // var max = $( ".selector" ).slider( "option", "max" );
@@ -52,3 +73,20 @@ $(function () {
     return false;
   });
 });
+
+/*
+$('#div-radiobutton-display').click(  function() {
+  // alert("ha");
+  alert("Value: " + $('input[name=radio]:checked', '#menu-form').val());
+});
+
+var val = $('#slider-nodeSize').slider({
+  change: function(event, ui) {
+          // alert(ui.value);
+      }
+    });
+
+$("#button-balance").click(function(event) {
+  console.log("clicked: " + event.target);
+}) ;
+*/

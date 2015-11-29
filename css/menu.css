@@ -42,6 +42,10 @@ h3 {
   width: 250px;
 }
 
+.label{
+  font-weight: bold;
+}
+
 #div-radiobutton-display {
   width:300px;
 }
