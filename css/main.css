@@ -3,7 +3,7 @@ To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
 and open the template in the editor.
 */
-/* 
+/*
     Created on : 29.10.2015, 10:19:47
     Author     : KB009
 */
@@ -24,6 +24,7 @@ body {
 .menu {
   display: block;
   position: fixed;
+  top: 0;
   width: 100%;
   background-color: gray;
   min-height: 20px;

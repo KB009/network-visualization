@@ -25,7 +25,6 @@ and open the template in the editor.
     <body>
         <div class="menu">
           <div id="topmenu" style="height: 200px">   <!-- runat="server" -->
-            <form id="menu-form">
               <div class="column" style="margin-left: 2%; margin-right: -5%;">
                 <div id="div-radiobutton-display" title="Barva" class="buttonset">
                   <h2>Barva</h2>
@@ -101,17 +100,28 @@ and open the template in the editor.
                 <button id="button-balance">Vyvážít</button>
                 <br>
               </div>
-            </form>
-
-
           </div>
+
           <div style="height:20px">
             <button id="button-pin" style="position: absolute; bottom: 0px; right: 5px; margin-bottom: -15px;">Pin</button>
+          </div>
 
+        </div>
+
+        <div style="padding: 10px; margin-top:230px">
+          <div style="margin: 10px">
+            Barva: <span id="test-div-radiobutton-display"></span>
+          </div>
+          <div style="margin: 10px">
+            Uzel: <span id="test-div-radiobutton-node"></span>
+          </div>
+          <div style="margin: 10px">
+            Mapovat na: <span id="test-checkbox-mapto"></span>
           </div>
 
         </div>
 
         <!-- <script type="text/javascript" src="js/main.js"></script> -->
+        <script type="text/javascript" src="js/test.js"></script>
     </body>
 </html>
