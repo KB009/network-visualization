@@ -9,16 +9,17 @@ and open the template in the editor.
 */
 body {
     margin: 0;
-    font-family: Trebuchet MS;
+    /* font-weight: bold; */
+    font-family: Tahoma, Geneva, sans-serif;
 }
 .node {
-  stroke: #000;
-  stroke-width: 1px;
+  /* stroke: #000; */
+  /* stroke-width: 1px; */
 }
 
 .link {
   stroke: #999;
-  stroke-opacity: .6;
+  stroke-opacity: .9;
 }
 
 .menu {

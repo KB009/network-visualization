@@ -12,11 +12,14 @@ $(window).load(function () {
         nodes,
         circle, 
         nodeAttribute = 0, // mapping colors on nodes - 0 for data, 1 for flows
+        linkAttribute = 0, // mapping colors on links - 0 for data, 1 for flows
         colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
-        fullDataRange = [Number.MAX_VALUE,0],
-        fullFlowsRange = [Number.MAX_VALUE,0],        
-        nodeWidth = 90,
-        nodeHeight = 25,
+        fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
+        fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
+        lineSize = 2,
+        nodeSize = 1,
+        nodeWidth = 90 * nodeSize,
+        nodeHeight = 25 * nodeSize,
         links,
         childrenLinks = [],
         root;
@@ -26,7 +29,7 @@ $(window).load(function () {
         .on("end", end)
         .charge(-1000)
         .chargeDistance(1000)
-        .linkDistance(function (d) {return d.target._children ? 150 : 120;})
+        .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
     
     var vis = d3.select("body").append("svg:svg")
@@ -38,8 +41,8 @@ $(window).load(function () {
         root.fixed = true;
         root.x = w / 2;
         root.y = h / 2 - 80; 
-        var allNodesLength = root.nodes.length; //excluding children
-        var allNodesIds = [];
+        var allNodesLength = root.nodes.length; // excluding children
+        var allNodesIds = []; // including children
         var currentNodes = 0;
         
         root.nodes.forEach(function (node) {
@@ -81,17 +84,14 @@ $(window).load(function () {
                 
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
-              
-        //bind doubleclick for specific nodes to be collabsible
-        //vis.selectAll(".collapsible").on("dblclick", click);
-        // Restart the force layout.
              
         var nodeIds = [], linkIds = [];
         
-        // we need to iterate through all visible nodes and links in order to connect links with their nodes (we need objects in links, not only ids)
+        // on update reset max and min values in force
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
+        // we need to iterate through all visible nodes and links in order to connect links with their nodes (we need objects in links, not only ids)
         nodes.forEach(function(n) {
             nodeIds.push(n.id);
             
@@ -143,21 +143,28 @@ $(window).load(function () {
                 .enter().append("g")
                 .attr("class", "link")
                 .append("line")
+                .attr("class", "link-border")
+                .style({"stroke-width": lineSize+2, "stroke": "#000"});
+        
+        // add border to every link
+        vis.selectAll(".link").append("line")
                 .attr("class", "link-line")
-                .style("stroke-width", 2);
+                .style({"stroke-width": lineSize, "stroke": color});
 
+        // add info-circle for every link       
         circle = vis.selectAll(".link")
                 .append("circle")
                 .attr("class","info")
                 .attr("cx", 100)
                 .attr("cy", 100)
                 .attr("r", 5)
-                .style({"fill": color, "stroke-width": 2}); 
+                .style({"fill": color, "stroke-width": 1, "stroke": "#000"});
                     
         // Update the nodes…
         node = vis.selectAll("g.node")
             .data(nodes, function (d) { return d.id;});
     
+        // create group of nodes
         var groupNodes = node.enter().append("g")
                 .attr("class", function(d) {
                     if(d.hasChildren) return "node collapsible";
@@ -173,7 +180,7 @@ $(window).load(function () {
                 .attr("y", -3)
                 .attr("width", nodeWidth+6)
                 .attr("height", nodeHeight+6)
-                .style("fill", "#fff");
+                .style({"fill": "#fff", "stroke-width": 1, "stroke": "#000"});
 
         // Enter any new nodes and show them as rectangles
         groupNodes.append("rect")
@@ -181,7 +188,7 @@ $(window).load(function () {
                 .attr("y", 0)//function(d) { return d.y; })
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
-                .style("fill", color);  
+                .style({"fill": color, "stroke-width": 1, "stroke": "#000"});  
             
         // ip address of node
         groupNodes.append("text")
@@ -199,12 +206,12 @@ $(window).load(function () {
                 .attr("y", 0)
                 .attr("width", nodeHeight)
                 .attr("height", nodeHeight)
-                .style("fill", "#b2b2b2");
+                .style({"fill": "#b2b2b2", "stroke-width": 1, "stroke": "#000"});
     
         // + or - sign for node
         collapsible.append("text")
-                .attr("dx", nodeWidth + 5)
-                .attr("dy", nodeHeight - 5)
+                .attr("dx", nodeWidth + nodeHeight/7)
+                .attr("dy", nodeHeight - nodeHeight/5)
                 .text(function (d) {
                     if (d._children === null) return "-";
                     else return "+";
@@ -217,26 +224,35 @@ $(window).load(function () {
         
     }
 
-    function tick() {
-    link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
-            .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
-            .attr("x2", function (d) { return d.target.x + nodeWidth / 2;})
-            .attr("y2", function (d) { return d.target.y + nodeHeight / 2;});
+    function tick() {   
+        // translate position of every link and node in svg
+        link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
+                .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
+                .attr("x2", function (d) { return d.target.x + nodeWidth / 2;})
+                .attr("y2", function (d) { return d.target.y + nodeHeight / 2;});
 
-    circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
-            .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
-          
-    node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
-}
+        vis.selectAll(".link-line").attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
+                .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
+                .attr("x2", function (d) { return d.target.x + nodeWidth / 2;})
+                .attr("y2", function (d) { return d.target.y + nodeHeight / 2;});
+
+        circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
+                .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
+
+        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
+    }
 
     function color(d) {
-        if (nodeAttribute === 0) {
+        // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
+        if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             var number = d.data;   
             var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
             r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
             g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
             b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
         }
+        
+        // else if d has nodeAttribute or linkAttribute 1
        else {
             var number = d.flows;   
             var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
