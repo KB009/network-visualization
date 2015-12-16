@@ -11,6 +11,10 @@ $(window).load(function () {
         node,
         nodes,
         circle, 
+        nodeAttribute = 0, // mapping colors on nodes - 0 for data, 1 for flows
+        colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
+        fullDataRange = [Number.MAX_VALUE,0],
+        fullFlowsRange = [Number.MAX_VALUE,0],        
         nodeWidth = 90,
         nodeHeight = 25,
         links,
@@ -19,11 +23,12 @@ $(window).load(function () {
 
     var force = d3.layout.force()
         .on("tick", tick)
+        .on("end", end)
         .charge(-1000)
         .chargeDistance(1000)
         .linkDistance(function (d) {return d.target._children ? 150 : 120;})
         .size([w, h - 160]);
-
+    
     var vis = d3.select("body").append("svg:svg")
         .attr("width", w)
         .attr("height", h);
@@ -39,7 +44,7 @@ $(window).load(function () {
         
         root.nodes.forEach(function (node) {
             allNodesIds.push(node.id);
-            node.weight = 1;
+            node.weight = 1;         
         }); 
         
         root.nodes.forEach(function (node) {
@@ -83,17 +88,37 @@ $(window).load(function () {
              
         var nodeIds = [], linkIds = [];
         
+        // we need to iterate through all visible nodes and links in order to connect links with their nodes (we need objects in links, not only ids)
+        fullDataRange = [Number.MAX_VALUE,0];
+        fullFlowsRange = [Number.MAX_VALUE,0];
+        
         nodes.forEach(function(n) {
             nodeIds.push(n.id);
+            
+            // get range of data from every VISIBLE nodefullDataRange = [0,1],
+            var nodeData = n.data;
+            if (nodeData < fullDataRange[0])
+                fullDataRange[0] = nodeData;
+            else if (nodeData > fullDataRange[1])
+                fullDataRange[1] = nodeData;
+            
+            // get range of flows from every VISIBLE node 
+            var nodeFlows = n.flows;
+            if (nodeFlows < fullFlowsRange[0])
+                fullFlowsRange[0] = nodeFlows;
+            else if (nodeFlows > fullFlowsRange[1])
+                fullFlowsRange[1] = nodeFlows;
+            
+            // assigning nodes to every "from" and "to" in links
             links.forEach(function(l) {
                 if (l.from === n.id)
                     l.source = n;
                 else if (l.to === n.id)
                     l.target = n;
             });
-
+             
             childrenLinks.forEach(function(childLink) {
-                //if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
+                // if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
                     if (childLink.from === n.id) {
                         childLink.source = n;
                     }
@@ -103,7 +128,7 @@ $(window).load(function () {
                 //}
             });          
         });  
-        
+              
         childrenLinks.forEach(function(childLink) {
            if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
                if(linkIds.indexOf(childLink.from+", "+childLink.to) === -1)
@@ -154,21 +179,40 @@ $(window).load(function () {
                     if(d.isCentral)
                         return "5,5";
                 })
-                .style("fill", color);          
-    
-        groupNodes.append("rect")
-                .attr("x", nodeWidth)
-                .attr("y", 0)
-                .attr("width", nodeHeight)
-                .attr("height", nodeHeight)
-                .style("fill", "#b2b2b2");
-    
-        //name of node
+                .style("fill", color);  
+        
+        // ip address of node
         groupNodes.append("text")
                 .attr("dx", 5)
                 .attr("dy", nodeHeight - 5)
                 .text(function(d) { return d.id;})
                 .style("font-size","11px");
+        
+        // collapsible button in node
+        groupNodes.append("rect")
+                .attr("x", nodeWidth)
+                .attr("y", 0)
+                .attr("width", function (d) {
+                    // return node height if node has any children (hidden or visible)
+                    if (d._children || d.children) return nodeHeight;  
+                    // otherwise return 0 to keep rectangle hidden (with height equal to 0)
+                    else return 0; 
+                })
+                .attr("height", nodeHeight)
+                .style("fill", "#b2b2b2");
+    
+        // + or - sign for node
+        groupNodes.append("text")
+                .attr("dx", nodeWidth + 5)
+                .attr("dy", nodeHeight - 5)
+                .text(function (d) {
+                    if (!d._children && !d.children)
+                        return "";
+                    else if (d._children === null)
+                        return "-";
+                    else return "+";
+                })
+                .style("font-size",nodeHeight + "px");
            
         force.nodes(nodes)
                 .links(links)
@@ -188,8 +232,22 @@ $(window).load(function () {
     node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
 }
 
-    function color() {
-        return "#e1e1e1";
+    function color(d) {
+        if (nodeAttribute === 0) {
+            var number = d.data;   
+            var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
+            r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
+            g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
+            b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
+        }
+       else {
+            var number = d.flows;   
+            var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
+            r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
+            g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
+            b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
+        }
+        return "rgb("+r+","+g+","+b+")";
     }
 
     // Toggle children on click.
@@ -222,8 +280,14 @@ $(window).load(function () {
         root.forEach(function(node){ recurse(node);});
         return nodes;
     }
-
+    /*
     function dragstart(d) {
         d3.select(this).classed("fixed", d.fixed = true);
-    } 
+    }*/
+    
+    function end() {
+        for (var i = 0; i < nodes.length; i++) {
+                    nodes[i].fixed = true;
+        }
+    }
 });
