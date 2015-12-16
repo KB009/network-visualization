@@ -160,56 +160,53 @@ $(window).load(function () {
     
         var groupNodes = node.enter().append("g")
                 .attr("class", function(d) {
-                    if(d.hasChildren) 
-                        return "node collapsible";
-                    else 
-                        return "node";
+                    if(d.hasChildren) return "node collapsible";
+                    else return "node";
                 })
                 .attr("id", function (d) { return d.id;})
                 .on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .call(force.drag);
+        
+        // finds central node and adds special border (rectangle) to it
+        groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
+                .attr("x", -3)
+                .attr("y", -3)
+                .attr("width", nodeWidth+6)
+                .attr("height", nodeHeight+6)
+                .style("fill", "#fff");
 
-        // Enter any new nodes.
+        // Enter any new nodes and show them as rectangles
         groupNodes.append("rect")
                 .attr("x", 0)//function(d) { return d.x; })
                 .attr("y", 0)//function(d) { return d.y; })
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
-                .style("stroke-dasharray", function(d){
-                    if(d.isCentral)
-                        return "5,5";
-                })
                 .style("fill", color);  
-        
+            
         // ip address of node
         groupNodes.append("text")
-                .attr("dx", 5)
-                .attr("dy", nodeHeight - 5)
+                .attr("dx", nodeHeight/5)
+                .attr("dy", nodeHeight - nodeHeight/3)
                 .text(function(d) { return d.id;})
-                .style("font-size","11px");
+                .style("font-size",nodeHeight/2.2 + "px");
         
+        //find only collapsible nodes
+        var collapsible = vis.selectAll("g.collapsible");
+          
         // collapsible button in node
-        groupNodes.append("rect")
+        collapsible.append("rect")
                 .attr("x", nodeWidth)
                 .attr("y", 0)
-                .attr("width", function (d) {
-                    // return node height if node has any children (hidden or visible)
-                    if (d._children || d.children) return nodeHeight;  
-                    // otherwise return 0 to keep rectangle hidden (with height equal to 0)
-                    else return 0; 
-                })
+                .attr("width", nodeHeight)
                 .attr("height", nodeHeight)
                 .style("fill", "#b2b2b2");
     
         // + or - sign for node
-        groupNodes.append("text")
+        collapsible.append("text")
                 .attr("dx", nodeWidth + 5)
                 .attr("dy", nodeHeight - 5)
                 .text(function (d) {
-                    if (!d._children && !d.children)
-                        return "";
-                    else if (d._children === null)
-                        return "-";
+                    if (d._children === null) return "-";
                     else return "+";
                 })
                 .style("font-size",nodeHeight + "px");
