@@ -30,3 +30,18 @@ body {
   min-height: 20px;
   opacity: .8;
 }
+
+/*jQueryUI*/
+
+.children-selector .ui-dialog-titlebar {
+    display:none;
+}
+
+#dialog .contents table {
+    display: block;
+    height: 239px;
+    width: 248px;
+    padding: 0;
+    overflow-y: scroll;
+    border: 1px solid gray;
+}

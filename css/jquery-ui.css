@@ -506,7 +506,7 @@ button.ui-button::-moz-focus-inner {
 .ui-dialog .ui-dialog-content {
 	position: relative;
 	border: 0;
-	padding: .5em 1em;
+	/* padding: .5em 1em; */
 	background: none;
 	overflow: auto;
 }
@@ -532,7 +532,7 @@ button.ui-button::-moz-focus-inner {
 	background-position: 16px 16px;
 }
 .ui-draggable .ui-dialog-titlebar {
-	cursor: move;
+	/* cursor: move; */
 }
 .ui-menu {
 	list-style: none;
@@ -844,6 +844,9 @@ body .ui-tooltip {
 	font-size: 1em;
 }
 .ui-widget-content {
+	/* margin: 0; */
+	width: 100%;
+	/* padding: 0; */
 	border: 1px solid #dddddd;
 	background: #ffffff;
 	color: #333333;

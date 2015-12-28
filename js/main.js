@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-$(window).load(function () {
+$(window).load(function () {   
     var w = $(window).width() - 20,
         h = 800,
         link,
@@ -23,6 +23,18 @@ $(window).load(function () {
         links,
         childrenLinks = [],
         root;
+
+    this.getLinks = function () {
+        return links;
+    };
+
+    this.getNodes = function () {
+        return nodes;
+    };
+
+    this.getForce = function () {
+        return force;
+    };
 
     var force = d3.layout.force()
         .on("tick", tick)
@@ -170,8 +182,8 @@ $(window).load(function () {
                     if(d.hasChildren) return "node collapsible";
                     else return "node";
                 })
-                .attr("id", function (d) { return d.id;})
-                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
+                .attr("id", function (d) { return "ip"+d.id.replace(/\./g, '-');})
+                //.on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .call(force.drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -210,6 +222,7 @@ $(window).load(function () {
     
         // + or - sign for node
         collapsible.append("text")
+                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .attr("dx", nodeWidth + nodeHeight/7)
                 .attr("dy", nodeHeight - nodeHeight/5)
                 .text(function (d) {
@@ -265,19 +278,77 @@ $(window).load(function () {
 
     // Toggle children on click.
     function click(d) {
+        var position = "#ip"+d.id.replace(/\./g, '-');
+        
+        var options = {
+            autoOpen: false,
+            height: 300,
+            width: 250,
+            resizable: false,
+            modal: false,
+            dialogClass: 'children-selector',
+            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: position }
+        };   
+        
+        $( "#dialog" ).dialog(options).dialog( "open" );
+    
+        $('body').bind('click', function(e) {
+            if($('#dialog').dialog('isOpen')
+                && !$(e.target).is('.ui-dialog, a')
+                && !$(e.target).closest('.ui-dialog').length
+            ) {
+                $('#dialog').dialog('close');
+                
+                    
+            }
+        });
+        
+        //clear previous content
+        $(".contents").empty();
+        
+        //append new content
+        $(".contents").append("<p>Seřadit podle:</p>");
+        $(".contents").append("<table>");
+        
+        var allChildren = [];
+     
+        if(d._children) {
+            // adds hidden children
+            d._children.forEach(function(child) {
+                allChildren.push([]);
+                allChildren[allChildren.length-1].push(child);
+                allChildren[allChildren.length-1].push("hidden");
+            });
+        }
+        else {
+            // adds shown children
+            d.children.forEach(function(child) {
+                allChildren[allChildren.length-1].push(child);
+                allChildren[allChildren.length-1].push("shown");
+            });
+        }
+        
+        //appends all children into modal window
+        allChildren.forEach(function(child) {
+            chceckbox = '<input type="checkbox" id="' + child[0].id + 'VisibleCheckbox" name="'  + child[0].id + 'VisibleCheckbox" >';
+            $(".contents table").append("<tr><td>" + chceckbox + "</td><td>" + child[0].id + "</td></tr>");
+        });
+        
+        $(".contents").append("</table>");
+        /*
         if (d.children) {
             d._children = d.children;
             d.children = null;
             links.forEach(function(link, i){
                 if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
                     links.splice(i);
-                }
-            });
+            }
+        });
         } else {
             d.children = d._children;
             d._children = null;
-        }
-        update();
+}
+        update();*/
 }
 
     // Returns a list of all nodes under the root.   
