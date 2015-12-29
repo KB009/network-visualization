@@ -171,7 +171,8 @@ $(window).load(function () {
                     if(d.hasChildren) return "node collapsible";
                     else return "node";
                 })
-                .attr("id", function (d) { return "ip"+d.id.replace(/\./g, '-');})
+                //.attr("id", function (d) { return "ip-"+d.id.replace(/\./g, '-');})
+                .attr("id", function (d) { return convertIp(d.id);})    
                 //.on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .call(force.drag);
         
@@ -203,6 +204,7 @@ $(window).load(function () {
           
         // collapsible button in node
         collapsible.append("rect")
+                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .attr("x", nodeWidth)
                 .attr("y", 0)
                 .attr("width", nodeHeight)
@@ -268,7 +270,8 @@ $(window).load(function () {
     // Toggle children on click.
     function click(d) {
         //finds actual node to compute its position
-        var position = "#ip"+d.id.replace(/\./g, '-');
+        //var position = "#ip-"+d.id.replace(/\./g, '-');
+        var position = "#"+convertIp(d.id);
         
         var options = {
             autoOpen: false,
@@ -296,12 +299,15 @@ $(window).load(function () {
         
         //append new content
         $(".contents").append("<p style='float:left'>Seřadit podle:</p>");
-        $(".contents").append("<input type='radio' name='sort' value='0'>Počty toků</input></br>");
+        $(".contents").append("<input type='radio' name='sort' value='0'/><label data-labelfor='0'>Počty toků</label></br>");
         $(".contents").append("<input type='radio' name='sort' value='1'>Objem dat</input></br>");
         $(".contents").append("<input type='radio' name='sort' value='2'>Prefix</input></br>");
         $(".contents").append('<input type="checkbox" id="selectAll" name="selectAll">');
         $(".contents").append('<button type="submit" id="submit" name="submit">Zobrazit vybrané</button>');
         $(".contents").append("<table class='filter-children'>");
+        
+        if(d._children.length === 0)
+            $('#dialog #selectAll').prop('checked',true);
             
         var allChildren = [];
 
@@ -310,51 +316,99 @@ $(window).load(function () {
             d._children.forEach(function(child) {
                 allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
-                allChildren[allChildren.length-1].push("hidden");
+                allChildren[allChildren.length-1].push(false);
                 updateColorRange(child);
             });
         }
-        else {
+        if(d.children) {
             // adds shown children
             d.children.forEach(function(child) {
+                allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
-                allChildren[allChildren.length-1].push("shown");
+                allChildren[allChildren.length-1].push(true);
                 updateColorRange(child);
-                //updateColorRange(child.data);
             });
         }
         
         //appends all children into modal window
         allChildren.forEach(function(child) {
-            var chceckbox = '<input type="checkbox" id="' + child[0].id + 'VisibleCheckbox" name="'  + child[0].id + 'VisibleCheckbox" >';
+            var checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '">';
+            var checkbox;
+            if (child[1] === true) 
+                checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '" checked>';
+            else 
+                checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '">';
+            
             var styleColor = 'style="background-color:' + color(child[0]) + '"';
-            $(".contents table").append("<tr " + styleColor + "><td>" + chceckbox + "</td><td>" + child[0].id + "</td></tr>");
+            $(".contents table").append("<tr " + styleColor + "><td>" + checkbox + "</td><td><label data-labelfor='" + convertIp(child[0].id) + "VisibleCheckbox'>" + child[0].id + "</label></td></tr>");
         });
         
         $(".contents").append("</table>");
+            
+        // select/diselecet all nodes
+        $('#dialog #selectAll').on('click',function(){
+            if(this.checked){
+                $('#dialog table :checkbox').each(function(){
+                    this.checked = true;
+                });
+            }else{
+                 $('#dialog table :checkbox').each(function(){
+                    this.checked = false;
+                });
+            }
+        });
         
-        $('#dialog #selectAll').change(function() {
-            var checkboxes = $(this).closest('table').find(':checkbox');
-            if($(this).is(':checked')) {
-                checkboxes.prop('checked', true);
-            } else {
-                checkboxes.prop('checked', false);
+        // select/diselect main checkbox according to number of selected nodes
+        $('#dialog table :checkbox').on('click',function(){
+            if($('#dialog table :checkbox:checked').length === $('#dialog table :checkbox').length){
+                $('#dialog #selectAll').prop('checked',true);
+            }else{
+                $('#dialog #selectAll').prop('checked',false);
             }
         });
-        /*
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-            links.forEach(function(link, i){
-                if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
-                    links.splice(i);
-            }
+        
+        //trigger click on labels
+        $("[data-labelfor]").click(function() {
+            $('#' + $(this).attr("data-labelfor")).prop('checked', function(i, oldVal) { 
+                return !oldVal; 
+            });
         });
-        } else {
-            d.children = d._children;
-            d._children = null;
-}
-        update();*/
+        
+        // on click on submit button update force with new nodes
+        $("#dialog #submit").click(function() {
+            $('#dialog table :checkbox').each(function(i, box) {
+                var actualHiddenNode = findNodeById(d._children, $(box).prop('name'));
+                var actualVisibleNode = findNodeById(d.children, $(box).prop('name'));
+                if ($(box).prop('checked') === true) {                                       
+                    if (actualHiddenNode !== undefined) {
+                        d._children.splice($.inArray(actualHiddenNode, d._children),1);
+
+                        if (d.children === undefined) { 
+                            d.children = [];
+                        }
+                        d.children.push(actualHiddenNode);
+                    }
+                }
+                else {
+                    if (actualVisibleNode !== undefined) {
+                        d.children.splice($.inArray(actualVisibleNode, d.children),1);
+                        //links to hidden children must be deleted manually 
+                        links.forEach(function(link, i){
+                            if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
+                                links.splice(i);
+                            }
+                        });
+                        if (d._children === undefined) { 
+                            d._children = [];
+                        }
+                        d._children.push(actualVisibleNode);
+                    }
+                    
+                }
+            });
+            update();
+            $('#dialog').dialog('close'); 
+        });
 }
 
     // Returns a list of all nodes under the root.   
@@ -386,9 +440,23 @@ $(window).load(function () {
                 fullDataRange[1] = newFlows;    
     }
     
+    //helper for converting ip address into string without periods, with letters on beginning
+    function convertIp(name) {
+        return ("ip-" + name.replace(/\./g, '-'));
+    } 
+    
     function end() {
         for (var i = 0; i < nodes.length; i++) {
                     nodes[i].fixed = true;
+        }
+    }
+    
+    function findNodeById(actualNodes, id) {
+        if (actualNodes !== undefined) {
+            for (var i = 0; i < actualNodes.length; i++) {
+                if (actualNodes[i].id === id)
+                    return actualNodes[i];
+            }
         }
     }
 });
