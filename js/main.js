@@ -23,7 +23,7 @@ $(window).load(function () {
         links,
         childrenLinks = [],
         root;
-
+        
     this.getLinks = function () {
         return links;
     };
@@ -107,20 +107,9 @@ $(window).load(function () {
         nodes.forEach(function(n) {
             nodeIds.push(n.id);
             
-            // get range of data from every VISIBLE nodefullDataRange = [0,1],
-            var nodeData = n.data;
-            if (nodeData < fullDataRange[0])
-                fullDataRange[0] = nodeData;
-            else if (nodeData > fullDataRange[1])
-                fullDataRange[1] = nodeData;
-            
-            // get range of flows from every VISIBLE node 
-            var nodeFlows = n.flows;
-            if (nodeFlows < fullFlowsRange[0])
-                fullFlowsRange[0] = nodeFlows;
-            else if (nodeFlows > fullFlowsRange[1])
-                fullFlowsRange[1] = nodeFlows;
-            
+            // get range of data and flows from every VISIBLE node
+            updateColorRange(n);
+
             // assigning nodes to every "from" and "to" in links
             links.forEach(function(l) {
                 if (l.from === n.id)
@@ -139,8 +128,8 @@ $(window).load(function () {
                     }
                 //}
             });          
-        });  
-              
+        });
+                    
         childrenLinks.forEach(function(childLink) {
            if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
                if(linkIds.indexOf(childLink.from+", "+childLink.to) === -1)
@@ -260,9 +249,9 @@ $(window).load(function () {
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             var number = d.data;   
             var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
-            r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
-            g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
-            b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
+            r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
+            g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
+            b = Math.round(norm * colorRange[1][2]  + (1 - norm) * colorRange[0][2]);
         }
         
         // else if d has nodeAttribute or linkAttribute 1
@@ -278,12 +267,13 @@ $(window).load(function () {
 
     // Toggle children on click.
     function click(d) {
+        //finds actual node to compute its position
         var position = "#ip"+d.id.replace(/\./g, '-');
         
         var options = {
             autoOpen: false,
             height: 300,
-            width: 250,
+            width: 220,
             resizable: false,
             modal: false,
             dialogClass: 'children-selector',
@@ -297,9 +287,7 @@ $(window).load(function () {
                 && !$(e.target).is('.ui-dialog, a')
                 && !$(e.target).closest('.ui-dialog').length
             ) {
-                $('#dialog').dialog('close');
-                
-                    
+                $('#dialog').dialog('close');                
             }
         });
         
@@ -307,17 +295,23 @@ $(window).load(function () {
         $(".contents").empty();
         
         //append new content
-        $(".contents").append("<p>Seřadit podle:</p>");
-        $(".contents").append("<table>");
-        
+        $(".contents").append("<p style='float:left'>Seřadit podle:</p>");
+        $(".contents").append("<input type='radio' name='sort' value='0'>Počty toků</input></br>");
+        $(".contents").append("<input type='radio' name='sort' value='1'>Objem dat</input></br>");
+        $(".contents").append("<input type='radio' name='sort' value='2'>Prefix</input></br>");
+        $(".contents").append('<input type="checkbox" id="selectAll" name="selectAll">');
+        $(".contents").append('<button type="submit" id="submit" name="submit">Zobrazit vybrané</button>');
+        $(".contents").append("<table class='filter-children'>");
+            
         var allChildren = [];
-     
+
         if(d._children) {
             // adds hidden children
             d._children.forEach(function(child) {
                 allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
                 allChildren[allChildren.length-1].push("hidden");
+                updateColorRange(child);
             });
         }
         else {
@@ -325,16 +319,28 @@ $(window).load(function () {
             d.children.forEach(function(child) {
                 allChildren[allChildren.length-1].push(child);
                 allChildren[allChildren.length-1].push("shown");
+                updateColorRange(child);
+                //updateColorRange(child.data);
             });
         }
         
         //appends all children into modal window
         allChildren.forEach(function(child) {
-            chceckbox = '<input type="checkbox" id="' + child[0].id + 'VisibleCheckbox" name="'  + child[0].id + 'VisibleCheckbox" >';
-            $(".contents table").append("<tr><td>" + chceckbox + "</td><td>" + child[0].id + "</td></tr>");
+            var chceckbox = '<input type="checkbox" id="' + child[0].id + 'VisibleCheckbox" name="'  + child[0].id + 'VisibleCheckbox" >';
+            var styleColor = 'style="background-color:' + color(child[0]) + '"';
+            $(".contents table").append("<tr " + styleColor + "><td>" + chceckbox + "</td><td>" + child[0].id + "</td></tr>");
         });
         
         $(".contents").append("</table>");
+        
+        $('#dialog #selectAll').change(function() {
+            var checkboxes = $(this).closest('table').find(':checkbox');
+            if($(this).is(':checked')) {
+                checkboxes.prop('checked', true);
+            } else {
+                checkboxes.prop('checked', false);
+            }
+        });
         /*
         if (d.children) {
             d._children = d.children;
@@ -364,10 +370,21 @@ $(window).load(function () {
         root.forEach(function(node){ recurse(node);});
         return nodes;
     }
-    /*
-    function dragstart(d) {
-        d3.select(this).classed("fixed", d.fixed = true);
-    }*/
+    
+    function updateColorRange(newValue) {
+        var newData = newValue.data;
+        var newFlows = newValue.flows; 
+        
+        if (newData < fullDataRange[0])
+                fullDataRange[0] = newData;
+        else if (newData > fullDataRange[1])
+                fullDataRange[1] = newData;
+            
+        if (newFlows < fullDataRange[0])
+                fullDataRange[0] = newFlows;
+        else if (newFlows > fullDataRange[1])
+                fullDataRange[1] = newFlows;    
+    }
     
     function end() {
         for (var i = 0; i < nodes.length; i++) {
