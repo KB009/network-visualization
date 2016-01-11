@@ -22,6 +22,7 @@ $(window).load(function () {
         nodeHeight = 25 * nodeSize,
         links,
         childrenLinks = [],
+        sortingType = 2,
         root;
         
     this.getLinks = function () {
@@ -298,14 +299,18 @@ $(window).load(function () {
         $(".contents").empty();
         
         //append new content
-        $(".contents").append("<p style='float:left'>Seřadit podle:</p>");
-        $(".contents").append("<input type='radio' name='sort' value='0'/><label data-labelfor='0'>Počty toků</label></br>");
-        $(".contents").append("<input type='radio' name='sort' value='1'>Objem dat</input></br>");
-        $(".contents").append("<input type='radio' name='sort' value='2'>Prefix</input></br>");
+        $(".contents").append("<p style='float:left'>Seřadit podle:</p><form id='sortNodes'>");
+        $(".contents #sortNodes").append("<input type='radio' name='sort' value='0'/><label data-labelfor='0'>Počty toků</label></br>");
+        $(".contents #sortNodes").append("<input type='radio' name='sort' value='1'/><label data-labelfor='1'>Objem dat</label></br>");
+        $(".contents #sortNodes").append("<input type='radio' name='sort' value='2'/><label data-labelfor='2'>Prefix</label></br>");
         $(".contents").append('<input type="checkbox" id="selectAll" name="selectAll">');
         $(".contents").append('<button type="submit" id="submit" name="submit">Zobrazit vybrané</button>');
         $(".contents").append("<table class='filter-children'>");
         
+        //set sorting type for list of nodes
+        $('input:radio[name=sort]').filter('[value=' + sortingType + ']').prop('checked', true);     
+
+        //if all nodes are visible, main checkbox (for selecting all nodes) is checked
         if(d._children.length === 0)
             $('#dialog #selectAll').prop('checked',true);
             
@@ -321,7 +326,7 @@ $(window).load(function () {
             });
         }
         if(d.children) {
-            // adds shown children
+            // adds visible children
             d.children.forEach(function(child) {
                 allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
@@ -329,24 +334,21 @@ $(window).load(function () {
                 updateColorRange(child);
             });
         }
-        
-        //appends all children into modal window
-        allChildren.forEach(function(child) {
-            var checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '">';
-            var checkbox;
-            if (child[1] === true) 
-                checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '" checked>';
-            else 
-                checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + 'VisibleCheckbox" name="'  + child[0].id + '">';
+                
+        //sort nodes in array
+        if (sortingType == 0) 
+            allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? 1 : -1;});
+        else if (sortingType == 1) 
+            allChildren.sort(function(a, b){return a[0].data > b[0].data ? 1 : -1;});
+        else 
+            allChildren.sort(function(a, b){return a[0].id > b[0].id ? 1 : -1;});
             
-            var styleColor = 'style="background-color:' + color(child[0]) + '"';
-            $(".contents table").append("<tr " + styleColor + "><td>" + checkbox + "</td><td><label data-labelfor='" + convertIp(child[0].id) + "VisibleCheckbox'>" + child[0].id + "</label></td></tr>");
-        });
-        
+        //appends all children into modal window
+        listNodes(allChildren);        
         $(".contents").append("</table>");
             
         // select/diselecet all nodes
-        $('#dialog #selectAll').on('click',function(){
+        $('#dialog #selectAll').click(function(){
             if(this.checked){
                 $('#dialog table :checkbox').each(function(){
                     this.checked = true;
@@ -359,7 +361,7 @@ $(window).load(function () {
         });
         
         // select/diselect main checkbox according to number of selected nodes
-        $('#dialog table :checkbox').on('click',function(){
+        $('#dialog table :checkbox').click(function(){
             if($('#dialog table :checkbox:checked').length === $('#dialog table :checkbox').length){
                 $('#dialog #selectAll').prop('checked',true);
             }else{
@@ -377,39 +379,93 @@ $(window).load(function () {
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {
             $('#dialog table :checkbox').each(function(i, box) {
-                var actualHiddenNode = findNodeById(d._children, $(box).prop('name'));
-                var actualVisibleNode = findNodeById(d.children, $(box).prop('name'));
-                if ($(box).prop('checked') === true) {                                       
-                    if (actualHiddenNode !== undefined) {
+                
+                // we find actual node in hidden or visible children
+                var actualHiddenNode = findNodeById(d._children, $(box).prop('name')),
+                    actualVisibleNode = findNodeById(d.children, $(box).prop('name'));
+                
+                // if this node should be visible (is checked) and currently is hidden, we need to replace it
+                if ($(box).prop('checked') === true) {                                           
+                    if (actualHiddenNode !== undefined) {  
                         d._children.splice($.inArray(actualHiddenNode, d._children),1);
 
-                        if (d.children === undefined) { 
+                        if (d.children === undefined) { // if there is no visible child
                             d.children = [];
                         }
                         d.children.push(actualHiddenNode);
                     }
                 }
-                else {
+                // if this node should be hidden (is not checked) and is currently visible, we need to replace it
+                else { 
                     if (actualVisibleNode !== undefined) {
                         d.children.splice($.inArray(actualVisibleNode, d.children),1);
-                        //links to hidden children must be deleted manually 
-                        links.forEach(function(link, i){
-                            if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
-                                links.splice(i);
-                            }
-                        });
-                        if (d._children === undefined) { 
+                                               
+                        if (d._children === undefined) { // if there is no hidden child 
                             d._children = [];
                         }
                         d._children.push(actualVisibleNode);
-                    }
-                    
+                    }                    
                 }
             });
+            
+            // additionally, redundant links to all hidden children must be deleted manually 
+            links.forEach(function(link, i){
+                if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
+                    links.splice(i);
+                }
+            });
+            
             update();
             $('#dialog').dialog('close'); 
         });
-}
+        
+        //get new sorting type for list of nodes on change of radio buttons
+        $('#sortNodes input').change(function() {
+            sortingType = ($('input[name="sort"]:checked', '#sortNodes').val()); 
+            var rows = $('.contents .filter-children').find('tbody > tr');//changeSorting(allChildren);
+            rows.sort(function(a, b){
+                var obj1, obj2;
+                if(sortingType == 0) {
+                    obj1 = parseInt($(a).find('td #flow').val()),
+                    obj2 = parseInt($(b).find('td #flow').val());
+                }
+                else if (sortingType == 1) {
+                    obj1 = parseInt($(a).find('td #data').val()),
+                    obj2 = parseInt($(b).find('td #data').val());
+                }
+                else {
+                    obj1 = a.innerText;
+                    obj2 = b.innerText;
+                }
+                    
+                return obj1 > obj2 ? 1 : -1;
+            });
+            
+            $.each(rows, function(i, row){
+                $('.contents .filter-children').append(row);
+            });
+        });
+             
+        //creates rows with nodes in table 
+        function listNodes(nodes){
+            nodes.forEach(function(child) {
+                var checkbox,
+                    hiddenFlow = '<input type="hidden" name="flow" id="flow" value="' + child[0].flows + '">',
+                    hiddenData = '<input type="hidden" name="data" id="data" value="' + child[0].data + '">';
+                
+                if (child[1] === true) 
+                    checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + '" name="'  + child[0].id + '" checked>';
+                else 
+                    checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + '" name="'  + child[0].id + '">';
+                
+                var styleColor = 'style="background-color:' + color(child[0]) + '"',
+                    firstTd = "<td>" + checkbox + hiddenFlow + hiddenData + "</td>",
+                    secondTd = "<td><label data-labelfor='" + convertIp(child[0].id) + "'>" + child[0].id + "</label></td>";
+                
+                $(".contents table").append("<tr " + styleColor + ">" + firstTd + secondTd + "</tr>");
+            });
+        }
+    }
 
     // Returns a list of all nodes under the root.   
     function flatten(root) {
