@@ -24,7 +24,7 @@ $(window).load(function () {
         childrenLinks = [],
         sortingType = 2,
         root;
-        
+               
     this.getLinks = function () {
         return links;
     };
@@ -44,10 +44,14 @@ $(window).load(function () {
         .chargeDistance(1000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
-    
+   
     var vis = d3.select("body").append("svg:svg")
         .attr("width", w)
         .attr("height", h);
+
+    var drag = force.drag()
+        .on("dragstart",dragstart)
+        .on("drag", drag);
 
     d3.json("data/sample.json", function (json) {
         root = json;
@@ -172,9 +176,7 @@ $(window).load(function () {
                     if(d.hasChildren) return "node collapsible";
                     else return "node";
                 })
-                //.attr("id", function (d) { return "ip-"+d.id.replace(/\./g, '-');})
                 .attr("id", function (d) { return convertIp(d.id);})    
-                //.on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .call(force.drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -466,7 +468,36 @@ $(window).load(function () {
             });
         }
     }
+    
+    // fix position of any node on dragstart
+    function dragstart(d) {
+        d3.select(this).classed("fixed", d.fixed = true);
+    }
+    
+    // on drag of specific nodes, positioning of their children is affected 
+    /*function drag(d) {
+        if (d.hasChildren || d.isCentral) {
+            setNodePosition(d, d3.event);
+        }
+    }
+    
+    function setNodePosition(node, event) {
+        if (node.children) {
+            node.children.forEach(function (ch) {
+                setNodePosition(ch, event);
+                ch.px += event.dx;
+                ch.py += event.dy;
+            });
+        }
 
+        else if (node.isCentral) {
+            nodes.forEach(function (ch) {
+                ch.px += event.dx;
+                ch.py += event.dy;
+            });
+        }
+    }*/
+    
     // Returns a list of all nodes under the root.   
     function flatten(root) {
         var nodes = [], i = 0;
