@@ -218,7 +218,7 @@ $(window).load(function () {
                 .attr("dx", nodeWidth + nodeHeight/7)
                 .attr("dy", nodeHeight - nodeHeight/5)
                 .text(function (d) {
-                    if (d._children === null) return "-";
+                    if (d._children.length < 1) return "−";
                     else return "+";
                 })
                 .style("font-size",nodeHeight + "px");
