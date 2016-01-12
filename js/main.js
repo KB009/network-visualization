@@ -202,20 +202,31 @@ $(window).load(function () {
                 .text(function(d) { return d.id;})
                 .style("font-size",nodeHeight/2.2 + "px");
         
-        //find only collapsible nodes
+        // find only collapsible nodes
         var collapsible = vis.selectAll("g.collapsible");
           
         // collapsible button in node
         collapsible.append("rect")
+                .attr("class", "filter-nodes")
                 .on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .attr("x", nodeWidth)
                 .attr("y", 0)
                 .attr("width", nodeHeight)
                 .attr("height", nodeHeight)
-                .style({"fill": "#b2b2b2", "stroke-width": 1, "stroke": "#000"});
+                .style({"fill": "#E7E8E9", "stroke-width": 1, "stroke": "#000"});
     
+         collapsible.append("rect")
+                .attr("class", "filter-nodes")
+                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
+                .attr("x", nodeWidth)
+                .attr("y", function(d) { return nodeHeight - computeHeight(d);})
+                .attr("width", nodeHeight)
+                .attr("height", computeHeight)
+                .style({"fill": "#9E9E9E", "stroke-width": 1, "stroke": "#000", "stroke-dasharray": 0+","+nodeHeight+","+nodeHeight*3});
+            
         // + or - sign for node
         collapsible.append("text")
+                .attr("class", "filter-nodes")
                 .on("dblclick", function(d) {if (d.hasChildren) click(d);})
                 .attr("dx", nodeWidth + nodeHeight/7)
                 .attr("dy", nodeHeight - nodeHeight/5)
@@ -268,6 +279,23 @@ $(window).load(function () {
             b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
         }
         return "rgb("+r+","+g+","+b+")";
+    }
+    
+    // Get amount of hidden children for each node
+    function computeHeight(d) {
+        var height,
+            norm,
+            hiddenChildren = 0,
+            allChildren = 0;
+        
+        if (d._children !== undefined) hiddenChildren = d._children.length;
+        if (d.children !== undefined) allChildren = d.children.length;
+        
+        allChildren +=  hiddenChildren;
+            
+        norm = (hiddenChildren - 0) / (allChildren - 0);
+        height = norm*nodeHeight - 0.5;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
+        return height;   
     }
 
     // Toggle children on click.
@@ -484,6 +512,14 @@ $(window).load(function () {
     function setNodePosition(node, event) {
         if (node.children) {
             node.children.forEach(function (ch) {
+                setNodePosition(ch, event);
+                ch.px += event.dx;
+                ch.py += event.dy;
+            });
+        }
+        
+        if (node._children) {
+            node._children.forEach(function (ch) {
                 setNodePosition(ch, event);
                 ch.px += event.dx;
                 ch.py += event.dy;
