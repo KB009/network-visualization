@@ -41,7 +41,7 @@ $(window).load(function () {
         .on("tick", tick)
         .on("end", end)
         .charge(-1000)
-        .chargeDistance(1000)
+        .chargeDistance(5000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
    
@@ -59,7 +59,8 @@ $(window).load(function () {
         root.x = w / 2;
         root.y = h / 2 - 80; 
         var allNodesLength = root.nodes.length; // excluding children
-        var allNodesIds = []; // including children
+        var allNodesIds = []; // excluding children
+        var allChildren = [];
         var currentNodes = 0;
         
         root.nodes.forEach(function (node) {
@@ -68,19 +69,22 @@ $(window).load(function () {
         }); 
         
         root.nodes.forEach(function (node) {
-            d3.json("data/"+node.id+".moreData.json", function(error, json){
+            d3.json("data/" + node.id + ".moreData.json", function(error, json){
                 if (error === null && json !== null) {
                     node.hasChildren = true;
                     var childrenNodes = json.nodes;
                     var childrenEdges = json.edges;
-                    childrenNodes.forEach(function(nChild) {                       
-                        if(allNodesIds.indexOf(nChild.id) === -1) {
-                            allNodesIds.push(nChild.id);
+                    childrenNodes.forEach(function(nChild) { 
+                        if(allChildren.indexOf(nChild) === -1 && allNodesIds.indexOf(nChild.id) === -1) {
                             nChild.weight = 1;
+                            allChildren.push(nChild);
+                            
                             if(node._children)
-                                node._children.push(nChild);
-                            else
-                                node._children = [nChild];
+                                node._children.push(nChild.id);
+                            else {
+                                node._children = [nChild.id];
+                                node.children = [];
+                            }
                         }
                     });
                     
@@ -89,15 +93,25 @@ $(window).load(function () {
                     });
                 }
                 currentNodes++;
-                if (currentNodes === allNodesLength)  
+                if (currentNodes === allNodesLength) { 
+                    root.nodes.forEach(function (nn){
+                        if (nn._children) {
+                            $.each(nn._children, function (i, cc) {
+                                var ch = findNodeById(allChildren, cc);
+                                nn._children[i] = ch;                                       
+                            });
+                        }
+                    });
                     update();
+                }
             });
-        }); 
+        });
     });
     
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
+        console.log(nodes);
                 
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
@@ -294,14 +308,13 @@ $(window).load(function () {
         allChildren +=  hiddenChildren;
             
         norm = (hiddenChildren - 0) / (allChildren - 0);
-        height = norm*nodeHeight - 0.5;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
+        height = norm*nodeHeight;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
         return height;   
     }
 
     // Toggle children on click.
     function click(d) {
         //finds actual node to compute its position
-        //var position = "#ip-"+d.id.replace(/\./g, '-');
         var position = "#"+convertIp(d.id);
         
         var options = {
@@ -316,6 +329,7 @@ $(window).load(function () {
         
         $( "#dialog" ).dialog(options).dialog( "open" );
     
+        // bind dialog closing when clicking outside the dialog
         $('body').bind('click', function(e) {
             if($('#dialog').dialog('isOpen')
                 && !$(e.target).is('.ui-dialog, a')
@@ -376,7 +390,7 @@ $(window).load(function () {
         //appends all children into modal window
         listNodes(allChildren);        
         $(".contents").append("</table>");
-            
+        
         // select/diselecet all nodes
         $('#dialog #selectAll').click(function(){
             if(this.checked){
@@ -419,22 +433,42 @@ $(window).load(function () {
                     if (actualHiddenNode !== undefined) {  
                         d._children.splice($.inArray(actualHiddenNode, d._children),1);
 
-                        if (d.children === undefined) { // if there is no visible child
+                        /*if (d.children === undefined) { // if there is no visible child
                             d.children = [];
-                        }
+                        }*/
                         d.children.push(actualHiddenNode);
-                    }
-                }
+                        
+                        $.each(nodes, function(i, n) {
+                           if (n.hasChildren) {
+                               var ch = findNodeById(n._children, actualHiddenNode.id);
+                               if (ch) {
+                                   n._children.splice($.inArray(ch, n._children),1);
+                                   n.children.push(ch);
+                               }
+                           } 
+                        });
+                               }
+                           } 
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else { 
                     if (actualVisibleNode !== undefined) {
                         d.children.splice($.inArray(actualVisibleNode, d.children),1);
-                                               
-                        if (d._children === undefined) { // if there is no hidden child 
+                     
+                       /* if (d._children === undefined) { // if there is no hidden child 
                             d._children = [];
-                        }
+                                  }*/
                         d._children.push(actualVisibleNode);
-                    }                    
+                        
+                        $.each(nodes, function(i, n) {
+                              if (n.hasChildren) {
+                                  var ch = findNodeById(n.children, actualVisibleNode.id);
+                                  if (ch) {
+                                      n.children.splice($.inArray(ch, n.children),1);
+                                      n._children.push(ch);
+                                  }
+                              } 
+                           });
+                    } 
                 }
             });
             
@@ -541,9 +575,9 @@ $(window).load(function () {
         function recurse(node) {
             if (node.children) node.children.forEach(recurse);
             if (!node.id) node.id = ++i;
-            nodes.push(node);
-        }
-
+                nodes.push(node);
+            }
+            
         root.forEach(function(node){ recurse(node);});
         return nodes;
     }
