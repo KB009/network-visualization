@@ -583,7 +583,6 @@ $(window).load(function () {
         
         nodes.forEach(function (node) {
             if (node.hasChildren === undefined) {
-                console.log(node);
                 $.merge(children, nodeData(node, children));
             }
         });
@@ -601,6 +600,7 @@ $(window).load(function () {
                     var childrenNodes = data.nodes;
                     var childrenEdges = data.edges;
                     childrenNodes.forEach(function(nChild) { 
+                        //if nChild node is not central and is not visible 
                         if(children.indexOf(nChild) === -1 && findNodeById(nodes, nChild.id) === undefined) {
                             nChild.weight = 1;
                             node_children.push(nChild);
@@ -611,6 +611,15 @@ $(window).load(function () {
                             }
 
                             node._children.push(nChild.id);
+                        }
+                        //if nChild is central node for this json
+                        else if(node.id === nChild.id) {
+                            node.data = nChild.data;
+                            node.flows = nChild.flows;
+                        }
+                        //if child node already exists somewhere
+                        else {
+                            /*TODO*/
                         }
                     });
 
@@ -627,16 +636,15 @@ $(window).load(function () {
         }     
         
         function setChildren(nodes, children){
-            if (children.length > 0) {
             nodes.forEach(function (nn){
                 if (nn._children) {
                     $.each(nn._children, function (i, cc) {
                         var ch = findNodeById(children, cc);
-                        nn._children[i] = ch;                                       
+                        if (ch !== undefined)
+                            nn._children[i] = ch;                                       
                     });
                 }
             });  
-            }
         }
     }
 });
