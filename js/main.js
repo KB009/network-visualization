@@ -58,120 +58,22 @@ $(window).load(function () {
         root.fixed = true;
         root.x = w / 2;
         root.y = h / 2 - 80; 
-        //var allNodesLength = root.nodes.length; // excluding children
-        var allNodesIds = []; // excluding children
-        //var allChildren = [];
-        //var currentNodes = 0;
         
         root.nodes.forEach(function (node) {
-            allNodesIds.push(node.id);
             node.weight = 1;         
         }); 
         
-        var children = [];
-        var nodes = root.nodes;
-        
-        //do { 
-            children = getData(nodes); 
-            setChildren(root.nodes, children);
-            nodes = children;
-            console.log(nodes);
-        //} while (children != [])
-        
-        function getData(nodes){
-            var allChildren = [];
-            nodes.forEach(function (node) {
-            jQuery.ajax({
-                datatype: "json",
-                url: "data/" + node.id + ".moreData.json",
-                async: false,
-                success: function(json){
-                    if (json !== null) {
-                        node.hasChildren = true;
-                        var childrenNodes = json.nodes;
-                        var childrenEdges = json.edges;
-                        childrenNodes.forEach(function(nChild) { 
-                            if(allChildren.indexOf(nChild) === -1 /*&& allNodesIds.indexOf(nChild.id) === -1*/) {
-                                nChild.weight = 1;
-                                allChildren.push(nChild);
-
-                                if(!node._children) {
-                                    node._children = [];
-                                    node.children = [];
-                                }
-                                
-                                node._children.push(nChild.id);
-                            }
-                        });
-
-                        childrenEdges.forEach(function(eChild) {
-                            childrenLinks.push(eChild);    
-                        });
-                    }
-                }
-            });
-        });
-        return allChildren;
-    }
-    
-    function setChildren(nodes, children){ 
-        nodes.forEach(function (nn){
-            if (nn._children) {
-                $.each(nn._children, function (i, cc) {
-                    var ch = findNodeById(children, cc);
-                    nn._children[i] = ch;                                       
-                });
-            }
-        }); 
-        
-    }
-        
-        update();
-        /*root.nodes.forEach(function (node) {
-            d3.json("data/" + node.id + ".moreData.json", function(error, json){
-                if (error === null && json !== null) {
-                    node.hasChildren = true;
-                    var childrenNodes = json.nodes;
-                    var childrenEdges = json.edges;
-                    childrenNodes.forEach(function(nChild) { 
-                        if(allChildren.indexOf(nChild) === -1 && allNodesIds.indexOf(nChild.id) === -1) {
-                            nChild.weight = 1;
-                            allChildren.push(nChild);
-                            
-                            if(node._children)
-                                node._children.push(nChild.id);
-                            else {
-                                node._children = [nChild.id];
-                                node.children = [];
-                            }
-                        }
-                    });
-                    
-                    childrenEdges.forEach(function(eChild) {
-                        childrenLinks.push(eChild);    
-                    });
-                }
-                currentNodes++;
-                if (currentNodes === allNodesLength) { 
-                    root.nodes.forEach(function (nn){
-                        if (nn._children) {
-                            $.each(nn._children, function (i, cc) {
-                                var ch = findNodeById(allChildren, cc);
-                                nn._children[i] = ch;                                       
-                            });
-                        }
-                    });
-                    update();
-                }
-            });
-        });*/    
+        getJsonData(root.nodes);
+             
+        update();  
     });
         
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
-        //console.log(nodes);
-
+        
+        getJsonData(nodes);
+           
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
              
@@ -672,6 +574,68 @@ $(window).load(function () {
             for (var i = 0; i < actualNodes.length; i++) {
                 if (actualNodes[i].id === id)
                     return actualNodes[i];
+            }
+        }
+    }
+    
+    function getJsonData(nodes) {
+        var children = [];
+        
+        nodes.forEach(function (node) {
+            if (node.hasChildren === undefined) {
+                console.log(node);
+                $.merge(children, nodeData(node, children));
+            }
+        });
+        
+        setChildren(nodes, children);
+          
+        function nodeData(node, children){
+            var node_children = [];
+            jQuery.ajax({
+                datatype: "json",
+                url: "data/" + node.id + ".moreData.json",
+                async: false,
+                success: function(data){
+                    node.hasChildren = true;
+                    var childrenNodes = data.nodes;
+                    var childrenEdges = data.edges;
+                    childrenNodes.forEach(function(nChild) { 
+                        if(children.indexOf(nChild) === -1 && findNodeById(nodes, nChild.id) === undefined) {
+                            nChild.weight = 1;
+                            node_children.push(nChild);
+
+                            if(!node._children) {
+                                node._children = [];
+                                node.children = [];
+                            }
+
+                            node._children.push(nChild.id);
+                        }
+                    });
+
+                    childrenEdges.forEach(function(eChild) {
+                        childrenLinks.push(eChild);    
+                    });
+                },
+                error: function() {
+                    nodes.hasChildren = false;
+                }
+            }); 
+           
+            return node_children;
+        }     
+        
+        function setChildren(nodes, children){
+            if (children.length > 0) {
+            nodes.forEach(function (nn){
+                if (nn._children) {
+                    $.each(nn._children, function (i, cc) {
+                        var ch = findNodeById(children, cc);
+                        nn._children[i] = ch;                                       
+                    });
+                }
+            });  
             }
         }
     }
