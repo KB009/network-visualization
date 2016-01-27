@@ -58,17 +58,76 @@ $(window).load(function () {
         root.fixed = true;
         root.x = w / 2;
         root.y = h / 2 - 80; 
-        var allNodesLength = root.nodes.length; // excluding children
+        //var allNodesLength = root.nodes.length; // excluding children
         var allNodesIds = []; // excluding children
-        var allChildren = [];
-        var currentNodes = 0;
+        //var allChildren = [];
+        //var currentNodes = 0;
         
         root.nodes.forEach(function (node) {
             allNodesIds.push(node.id);
             node.weight = 1;         
         }); 
         
-        root.nodes.forEach(function (node) {
+        var children = [];
+        var nodes = root.nodes;
+        
+        //do { 
+            children = getData(nodes); 
+            setChildren(root.nodes, children);
+            nodes = children;
+            console.log(nodes);
+        //} while (children != [])
+        
+        function getData(nodes){
+            var allChildren = [];
+            nodes.forEach(function (node) {
+            jQuery.ajax({
+                datatype: "json",
+                url: "data/" + node.id + ".moreData.json",
+                async: false,
+                success: function(json){
+                    if (json !== null) {
+                        node.hasChildren = true;
+                        var childrenNodes = json.nodes;
+                        var childrenEdges = json.edges;
+                        childrenNodes.forEach(function(nChild) { 
+                            if(allChildren.indexOf(nChild) === -1 /*&& allNodesIds.indexOf(nChild.id) === -1*/) {
+                                nChild.weight = 1;
+                                allChildren.push(nChild);
+
+                                if(!node._children) {
+                                    node._children = [];
+                                    node.children = [];
+                                }
+                                
+                                node._children.push(nChild.id);
+                            }
+                        });
+
+                        childrenEdges.forEach(function(eChild) {
+                            childrenLinks.push(eChild);    
+                        });
+                    }
+                }
+            });
+        });
+        return allChildren;
+    }
+    
+    function setChildren(nodes, children){ 
+        nodes.forEach(function (nn){
+            if (nn._children) {
+                $.each(nn._children, function (i, cc) {
+                    var ch = findNodeById(children, cc);
+                    nn._children[i] = ch;                                       
+                });
+            }
+        }); 
+        
+    }
+        
+        update();
+        /*root.nodes.forEach(function (node) {
             d3.json("data/" + node.id + ".moreData.json", function(error, json){
                 if (error === null && json !== null) {
                     node.hasChildren = true;
@@ -105,14 +164,14 @@ $(window).load(function () {
                     update();
                 }
             });
-        });
+        });*/    
     });
-    
+        
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
-        console.log(nodes);
-                
+        //console.log(nodes);
+
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
              
@@ -537,7 +596,7 @@ $(window).load(function () {
     }
     
     // on drag of specific nodes, positioning of their children is affected 
-    /*function drag(d) {
+    function drag(d) {
         if (d.hasChildren || d.isCentral) {
             setNodePosition(d, d3.event);
         }
@@ -566,7 +625,7 @@ $(window).load(function () {
                 ch.py += event.dy;
             });
         }
-    }*/
+    }
     
     // Returns a list of all nodes under the root.   
     function flatten(root) {
