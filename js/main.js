@@ -22,6 +22,7 @@ $(window).load(function () {
         nodeHeight = 25 * nodeSize,
         links,
         childrenLinks = [],
+        allChildrenNodes = [],
         sortingType = 2,
         root;
                
@@ -73,7 +74,8 @@ $(window).load(function () {
         links = root.edges;
         
         getJsonData(nodes);
-           
+        console.log(nodes);   
+        console.log(allChildrenNodes);   
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
              
@@ -392,19 +394,16 @@ $(window).load(function () {
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true) {                                           
                     if (actualHiddenNode !== undefined) {  
+                        actualHiddenNode = actualHiddenNode[0];
                         d._children.splice($.inArray(actualHiddenNode, d._children),1);
-
-                        /*if (d.children === undefined) { // if there is no visible child
-                            d.children = [];
-                        }*/
                         d.children.push(actualHiddenNode);
                         
                         $.each(nodes, function(i, n) {
                            if (n.hasChildren) {
                                var ch = findNodeById(n._children, actualHiddenNode.id);
                                if (ch) {
-                                   n._children.splice($.inArray(ch, n._children),1);
-                                   n.children.push(ch);
+                                   n._children.splice($.inArray(ch[0], n._children),1);
+                                   n.children.push(ch[0]);
                                }
                            } 
                         });
@@ -413,19 +412,16 @@ $(window).load(function () {
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else { 
                     if (actualVisibleNode !== undefined) {
-                        d.children.splice($.inArray(actualVisibleNode, d.children),1);
-                     
-                       /* if (d._children === undefined) { // if there is no hidden child 
-                            d._children = [];
-                                  }*/
+                        actualVisibleNode = actualVisibleNode[0];
+                        d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
                         d._children.push(actualVisibleNode);
                         
                         $.each(nodes, function(i, n) {
                               if (n.hasChildren) {
                                   var ch = findNodeById(n.children, actualVisibleNode.id);
                                   if (ch) {
-                                      n.children.splice($.inArray(ch, n.children),1);
-                                      n._children.push(ch);
+                                      n.children.splice($.inArray(ch[0], n.children),1);
+                                      n._children.push(ch[0]);
                                   }
                               } 
                            });
@@ -573,24 +569,25 @@ $(window).load(function () {
         if (actualNodes !== undefined) {
             for (var i = 0; i < actualNodes.length; i++) {
                 if (actualNodes[i].id === id)
-                    return actualNodes[i];
+                    return [actualNodes[i], i];
             }
         }
     }
     
     function getJsonData(nodes) {
-        var children = [];
         
         nodes.forEach(function (node) {
             if (node.hasChildren === undefined) {
-                $.merge(children, nodeData(node, children));
+                nodeData(node);
             }
         });
         
-        setChildren(nodes, children);
-          
-        function nodeData(node, children){
-            var node_children = [];
+        setChildren(nodes);
+        
+        //console.log(childrenNodes);
+        return allChildrenNodes;  
+        
+        function nodeData(node){
             jQuery.ajax({
                 datatype: "json",
                 url: "data/" + node.id + ".moreData.json",
@@ -601,9 +598,8 @@ $(window).load(function () {
                     var childrenEdges = data.edges;
                     childrenNodes.forEach(function(nChild) { 
                         //if nChild node is not central and is not visible 
-                        if(children.indexOf(nChild) === -1 && findNodeById(nodes, nChild.id) === undefined) {
+                        if(findNodeById(nodes, nChild.id) === undefined) {
                             nChild.weight = 1;
-                            node_children.push(nChild);
 
                             if(!node._children) {
                                 node._children = [];
@@ -617,10 +613,17 @@ $(window).load(function () {
                             node.data = nChild.data;
                             node.flows = nChild.flows;
                         }
-                        //if child node already exists somewhere
-                        else {
-                            /*TODO*/
+                        
+                        var child = findNodeById(allChildrenNodes, nChild.id);
+                        if( child === undefined) {
+                            allChildrenNodes.push(nChild);
                         }
+                        else {
+                            allChildrenNodes[child[1]].data += nChild.data;
+                            allChildrenNodes[child[1]].data += nChild.flows;
+                            
+                        }
+                            console.log(allChildrenNodes);
                     });
 
                     childrenEdges.forEach(function(eChild) {
@@ -631,20 +634,19 @@ $(window).load(function () {
                     nodes.hasChildren = false;
                 }
             }); 
-           
-            return node_children;
         }     
         
-        function setChildren(nodes, children){
-            nodes.forEach(function (nn){
-                if (nn._children) {
-                    $.each(nn._children, function (i, cc) {
-                        var ch = findNodeById(children, cc);
-                        if (ch !== undefined)
-                            nn._children[i] = ch;                                       
+        function setChildren(nodes){         
+            nodes.forEach( function(node) {
+                if (node._children) {
+                    $.each(node._children, function (i, cc){
+                        var child = findNodeById(allChildrenNodes, cc);
+                        
+                        if (child !== undefined)
+                            node._children[i] = child[0];
                     });
                 }
-            });  
+            });         
         }
     }
 });
