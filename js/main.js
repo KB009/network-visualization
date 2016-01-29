@@ -16,7 +16,7 @@ $(window).load(function () {
         colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
         fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
-        lineSize = 2,
+        lineSize = 2.2,
         nodeSize = 1,
         nodeWidth = 90 * nodeSize,
         nodeHeight = 25 * nodeSize,
@@ -150,7 +150,7 @@ $(window).load(function () {
                 .attr("class", "link")
                 .append("line")
                 .attr("class", "link-border")
-                .style({"stroke-width": lineSize+2, "stroke": "#000"});
+                .style({"stroke-width": lineSize+1.4, "stroke": "#000"});
         
         // add border to every link
         vis.selectAll(".link").append("line")
@@ -164,7 +164,7 @@ $(window).load(function () {
                 .attr("cx", 100)
                 .attr("cy", 100)
                 .attr("r", 5)
-                .style({"fill": color, "stroke-width": 1, "stroke": "#000"});
+                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"});
                     
         // Update the nodes…
         node = vis.selectAll("g.node")
@@ -183,17 +183,19 @@ $(window).load(function () {
         groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
                 .attr("x", -3)
                 .attr("y", -3)
+                .attr("rx", 2)
                 .attr("width", nodeWidth+6)
                 .attr("height", nodeHeight+6)
-                .style({"fill": "#fff", "stroke-width": 1, "stroke": "#000"});
+                .style({"fill": "#fff", "stroke-width": 0.7, "stroke": "#000"});
 
         // Enter any new nodes and show them as rectangles
         groupNodes.append("rect")
                 .attr("x", 0)//function(d) { return d.x; })
                 .attr("y", 0)//function(d) { return d.y; })
+                .attr("rx", 2)
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
-                .style({"fill": color, "stroke-width": 1, "stroke": "#000"});  
+                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"});  
             
         // ip address of node
         groupNodes.append("text")
@@ -208,27 +210,30 @@ $(window).load(function () {
         // collapsible button in node
         collapsible.append("rect")
                 .attr("class", "filter-nodes")
-                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
-                .attr("x", nodeWidth)
+                .on("dblclick", filterNodes )
+                .on("contextmenu", toggleNodes )
+                .attr("x", nodeWidth - 1)
                 .attr("y", 0)
                 .attr("width", nodeHeight)
                 .attr("height", nodeHeight)
-                .style({"fill": "#E7E8E9", "stroke-width": 1, "stroke": "#000"});
+                .style({"fill": "#E7E8E9", "stroke-width": 0.7, "stroke": "#000"});
     
          collapsible.append("rect")
                 .attr("class", "filter-nodes")
-                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
-                .attr("x", nodeWidth)
+                .on("dblclick", filterNodes )
+                .on("contextmenu", toggleNodes )
+                .attr("x", nodeWidth - 1)
                 .attr("y", function(d) { return nodeHeight - computeHeight(d);})
                 .attr("width", nodeHeight)
                 .attr("height", computeHeight)
-                .style({"fill": "#9E9E9E", "stroke-width": 1, "stroke": "#000", "stroke-dasharray": 0+","+nodeHeight+","+nodeHeight*3});
+                .style({"fill": "#9E9E9E", "stroke-width": 0.7, "stroke": "#000", "stroke-dasharray": 0+","+nodeHeight+","+nodeHeight*3});
             
         // + or - sign for node
         collapsible.append("text")
                 .attr("class", "filter-nodes")
-                .on("dblclick", function(d) {if (d.hasChildren) click(d);})
-                .attr("dx", nodeWidth + nodeHeight/7)
+                .on("dblclick", filterNodes )
+                .on("contextmenu", toggleNodes )
+                .attr("dx", nodeWidth + nodeHeight/7 - 1)
                 .attr("dy", nodeHeight - nodeHeight/5)
                 .text(function (d) {
                     if (d._children.length < 1) return "−";
@@ -298,23 +303,23 @@ $(window).load(function () {
         return height;   
     }
 
-    // Toggle children on click.
-    function click(d) {
+    // Filter children on double click.
+    function filterNodes(d) {
         //finds actual node to compute its position
-        //var position = "#ip-"+d.id.replace(/\./g, '-');
         var position = "#"+convertIp(d.id);
-        
+
         var options = {
             autoOpen: false,
             height: 300,
             width: 220,
             resizable: false,
-            modal: false,
+            modal: true,
             dialogClass: 'children-selector',
-            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: position }
+            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: position }          
         };   
         
         $( "#dialog" ).dialog(options).dialog( "open" );
+        vis.selectAll(position + " .filter-nodes").attr("fill","white");
     
         $('body').bind('click', function(e) {
             if($('#dialog').dialog('isOpen')
@@ -322,6 +327,7 @@ $(window).load(function () {
                 && !$(e.target).closest('.ui-dialog').length
             ) {
                 $('#dialog').dialog('close');                
+                vis.selectAll(".filter-nodes").attr("fill","black");               
             }
         });
         
@@ -495,6 +501,27 @@ $(window).load(function () {
                 $(".contents table").append("<tr " + styleColor + ">" + firstTd + secondTd + "</tr>");
             });
         }
+    }
+    
+    // Toggle specific children on click 
+    function toggleNodes(d) {
+        d3.event.preventDefault();
+        console.log(d);
+        if (d.children) {
+            d._children = $.merge(d._children, d.children);
+            d.children = [];
+        }
+        else {
+            /* TODO */
+        }
+        
+        links.forEach(function(link, i){
+            if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
+                links.splice(i);
+            }
+        });
+        
+        update();
     }
     
     // fix position of any node on dragstart
