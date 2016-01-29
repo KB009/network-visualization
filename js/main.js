@@ -22,6 +22,7 @@ $(window).load(function () {
         nodeHeight = 25 * nodeSize,
         links,
         childrenLinks = [],
+        allChildrenNodes = [],
         sortingType = 2,
         root;
                
@@ -41,7 +42,7 @@ $(window).load(function () {
         .on("tick", tick)
         .on("end", end)
         .charge(-1000)
-        .chargeDistance(1000)
+        .chargeDistance(5000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
    
@@ -58,47 +59,23 @@ $(window).load(function () {
         root.fixed = true;
         root.x = w / 2;
         root.y = h / 2 - 80; 
-        var allNodesLength = root.nodes.length; // excluding children
-        var allNodesIds = []; // including children
-        var currentNodes = 0;
         
         root.nodes.forEach(function (node) {
-            allNodesIds.push(node.id);
             node.weight = 1;         
         }); 
         
-        root.nodes.forEach(function (node) {
-            d3.json("data/"+node.id+".moreData.json", function(error, json){
-                if (error === null && json !== null) {
-                    node.hasChildren = true;
-                    var childrenNodes = json.nodes;
-                    var childrenEdges = json.edges;
-                    childrenNodes.forEach(function(nChild) {                       
-                        if(allNodesIds.indexOf(nChild.id) === -1) {
-                            allNodesIds.push(nChild.id);
-                            nChild.weight = 1;
-                            if(node._children)
-                                node._children.push(nChild);
-                            else
-                                node._children = [nChild];
-                        }
-                    });
-                    
-                    childrenEdges.forEach(function(eChild) {
-                        childrenLinks.push(eChild);    
-                    });
-                }
-                currentNodes++;
-                if (currentNodes === allNodesLength)  
-                    update();
-            });
-        }); 
+        getJsonData(root.nodes);
+             
+        update();  
     });
-    
+        
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
-                
+        
+        getJsonData(nodes);
+        console.log(nodes);   
+        console.log(allChildrenNodes);   
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
              
@@ -299,7 +276,7 @@ $(window).load(function () {
         allChildren +=  hiddenChildren;
             
         norm = (hiddenChildren - 0) / (allChildren - 0);
-        height = norm*nodeHeight - 0.5;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
+        height = norm*nodeHeight;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
         return height;   
     }
 
@@ -321,6 +298,7 @@ $(window).load(function () {
         $( "#dialog" ).dialog(options).dialog( "open" );
         vis.selectAll(position + " .filter-nodes").attr("fill","white");
     
+        // bind dialog closing when clicking outside the dialog
         $('body').bind('click', function(e) {
             if($('#dialog').dialog('isOpen')
                 && !$(e.target).is('.ui-dialog, a')
@@ -382,7 +360,7 @@ $(window).load(function () {
         //appends all children into modal window
         listNodes(allChildren);        
         $(".contents").append("</table>");
-            
+        
         // select/diselecet all nodes
         $('#dialog #selectAll').click(function(){
             if(this.checked){
@@ -423,24 +401,38 @@ $(window).load(function () {
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true) {                                           
                     if (actualHiddenNode !== undefined) {  
+                        actualHiddenNode = actualHiddenNode[0];
                         d._children.splice($.inArray(actualHiddenNode, d._children),1);
-
-                        if (d.children === undefined) { // if there is no visible child
-                            d.children = [];
-                        }
                         d.children.push(actualHiddenNode);
-                    }
-                }
+                        
+                        $.each(nodes, function(i, n) {
+                           if (n.hasChildren) {
+                               var ch = findNodeById(n._children, actualHiddenNode.id);
+                               if (ch) {
+                                   n._children.splice($.inArray(ch[0], n._children),1);
+                                   n.children.push(ch[0]);
+                               }
+                           } 
+                        });
+                               }
+                           } 
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else { 
                     if (actualVisibleNode !== undefined) {
-                        d.children.splice($.inArray(actualVisibleNode, d.children),1);
-                                               
-                        if (d._children === undefined) { // if there is no hidden child 
-                            d._children = [];
-                        }
+                        actualVisibleNode = actualVisibleNode[0];
+                        d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
                         d._children.push(actualVisibleNode);
-                    }                    
+                        
+                        $.each(nodes, function(i, n) {
+                              if (n.hasChildren) {
+                                  var ch = findNodeById(n.children, actualVisibleNode.id);
+                                  if (ch) {
+                                      n.children.splice($.inArray(ch[0], n.children),1);
+                                      n._children.push(ch[0]);
+                                  }
+                              } 
+                           });
+                    } 
                 }
             });
             
@@ -530,7 +522,7 @@ $(window).load(function () {
     }
     
     // on drag of specific nodes, positioning of their children is affected 
-    /*function drag(d) {
+    function drag(d) {
         if (d.hasChildren || d.isCentral) {
             setNodePosition(d, d3.event);
         }
@@ -559,7 +551,7 @@ $(window).load(function () {
                 ch.py += event.dy;
             });
         }
-    }*/
+    }
     
     // Returns a list of all nodes under the root.   
     function flatten(root) {
@@ -568,9 +560,9 @@ $(window).load(function () {
         function recurse(node) {
             if (node.children) node.children.forEach(recurse);
             if (!node.id) node.id = ++i;
-            nodes.push(node);
-        }
-
+                nodes.push(node);
+            }
+            
         root.forEach(function(node){ recurse(node);});
         return nodes;
     }
@@ -605,8 +597,84 @@ $(window).load(function () {
         if (actualNodes !== undefined) {
             for (var i = 0; i < actualNodes.length; i++) {
                 if (actualNodes[i].id === id)
-                    return actualNodes[i];
+                    return [actualNodes[i], i];
             }
+        }
+    }
+    
+    function getJsonData(nodes) {
+        
+        nodes.forEach(function (node) {
+            if (node.hasChildren === undefined) {
+                nodeData(node);
+            }
+        });
+        
+        setChildren(nodes);
+        
+        //console.log(childrenNodes);
+        return allChildrenNodes;  
+        
+        function nodeData(node){
+            jQuery.ajax({
+                datatype: "json",
+                url: "data/" + node.id + ".moreData.json",
+                async: false,
+                success: function(data){
+                    node.hasChildren = true;
+                    var childrenNodes = data.nodes;
+                    var childrenEdges = data.edges;
+                    childrenNodes.forEach(function(nChild) { 
+                        //if nChild node is not central and is not visible 
+                        if(findNodeById(nodes, nChild.id) === undefined) {
+                            nChild.weight = 1;
+
+                            if(!node._children) {
+                                node._children = [];
+                                node.children = [];
+                            }
+
+                            node._children.push(nChild.id);
+                        }
+                        //if nChild is central node for this json
+                        else if(node.id === nChild.id) {
+                            node.data = nChild.data;
+                            node.flows = nChild.flows;
+                        }
+                        
+                        var child = findNodeById(allChildrenNodes, nChild.id);
+                        if( child === undefined) {
+                            allChildrenNodes.push(nChild);
+                        }
+                        else {
+                            allChildrenNodes[child[1]].data += nChild.data;
+                            allChildrenNodes[child[1]].data += nChild.flows;
+                            
+                        }
+                            console.log(allChildrenNodes);
+                    });
+
+                    childrenEdges.forEach(function(eChild) {
+                        childrenLinks.push(eChild);    
+                    });
+                },
+                error: function() {
+                    nodes.hasChildren = false;
+                }
+            }); 
+        }     
+        
+        function setChildren(nodes){         
+            nodes.forEach( function(node) {
+                if (node._children) {
+                    $.each(node._children, function (i, cc){
+                        var child = findNodeById(allChildrenNodes, cc);
+                        
+                        if (child !== undefined)
+                            node._children[i] = child[0];
+                    });
+                }
+            });         
         }
     }
 });
