@@ -74,8 +74,7 @@ $(window).load(function () {
         links = root.edges;
         
         getJsonData(nodes);
-        console.log(nodes);   
-        console.log(allChildrenNodes);   
+                 
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
              
@@ -282,8 +281,6 @@ $(window).load(function () {
 
     // Filter children on double click.
     function filterNodes(d) {
-        //finds actual node to compute its position
-        var position = "#"+convertIp(d.id);
 
         var options = {
             autoOpen: false,
@@ -292,11 +289,12 @@ $(window).load(function () {
             resizable: false,
             modal: true,
             dialogClass: 'children-selector',
-            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: position }          
+            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: "#"+convertIp(d.id) }          
         };   
         
         $( "#dialog" ).dialog(options).dialog( "open" );
-        vis.selectAll(position + " .filter-nodes").attr("fill","white");
+        
+        vis.selectAll("#" + convertIp(d.id) + " .filter-nodes").attr("fill","white");
     
         // bind dialog closing when clicking outside the dialog
         $('body').bind('click', function(e) {
@@ -348,7 +346,7 @@ $(window).load(function () {
                 updateColorRange(child);
             });
         }
-                
+                      
         //sort nodes in array
         if (sortingType == 0) 
             allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? 1 : -1;});
@@ -399,42 +397,41 @@ $(window).load(function () {
                     actualVisibleNode = findNodeById(d.children, $(box).prop('name'));
                 
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
-                if ($(box).prop('checked') === true) {                                           
-                    if (actualHiddenNode !== undefined) {  
-                        actualHiddenNode = actualHiddenNode[0];
-                        d._children.splice($.inArray(actualHiddenNode, d._children),1);
-                        d.children.push(actualHiddenNode);
-                        
-                        $.each(nodes, function(i, n) {
-                           if (n.hasChildren) {
-                               var ch = findNodeById(n._children, actualHiddenNode.id);
-                               if (ch) {
-                                   n._children.splice($.inArray(ch[0], n._children),1);
-                                   n.children.push(ch[0]);
-                               }
-                           } 
-                        });
-                               }
-                           } 
-                // if this node should be hidden (is not checked) and is currently visible, we need to replace it
-                else { 
-                    if (actualVisibleNode !== undefined) {
-                        actualVisibleNode = actualVisibleNode[0];
-                        d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
-                        d._children.push(actualVisibleNode);
-                        
-                        $.each(nodes, function(i, n) {
-                              if (n.hasChildren) {
-                                  var ch = findNodeById(n.children, actualVisibleNode.id);
-                                  if (ch) {
-                                      n.children.splice($.inArray(ch[0], n.children),1);
-                                      n._children.push(ch[0]);
-                                  }
-                              } 
-                           });
-                    } 
+                if ($(box).prop('checked') === true && actualHiddenNode !== undefined) {
+                    actualHiddenNode = actualHiddenNode[0];
+                    d._children.splice($.inArray(actualHiddenNode, d._children),1);
+                    d.children.push(actualHiddenNode);
+
+                    nodes.forEach(function(n) {
+                       if (n.hasChildren) {
+                           var commonChild = findNodeById(n._children, actualHiddenNode.id);
+                           if (commonChild) {
+                               n._children.splice($.inArray(commonChild[0], n._children),1);
+                               n.children.push(commonChild[0]);
+                           }
+                       } 
+                    });                   
                 }
+                // if this node should be hidden (is not checked) and is currently visible, we need to replace it
+                else if ($(box).prop('checked') === false && actualVisibleNode !== undefined) {
+                    d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
+                    d._children.push(actualVisibleNode);
+                    
+                    nodes.forEach(function(n) {
+                        if (n.hasChildren) {
+                            var commonChild = findNodeById(n.children, actualVisibleNode.id);
+                            if (commonChild) {
+                                n.children.splice($.inArray(commonChild[0], n.children),1);
+                                n._children.push(commonChild[0]);
+                            }
+                        } 
+                    });
+                }       
             });
+            
+            //update quick toggle
+            d.quick_toggle = [];
+            d.quick_toggle = d.children;
             
             // additionally, redundant links to all hidden children must be deleted manually 
             links.forEach(function(link, i){
@@ -442,7 +439,6 @@ $(window).load(function () {
                     links.splice(i);
                 }
             });
-            
             update();
             $('#dialog').dialog('close'); 
         });
@@ -498,13 +494,45 @@ $(window).load(function () {
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();
-        console.log(d);
-        if (d.children) {
+        //there are some visible children -> hide all
+        if (d.children.length > 0) {
+            
+            //d.quick_toggle = d.children;
             d._children = $.merge(d._children, d.children);
             d.children = [];
+            
+            nodes.forEach(function(node) {
+                if (node.hasChildren) 
+                    d.quick_toggle.forEach(function(toggle) {
+                        var commonChild = findNodeById(node.children, toggle.id);
+                        if (commonChild) {
+                            node.children.splice($.inArray(commonChild[0], node.children), 1);
+                            node._children.push(commonChild[0]);
+                        }
+                    });               
+            });
+            
         }
+        //all children are hidden -> show latest 'quick toggle' list 
         else {
-            /* TODO */
+            if (d.quick_toggle === undefined || d.quick_toggle.length === 0)
+                d.quick_toggle = d._children;
+
+            d.children = d.quick_toggle;
+            d._children = d._children.filter( function( el ) {
+                return d.quick_toggle.indexOf( el ) === -1;
+            });
+            
+            nodes.forEach(function(node) {
+                if (node.hasChildren) 
+                    d.quick_toggle.forEach(function(child) {
+                        var commonChild = findNodeById(node._children, child.id);
+                        if (commonChild) {
+                            node._children.splice($.inArray(commonChild[0], node._children), 1);
+                            node.children.push(commonChild[0]);
+                        }
+                    });               
+            });
         }
         
         links.forEach(function(link, i){
@@ -606,13 +634,13 @@ $(window).load(function () {
         
         nodes.forEach(function (node) {
             if (node.hasChildren === undefined) {
+                node.hasChildren = false;
                 nodeData(node);
             }
         });
         
         setChildren(nodes);
         
-        //console.log(childrenNodes);
         return allChildrenNodes;  
         
         function nodeData(node){
@@ -651,7 +679,6 @@ $(window).load(function () {
                             allChildrenNodes[child[1]].data += nChild.flows;
                             
                         }
-                            console.log(allChildrenNodes);
                     });
 
                     childrenEdges.forEach(function(eChild) {
