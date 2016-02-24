@@ -399,9 +399,8 @@ $(window).load(function () {
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true && actualHiddenNode !== undefined) {
                     actualHiddenNode = actualHiddenNode[0];
-                    d._children.splice($.inArray(actualHiddenNode, d._children),1);
-                    d.children.push(actualHiddenNode);
 
+                    //check all nodes for adjacency with actualHiddenNode
                     nodes.forEach(function(n) {
                        if (n.hasChildren) {
                            var commonChild = findNodeById(n._children, actualHiddenNode.id);
@@ -414,9 +413,9 @@ $(window).load(function () {
                 }
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else if ($(box).prop('checked') === false && actualVisibleNode !== undefined) {
-                    d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
-                    d._children.push(actualVisibleNode);
+                    actualVisibleNode = actualVisibleNode[0];
                     
+                    //check all nodes for adjacency with actualVisibleNode
                     nodes.forEach(function(n) {
                         if (n.hasChildren) {
                             var commonChild = findNodeById(n.children, actualVisibleNode.id);
