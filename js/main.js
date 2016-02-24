@@ -60,9 +60,22 @@ $(window).load(function () {
         root.x = w / 2;
         root.y = h / 2 - 80; 
         
+        var centralNode, connections = 0;
+        
         root.nodes.forEach(function (node) {
-            node.weight = 1;         
+            node.weight = 1;
+            if (node.isCentral)
+                centralNode = node.id;
+            else
+                connections += 1;
         }); 
+        
+        root.nodes.forEach(function (node) {
+            if (node.isCentral)
+                node.connections = connections;
+            else
+                node.parent = centralNode;
+        });
         
         getJsonData(root.nodes);
              
@@ -152,7 +165,64 @@ $(window).load(function () {
                     if(d.hasChildren) return "node collapsible";
                     else return "node";
                 })
-                .attr("id", function (d) { return convertIp(d.id);})    
+                .attr("id", function (d) { return convertIp(d.id);}) 
+                .attr("px", 0)
+                .attr("py", 0)
+                .attr("transform", function (d) { 
+                    //d.fixed = true;
+                if (d.isCentral) {
+                    d.fixed = true;
+                    d.x = $(window).width() / 2;
+                    d.y = $(window).height() / 2;
+                }
+                else {
+                    //console.log(d.parent);
+                    var central = findNodeById(nodes, d.parent), x, y, a, b;
+                    if (central !== undefined) {
+                        central = central[0];
+                        d.fixed = true;
+                        x = central.x; 
+                        y = central.y;
+                        a = 250;
+                        b = 120;
+
+                        if (central.x === undefined || central.y === undefined) {
+                            x = $(window).width() / 2;
+                            y = $(window).height() / 2;
+                        }
+                        
+                        var amountOfChildren = central.connections;//children.length + central._children.length;
+                        
+                        var numberInRow = amountOfChildren;//16;
+                        if (amountOfChildren > 16)
+                            numberInRow = 16;
+                        
+                        if (central.next > 16) {
+                            a = 350, b = 190;
+                            numberInRow = 23;
+                        }
+                        if (central.next > 39) {
+                            a = 400, b = 260;
+                            numberInRow = 23;
+                        }
+                        
+                        var slice = 2 * Math.PI / numberInRow;
+                        updateNode(central, 1);
+                        var angle = slice * central.next;
+                        d.x = x + a * Math.cos(angle);
+                        d.y = y + b * Math.sin(angle);
+                        console.log("allChilds " + d.x + ", next " + central.next + ", slice " + slice + ", angle " + angle);
+                        return "translate(" + d.x + "," + d.y + ")";
+                    }
+                    else {
+                        //d.fixed = true;
+                        d.x = $(window).width() / 2;
+                        d.y = $(window).height() / 2;
+                        return "translate(" + d.x + "," + d.y + ")";
+                    }
+                }
+
+                })
                 .call(force.drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -293,7 +363,7 @@ $(window).load(function () {
         };   
         
         $( "#dialog" ).dialog(options).dialog( "open" );
-        
+    
         vis.selectAll("#" + convertIp(d.id) + " .filter-nodes").attr("fill","white");
     
         // bind dialog closing when clicking outside the dialog
@@ -346,7 +416,7 @@ $(window).load(function () {
                 updateColorRange(child);
             });
         }
-                      
+                
         //sort nodes in array
         if (sortingType == 0) 
             allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? 1 : -1;});
@@ -398,35 +468,35 @@ $(window).load(function () {
                 
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true && actualHiddenNode !== undefined) {
-                    actualHiddenNode = actualHiddenNode[0];
-                    d._children.splice($.inArray(actualHiddenNode, d._children),1);
-                    d.children.push(actualHiddenNode);
-
+                        actualHiddenNode = actualHiddenNode[0];
+                        d._children.splice($.inArray(actualHiddenNode, d._children),1);
+                        d.children.push(actualHiddenNode);
+                        
                     nodes.forEach(function(n) {
-                       if (n.hasChildren) {
+                           if (n.hasChildren) {
                            var commonChild = findNodeById(n._children, actualHiddenNode.id);
                            if (commonChild) {
                                n._children.splice($.inArray(commonChild[0], n._children),1);
                                n.children.push(commonChild[0]);
-                           }
-                       } 
-                    });                   
-                }
+                               }
+                           } 
+                        });
+                               }
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else if ($(box).prop('checked') === false && actualVisibleNode !== undefined) {
-                    d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
-                    d._children.push(actualVisibleNode);
-                    
+                        d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
+                        d._children.push(actualVisibleNode);
+                        
                     nodes.forEach(function(n) {
-                        if (n.hasChildren) {
+                              if (n.hasChildren) {
                             var commonChild = findNodeById(n.children, actualVisibleNode.id);
                             if (commonChild) {
                                 n.children.splice($.inArray(commonChild[0], n.children),1);
                                 n._children.push(commonChild[0]);
-                            }
-                        } 
-                    });
-                }       
+                                  }
+                              } 
+                           });
+                    } 
             });
             
             //update quick toggle
@@ -508,7 +578,7 @@ $(window).load(function () {
                         if (commonChild) {
                             node.children.splice($.inArray(commonChild[0], node.children), 1);
                             node._children.push(commonChild[0]);
-                        }
+        }
                     });               
             });
             
@@ -530,7 +600,7 @@ $(window).load(function () {
                         if (commonChild) {
                             node._children.splice($.inArray(commonChild[0], node._children), 1);
                             node.children.push(commonChild[0]);
-                        }
+        }
                     });               
             });
         }
@@ -630,6 +700,47 @@ $(window).load(function () {
         }
     }
     
+    function getCentralNode(nodes) {
+        if (nodes !== undefined) {
+            for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].isCentral)
+                    return nodes[i];
+            }
+        }
+    }
+    
+    function updateNode(nodeForUpdate, number) {
+        nodes.forEach(function(node) {
+            if (nodeForUpdate.id === node.id){
+                if (node.next === undefined)
+                    node.next = 0;
+                if (number === 1)
+                    node.next += 1; 
+                else if (number === -1)
+                    node.next -= 1;  
+            //console.log(node.next);    
+            }
+        });
+        /*for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].isCentral){
+                if (number === 1)
+                    nodes[i].next += 1; 
+                else if (number === -1)
+                    nodes[i].next -= 1;  
+            //console.log(nodes[i].next);    
+            }
+        } */
+        /*nodes.forEach(function(node) {
+            if (node.isCentral){
+                if (number === 1)
+                    node.next += 1; 
+                else if (number === -1)
+                    node.next -= 1;  
+            //console.log(node.next);    
+            }
+        });*/
+    }
+    
     function getJsonData(nodes) {
         
         nodes.forEach(function (node) {
@@ -650,12 +761,15 @@ $(window).load(function () {
                 async: false,
                 success: function(data){
                     node.hasChildren = true;
+                    node.connections = 0;
                     var childrenNodes = data.nodes;
                     var childrenEdges = data.edges;
                     childrenNodes.forEach(function(nChild) { 
                         //if nChild node is not central and is not visible 
                         if(findNodeById(nodes, nChild.id) === undefined) {
                             nChild.weight = 1;
+                            nChild.parent = node.id;
+                            node.connections += 1;
 
                             if(!node._children) {
                                 node._children = [];
