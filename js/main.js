@@ -45,7 +45,7 @@ $(window).load(function () {
         .chargeDistance(5000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
-   
+
     var vis = d3.select("body").append("svg:svg")
         .attr("width", w)
         .attr("height", h);
@@ -168,61 +168,6 @@ $(window).load(function () {
                 .attr("id", function (d) { return convertIp(d.id);}) 
                 .attr("px", 0)
                 .attr("py", 0)
-                .attr("transform", function (d) { 
-                    //d.fixed = true;
-                if (d.isCentral) {
-                    d.fixed = true;
-                    d.x = $(window).width() / 2;
-                    d.y = $(window).height() / 2;
-                }
-                else {
-                    //console.log(d.parent);
-                    var central = findNodeById(nodes, d.parent), x, y, a, b;
-                    if (central !== undefined) {
-                        central = central[0];
-                        d.fixed = true;
-                        x = central.x; 
-                        y = central.y;
-                        a = 250;
-                        b = 120;
-
-                        if (central.x === undefined || central.y === undefined) {
-                            x = $(window).width() / 2;
-                            y = $(window).height() / 2;
-                        }
-                        
-                        var amountOfChildren = central.connections;//children.length + central._children.length;
-                        
-                        var numberInRow = amountOfChildren;//16;
-                        if (amountOfChildren > 16)
-                            numberInRow = 16;
-                        
-                        if (central.next > 16) {
-                            a = 350, b = 190;
-                            numberInRow = 23;
-                        }
-                        if (central.next > 39) {
-                            a = 400, b = 260;
-                            numberInRow = 23;
-                        }
-                        
-                        var slice = 2 * Math.PI / numberInRow;
-                        updateNode(central, 1);
-                        var angle = slice * central.next;
-                        d.x = x + a * Math.cos(angle);
-                        d.y = y + b * Math.sin(angle);
-                        console.log("allChilds " + d.x + ", next " + central.next + ", slice " + slice + ", angle " + angle);
-                        return "translate(" + d.x + "," + d.y + ")";
-                    }
-                    else {
-                        //d.fixed = true;
-                        d.x = $(window).width() / 2;
-                        d.y = $(window).height() / 2;
-                        return "translate(" + d.x + "," + d.y + ")";
-                    }
-                }
-
-                })
                 .call(force.drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -286,6 +231,66 @@ $(window).load(function () {
                     else return "+";
                 })
                 .style("font-size",nodeHeight + "px");
+        
+        nodePositioning();
+        
+        function nodePositioning() {
+            nodes.forEach(function(d) {
+                d.fixed = true;
+                if (d.isCentral) {
+                        d.x = $(window).width() / 2;
+                        d.y = $(window).height() / 2;
+                }
+                else {
+                    var central = findNodeById(nodes, d.parent), x, y, a, b;
+                    if (central !== undefined) {
+                        central = central[0];
+                        x = central.x; 
+                        y = central.y;
+                        a = nodeWidth * 2.8;//250;
+                        b = nodeHeight * 4;//120;
+
+                    if (central.x === undefined || central.y === undefined) {
+                        x = $(window).width() / 2;
+                        y = $(window).height() / 2;
+                    }
+
+                    var amountOfChildren = central.connections;
+
+                    var numberInRow = amountOfChildren;//16;
+                    if (amountOfChildren > 16)
+                        numberInRow = 16;
+
+                    if (central.next > 16) {
+                        a = nodeWidth * 5, b = nodeHeight * 6;//a = 350, b = 190;
+                        numberInRow = 24;
+                    }
+                    if (central.next > 39) {
+                        a = nodeWidth * 7, b = nodeHeight * 8;//a = 400, b = 260;
+                        numberInRow = 36;
+                    }
+
+                    var slice = 2 * Math.PI / numberInRow;
+                    updateNode(central, 1);
+                    var angle = slice * central.next;
+                    var i = 1;
+                    if (d.hasChildren && d.double)
+                        i = 2;
+                    
+                    d.x = x + i * a * Math.cos(angle);
+                    d.y = y + i * b * Math.sin(angle);
+
+                    //console.log("allChilds " + d.x + ", next " + central.next + ", slice " + slice + ", angle " + angle);
+                }
+                else {
+                    //d.fixed = true;
+                    d.x = $(window).width() / 2;
+                    d.y = $(window).height() / 2;
+                }
+                    force.resume();
+            }                      
+            });
+        }
            
         force.nodes(nodes)
                 .links(links)
@@ -459,7 +464,16 @@ $(window).load(function () {
         });
         
         // on click on submit button update force with new nodes
-        $("#dialog #submit").click(function() {
+        $("#dialog #submit").click(function() {  
+            d.next = 0;
+            
+            /*
+            if (!d.collapsed) {
+                d.px = 1.5 * d.px;
+                d.py = 1.5 * d.py;
+                d.collapsed = true;
+            }*/
+            
             $('#dialog table :checkbox').each(function(i, box) {
                 
                 // we find actual node in hidden or visible children
@@ -484,6 +498,7 @@ $(window).load(function () {
                                }
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else if ($(box).prop('checked') === false && actualVisibleNode !== undefined) {
+                        actualVisibleNode = actualVisibleNode[0];
                         d.children.splice($.inArray(actualVisibleNode, d.children),1);                  
                         d._children.push(actualVisibleNode);
                         
@@ -498,7 +513,7 @@ $(window).load(function () {
                            });
                     } 
             });
-            
+                       
             //update quick toggle
             d.quick_toggle = [];
             d.quick_toggle = d.children;
@@ -717,28 +732,9 @@ $(window).load(function () {
                 if (number === 1)
                     node.next += 1; 
                 else if (number === -1)
-                    node.next -= 1;  
-            //console.log(node.next);    
+                    node.next -= 1;     
             }
         });
-        /*for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].isCentral){
-                if (number === 1)
-                    nodes[i].next += 1; 
-                else if (number === -1)
-                    nodes[i].next -= 1;  
-            //console.log(nodes[i].next);    
-            }
-        } */
-        /*nodes.forEach(function(node) {
-            if (node.isCentral){
-                if (number === 1)
-                    node.next += 1; 
-                else if (number === -1)
-                    node.next -= 1;  
-            //console.log(node.next);    
-            }
-        });*/
     }
     
     function getJsonData(nodes) {
@@ -770,6 +766,7 @@ $(window).load(function () {
                             nChild.weight = 1;
                             nChild.parent = node.id;
                             node.connections += 1;
+                            node.collapsed = false;
 
                             if(!node._children) {
                                 node._children = [];
