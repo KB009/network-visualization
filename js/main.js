@@ -353,8 +353,20 @@ $(window).load(function () {
         else if (sortingType == 1) 
             allChildren.sort(function(a, b){return a[0].data > b[0].data ? 1 : -1;});
         else 
-            allChildren.sort(function(a, b){return a[0].id > b[0].id ? 1 : -1;});
+            allChildren.sort(sortIPs);//function(a, b){return a[0].id > b[0].id ? 1 : -1;});
             
+        function sortIPs(a, b){
+            var arrayA = a[0].id.split('.'),
+                arrayB = b[0].id.split('.');
+            
+            for(var i = 0; i < 4; i++) {
+                if (parseInt(arrayA[i]) > parseInt(arrayB[i]))
+                    return 1;
+                else if (parseInt(arrayA[i]) < parseInt(arrayB[i]))
+                    return -1;
+            }
+        }
+        
         //appends all children into modal window
         listNodes(allChildren);        
         $(".contents").append("</table>");
@@ -387,7 +399,7 @@ $(window).load(function () {
                 return !oldVal; 
             });
         });
-        
+
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {
             $('#dialog table :checkbox').each(function(i, box) {
