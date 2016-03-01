@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-$(window).load(function () {   
+$(window).load(function () { 
     var w = $(window).width() - 20,
         h = 800,
         link,
@@ -379,40 +379,17 @@ $(window).load(function () {
                     // i-th array position in one of addresses is empty (there is ::)
                     if (arrayA[i].length === 0 && arrayB[i].length !== 0)
                         return -1;
-                    else if (arrayA[i].length !== 0 && arrayB[i].length === 0)
+                    if (arrayA[i].length !== 0 && arrayB[i].length === 0)
                         return 1;
-                        
-                    var sliceLength = arrayA[i].length < arrayB[i].length ? arrayA[i].length : arrayB[i].length;
                     
-                    for (var j = 0; j < sliceLength; j++) {
-                        var charA = parseInt(arrayA[i][j]),
-                            charB = parseInt(arrayB[i][j]);
-                        // both characters are numbers
-                        if (!isNaN(charA) && !isNaN(charB)) {
-                            if (charA > charB)
-                                return 1;
-                            else if (charA < charB)
-                                return -1;
-                        } 
-                        // niether of characters is a number
-                        else if (isNaN(charA) && isNaN(charB)) {
-                            if (arrayA[i][j].toLowerCase() > arrayB[i][j].toLowerCase())
-                                return 1;
-                            else if (arrayA[i][j].toLowerCase() < arrayB[i][j].toLowerCase())
-                                return -1;  
-                        }
-                        // only one of characters is a number
-                        else {     
-                            // if character is numeric then it's value is lower
-                            if (!isNaN(charA))
-                                return -1;
-                            else 
-                                return 1;
-                        }
-                        
-                    }
-                }    
-                
+                    var sliceA = parseInt(arrayA[i], 16), 
+                        sliceB = parseInt(arrayB[i], 16); 
+                    
+                    if (sliceA > sliceB) 
+                        return 1;
+                    else if (sliceA < sliceB)
+                        return -1;
+                }                    
             }
             //one IPv6, one IPv4 -> TODO priority
             else {
@@ -447,22 +424,15 @@ $(window).load(function () {
             }else{
                 $('#dialog #selectAll').prop('checked',false);
             }
-        });
-        
-        //trigger click on labels
-        $("[data-labelfor]").click(function() {
-            $('#' + $(this).attr("data-labelfor")).prop('checked', function(i, oldVal) { 
-                return !oldVal; 
-            });
-        });
+        });       
 
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {
             $('#dialog table :checkbox').each(function(i, box) {
-                
+                var nodeId = $(box).attr('id').replace('checkbox-ip-','').replace(/\-/g,'.');
                 // we find actual node in hidden or visible children
-                var actualHiddenNode = findNodeById(d._children, $(box).prop('name')),
-                    actualVisibleNode = findNodeById(d.children, $(box).prop('name'));
+                var actualHiddenNode = findNodeById(d._children, nodeId),
+                    actualVisibleNode = findNodeById(d.children, nodeId);
                 
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true && actualHiddenNode !== undefined) {
@@ -545,13 +515,13 @@ $(window).load(function () {
                     hiddenData = '<input type="hidden" name="data" id="data" value="' + child[0].data + '">';
                 
                 if (child[1] === true) 
-                    checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + '" name="'  + child[0].id + '" checked>';
-                else 
-                    checkbox = '<input type="checkbox" id="' + convertIp(child[0].id) + '" name="'  + child[0].id + '">';
-                
+                    checkbox = '<input type="checkbox" id="checkbox-' + convertIp(child[0].id) + '" name="checkbox-'  + child[0].id + '" checked>';
+                else
+                    checkbox = '<input type="checkbox" id="checkbox-' + convertIp(child[0].id) + '" name="checkbox-'  + child[0].id + '">';
+                    
                 var styleColor = 'style="background-color:' + color(child[0]) + '"',
                     firstTd = "<td>" + checkbox + hiddenFlow + hiddenData + "</td>",
-                    secondTd = "<td><label data-labelfor='" + convertIp(child[0].id) + "'>" + child[0].id + "</label></td>";
+                    secondTd = "<td><label for='checkbox-" + convertIp(child[0].id) + "'>" + child[0].id + "</label></td>";
                 
                 $(".contents table").append("<tr " + styleColor + ">" + firstTd + secondTd + "</tr>");
             });
