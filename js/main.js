@@ -353,16 +353,72 @@ $(window).load(function () {
         else if (sortingType == 1) 
             allChildren.sort(function(a, b){return a[0].data > b[0].data ? 1 : -1;});
         else 
-            allChildren.sort(sortIPs);//function(a, b){return a[0].id > b[0].id ? 1 : -1;});
+            allChildren.sort(compareIPs);
             
-        function sortIPs(a, b){
-            var arrayA = a[0].id.split('.'),
-                arrayB = b[0].id.split('.');
+        function compareIPs(a, b){
+            // both addresses are IPv4
+            if (a[0].id.indexOf('.') !== -1 && b[0].id.indexOf('.') !== -1) {
+                var arrayA = a[0].id.split('.'),
+                    arrayB = b[0].id.split('.');
             
-            for(var i = 0; i < 4; i++) {
-                if (parseInt(arrayA[i]) > parseInt(arrayB[i]))
+                for (var i = 0; i < 4; i++) {
+                    if (parseInt(arrayA[i]) > parseInt(arrayB[i]))
+                        return 1;
+                    else if (parseInt(arrayA[i]) < parseInt(arrayB[i]))
+                        return -1;
+                }
+            }
+            // both addresses are IPv6
+            else if (a[0].id.indexOf(':') !== -1 && b[0].id.indexOf(':') !== -1) {
+                var arrayA = a[0].id.split(':'),
+                    arrayB = b[0].id.split(':');
+            
+                var arrayLength = arrayA.length < arrayB.length ? arrayA.length : arrayB.length;    
+                
+                for (var i = 0; i < arrayLength; i++) {
+                    // i-th array position in one of addresses is empty (there is ::)
+                    if (arrayA[i].length === 0 && arrayB[i].length !== 0)
+                        return -1;
+                    else if (arrayA[i].length !== 0 && arrayB[i].length === 0)
+                        return 1;
+                        
+                    var sliceLength = arrayA[i].length < arrayB[i].length ? arrayA[i].length : arrayB[i].length;
+                    
+                    for (var j = 0; j < sliceLength; j++) {
+                        var charA = parseInt(arrayA[i][j]),
+                            charB = parseInt(arrayB[i][j]);
+                        // both characters are numbers
+                        if (!isNaN(charA) && !isNaN(charB)) {
+                            if (charA > charB)
+                                return 1;
+                            else if (charA < charB)
+                                return -1;
+                        } 
+                        // niether of characters is a number
+                        else if (isNaN(charA) && isNaN(charB)) {
+                            if (arrayA[i][j].toLowerCase() > arrayB[i][j].toLowerCase())
+                                return 1;
+                            else if (arrayA[i][j].toLowerCase() < arrayB[i][j].toLowerCase())
+                                return -1;  
+                        }
+                        // only one of characters is a number
+                        else {     
+                            // if character is numeric then it's value is lower
+                            if (!isNaN(charA))
+                                return -1;
+                            else 
+                                return 1;
+                        }
+                        
+                    }
+                }    
+                
+            }
+            //one IPv6, one IPv4 -> TODO priority
+            else {
+                if (a[0].id.indexOf(':') !== -1)
                     return 1;
-                else if (parseInt(arrayA[i]) < parseInt(arrayB[i]))
+                else
                     return -1;
             }
         }
