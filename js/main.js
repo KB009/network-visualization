@@ -4,9 +4,11 @@
  * and open the template in the editor.
  */
 
-$(window).load(function () { 
-    var w = $(window).width() - 20,
-        h = 800,
+/* global d3 */
+
+$(window).load(function () {
+    var w = $(window).width(),
+        h = $(window).height() - 3,
         link,
         node,
         nodes,
@@ -25,7 +27,7 @@ $(window).load(function () {
         allChildrenNodes = [],
         sortingType = 2,
         root;
-               
+                       
     this.getLinks = function () {
         return links;
     };
@@ -45,10 +47,16 @@ $(window).load(function () {
         .chargeDistance(5000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
-   
+
     var vis = d3.select("body").append("svg:svg")
         .attr("width", w)
-        .attr("height", h);
+        .attr("height", h)
+        /*.call(d3.behavior.zoom()
+            .scaleExtent([0.6, 4])
+            .center([w, h])
+            .on("zoom", zoom))*/
+        .append("g")
+        .attr("class", "svg");
 
     var drag = force.drag()
         .on("dragstart",dragstart)
@@ -73,18 +81,33 @@ $(window).load(function () {
         nodes = flatten(root.nodes);
         links = root.edges;
         
-        getJsonData(nodes);
-                 
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
-             
-        var nodeIds = [], linkIds = [];
         
+        getJsonData(nodes);
+                                    
         // on update reset max and min values in force
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
-        // we need to iterate through all visible nodes and links in order to connect links with their nodes (we need objects in links, not only ids)
+        createLinks();
+        createNodes();
+        
+        // start simulation
+        force.nodes(nodes)
+                .links(links)
+                .start();     
+    }
+    
+    /**
+     * 
+     */
+    function createLinks() {
+        var nodeIds = [], 
+            linkIds = [];
+    
+        // First we need to iterate through all visible nodes and links in order to connect links with their nodes 
+        // (we need objects in links, not only ids)
         nodes.forEach(function(n) {
             nodeIds.push(n.id);
             
@@ -100,21 +123,19 @@ $(window).load(function () {
             });
              
             childrenLinks.forEach(function(childLink) {
-                // if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
-                    if (childLink.from === n.id) {
-                        childLink.source = n;
-                    }
-                    else if (childLink.to === n.id) {
-                        childLink.target = n;
-                    }
-                //}
+                if (childLink.from === n.id) {
+                     childLink.source = n;
+                 }
+                 else if (childLink.to === n.id) {
+                     childLink.target = n;
+                 }
             });          
         });
-                    
+        
         childrenLinks.forEach(function(childLink) {
            if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
-               if(linkIds.indexOf(childLink.from+", "+childLink.to) === -1)
-                    linkIds.push(childLink.source.id+", "+childLink.target.id);
+               if(linkIds.indexOf(childLink.from + ", " + childLink.to) === -1)
+                    linkIds.push(childLink.source.id + ", " + childLink.target.id);
                     links.push(childLink);
             } 
         });
@@ -141,7 +162,12 @@ $(window).load(function () {
                 .attr("cy", 100)
                 .attr("r", 5)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"});
-                    
+    }
+    
+    /**
+     * 
+     */
+    function createNodes() {
         // Update the nodes…
         node = vis.selectAll("g.node")
             .data(nodes, function (d) { return d.id;});
@@ -215,16 +241,11 @@ $(window).load(function () {
                     if (d._children.length < 1) return "−";
                     else return "+";
                 })
-                .style("font-size",nodeHeight + "px");
-           
-        force.nodes(nodes)
-                .links(links)
-                .start();
-        
+                .style("font-size",nodeHeight + "px");       
     }
 
     function tick() {   
-        // translate position of every link and node in svg
+        // Translate position of every link and node in svg
         link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
                 .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
                 .attr("x2", function (d) { return d.target.x + nodeWidth / 2;})
@@ -740,5 +761,19 @@ $(window).load(function () {
                 }
             });         
         }
+    }    
+    
+    function zoom() {
+        //$("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");        
+        
+        /*if(d3.event.sourceEvent.altKey) {
+            $("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");        
+        }
+        else {
+            if (force.scale === undefined)
+                force.scale = 1;
+
+            $("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + force.scale + ")");        
+        }*/
     }
 });
