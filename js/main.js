@@ -471,16 +471,49 @@ $(window).load(function () {
                 });
             }
         });
+            
+        // FlowMon Shitf/Ctrl multiselect
+        var checkboxes = $('#dialog table td');
+        checkboxes.mousemove(function (event) {
+            var target = event.target.getAttribute("for");
+            if(event.ctrlKey){
+                if (target)
+                    $("#dialog #" + target).prop('checked', true);
+                else
+                    $(event.target).prop('checked', true);
+            }
+            if(event.shiftKey){
+                if (target)
+                    $("#dialog #" + target).prop('checked', false);
+                else
+                    $(event.target).prop('checked', false);
+            }
+        });
         
-        // select/diselect main checkbox according to number of selected nodes
-        $('#dialog table :checkbox').click(function(){
+        //var lastChecked = null;  
+        checkboxes.click(function(event){
+            // select/deselect main checkbox according to number of selected nodes
             if($('#dialog table :checkbox:checked').length === $('#dialog table :checkbox').length){
                 $('#dialog #selectAll').prop('checked',true);
             }else{
                 $('#dialog #selectAll').prop('checked',false);
             }
-        });       
+                      
+            // standard Shift multiselect
+            /*if(!lastChecked) {
+                lastChecked = this;
+                return;
+            }
 
+            if(event.shiftKey) {
+                var start = checkboxes.index(this);
+                var end = checkboxes.index(lastChecked); 
+                checkboxes.slice(Math.min(start,end), Math.max(start,end)+ 1)
+                          .prop('checked', lastChecked.checked);;
+            }
+            lastChecked = this; */  
+        });  
+        
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {
             $('#dialog table :checkbox').each(function(i, box) {
@@ -823,9 +856,9 @@ $(window).load(function () {
             force.translate = [0,0];
         
         if (d3.event.deltaY > 0)
-            force.translate[1] += 10;
-        else
             force.translate[1] -= 10;
+        else
+            force.translate[1] += 10;
     
         zoom.translate([force.translate[0], force.translate[1]]);
         

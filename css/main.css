@@ -68,6 +68,12 @@ body {
     padding: 0;
     overflow-y: scroll;
     border: 1px solid gray;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Konqueror */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* IE/Edge */
+    user-select: none;           
 }
 
 #dialog .contents #selectAll {
