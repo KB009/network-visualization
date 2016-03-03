@@ -38,9 +38,7 @@ $(window).load(function () {
 
     this.getForce = function () {
         return force;
-    };
-    
-    console.log(this);
+    }; 
 
     /**
      * Initiation of layout
@@ -124,8 +122,8 @@ $(window).load(function () {
             if(!event.altKey){
                 svg.call(zoom)
                     .on("dblclick.zoom", null)
-                    .on("wheel.zoom", null)
-                    .on("mousewheel.zoom", null);
+                    .on("wheel.zoom", scroll)
+                    .on("mousewheel.zoom", scroll);
             }
         });
         
@@ -636,32 +634,7 @@ $(window).load(function () {
         });
         
         update();
-    }   
-    
-    function setNodePosition(node, event) {
-        if (node.children) {
-            node.children.forEach(function (ch) {
-                setNodePosition(ch, event);
-                ch.px += event.dx;
-                ch.py += event.dy;
-            });
-        }
-        
-        if (node._children) {
-            node._children.forEach(function (ch) {
-                setNodePosition(ch, event);
-                ch.px += event.dx;
-                ch.py += event.dy;
-            });
-        }
-
-        else if (node.isCentral) {
-            nodes.forEach(function (ch) {
-                ch.px += event.dx;
-                ch.py += event.dy;
-            });
-        }
-    }
+    }       
     
     // Returns a list of all nodes under the root.   
     function flatten(root) {
@@ -787,6 +760,12 @@ $(window).load(function () {
         }
     }   
     
+    /**
+     * 
+     * Manipulation functions
+     * 
+     */
+    
     // fix position of any node on dragstart and enable dragging
     function dragstart(d) {
         d3.event.sourceEvent.stopPropagation();
@@ -803,14 +782,63 @@ $(window).load(function () {
         if (d.hasChildren || d.isCentral) {
             setNodePosition(d, d3.event);
         }
-    }   
+    } 
     
-    function scroll() {
+    function setNodePosition(node, event) {
+        // Node has visible children for moving
+        if (node.children) {
+            node.children.forEach(function (ch) {
+                setNodePosition(ch, event);
+                ch.px += event.dx;
+                ch.py += event.dy;
+            });
+        }
+        // node has hidden children that need to have their positions changed as well
+        if (node._children) {
+            node._children.forEach(function (ch) {
+                setNodePosition(ch, event);
+                ch.px += event.dx;
+                ch.py += event.dy;
+            });
+        }
+        // node is central, so every other node is treated like it's child
+        else if (node.isCentral) {
+            // in uniqueVals are stored ids of all nodes which have been moved
+            // otherwise would nodes with two or more parents be moved multiple times
+            var uniqueVals = [];
+            nodes.forEach(function (ch) {
+                if (ch.id !== node.id && uniqueVals.indexOf(ch.id) === -1) {
+                    ch.px += event.dx;
+                    ch.py += event.dy;
+                    uniqueVals.push(ch.id);
+                }
+            });
+        }
     }
     
-    function zoom() {            
-        vis.attr("transform", "translate(" 
-                + d3.event.translate + ")scale(" 
-                + d3.event.scale + ")");        
+    function scroll() {
+        if(force.scale === undefined)
+            force.scale = 1;
+        if(force.translate === undefined)
+            force.translate = [0,0];
+        
+        if (d3.event.deltaY > 0)
+            force.translate[1] += 10;
+        else
+            force.translate[1] -= 10;
+    
+        zoom.translate([force.translate[0], force.translate[1]]);
+        
+        vis.attr("transform", "translate(" + force.translate + 
+                                 ")scale(" + force.scale + ")");
+    }
+    
+    function zoom() {   
+        if (d3.event) {
+            force.scale = d3.event.scale;
+            force.translate = d3.event.translate;
+        }
+        vis.attr("transform", "translate(" + d3.event.translate + 
+                                 ")scale(" + d3.event.scale + ")");        
     }
 });
