@@ -10,11 +10,12 @@ $(window).load(function () {
     var w = $(window).width(),
         h = $(window).height() - 3,
         link,
+        links,
+        circle, 
         node,
         nodes,
-        circle, 
-        nodeAttribute = 0, // mapping colors on nodes - 0 for data, 1 for flows
         linkAttribute = 0, // mapping colors on links - 0 for data, 1 for flows
+        nodeAttribute = 0, // mapping colors on nodes - 0 for data, 1 for flows
         colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
         fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
@@ -22,7 +23,6 @@ $(window).load(function () {
         nodeSize = 1,
         nodeWidth = 90 * nodeSize,
         nodeHeight = 25 * nodeSize,
-        links,
         childrenLinks = [],
         allChildrenNodes = [],
         sortingType = 2,
@@ -39,6 +39,21 @@ $(window).load(function () {
     this.getForce = function () {
         return force;
     };
+    
+    console.log(this);
+
+    /**
+     * Initiation of layout
+     * 
+     */
+    
+    var zoom = d3.behavior.zoom()
+        .scaleExtent([0.3, 3])
+        .on("zoom", zoom);
+    
+    var drag = d3.behavior.drag()
+        .on("dragstart", dragstart)
+        .on("drag", drag);
 
     var force = d3.layout.force()
         .on("tick", tick)
@@ -48,19 +63,15 @@ $(window).load(function () {
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
 
-    var vis = d3.select("body").append("svg:svg")
+    var svg = d3.select("body").append("svg")
         .attr("width", w)
         .attr("height", h)
-        /*.call(d3.behavior.zoom()
-            .scaleExtent([0.6, 4])
-            .center([w, h])
-            .on("zoom", zoom))*/
-        .append("g")
+        .call(zoom)
+            .on("dblclick.zoom", null)
+            .on("wheel.zoom", scroll);
+          
+    var vis = d3.select("svg").append("g")
         .attr("class", "svg");
-
-    var drag = force.drag()
-        .on("dragstart",dragstart)
-        .on("drag", drag);
 
     d3.json("data/sample.json", function (json) {
         root = json;
@@ -76,7 +87,12 @@ $(window).load(function () {
              
         update();  
     });
-        
+    
+    /** 
+     * Update is called everytime the graph is changed (more data is gathered).
+     * If we want a change to be propagated visually, we must call this function.
+     * 
+     */    
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
@@ -86,12 +102,32 @@ $(window).load(function () {
         
         getJsonData(nodes);
                                     
-        // on update reset max and min values in force
+        // On update reset max and min values in force
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
         createLinks();
         createNodes();
+        
+        // bind zoom on Alt + mousewheel 
+        $(window).keydown(function (event) {
+            event.preventDefault();
+            if(event.altKey){
+                svg.call(zoom)
+                    .on("dblclick.zoom", null)
+                    .on("mousewheel.zoom", zoom);
+            }
+        });
+        // unbind zoom if Alt is released
+        $(window).keyup(function (event) {
+            event.preventDefault();
+            if(!event.altKey){
+                svg.call(zoom)
+                    .on("dblclick.zoom", null)
+                    .on("wheel.zoom", null)
+                    .on("mousewheel.zoom", null);
+            }
+        });
         
         // start simulation
         force.nodes(nodes)
@@ -179,7 +215,7 @@ $(window).load(function () {
                     else return "node";
                 })
                 .attr("id", function (d) { return convertIp(d.id);})    
-                .call(force.drag);
+                .call(drag);
         
         // finds central node and adds special border (rectangle) to it
         groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
@@ -600,19 +636,7 @@ $(window).load(function () {
         });
         
         update();
-    }
-    
-    // fix position of any node on dragstart
-    function dragstart(d) {
-        d3.select(this).classed("fixed", d.fixed = true);
-    }
-    
-    // on drag of specific nodes, positioning of their children is affected 
-    function drag(d) {
-        if (d.hasChildren || d.isCentral) {
-            setNodePosition(d, d3.event);
-        }
-    }
+    }   
     
     function setNodePosition(node, event) {
         if (node.children) {
@@ -761,19 +785,32 @@ $(window).load(function () {
                 }
             });         
         }
-    }    
+    }   
     
-    function zoom() {
-        //$("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");        
-        
-        /*if(d3.event.sourceEvent.altKey) {
-            $("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");        
+    // fix position of any node on dragstart and enable dragging
+    function dragstart(d) {
+        d3.event.sourceEvent.stopPropagation();
+        d.fixed = true;
+        d3.select(this).classed("fixed", true);
+        force.start();
+    }
+    
+    // on drag of specific nodes, positioning of their children is affected 
+    function drag(d) {      
+        d.px += d3.event.dx;
+        d.py += d3.event.dy;
+            
+        if (d.hasChildren || d.isCentral) {
+            setNodePosition(d, d3.event);
         }
-        else {
-            if (force.scale === undefined)
-                force.scale = 1;
-
-            $("svg .svg").attr("transform", "translate(" + d3.event.translate + ")scale(" + force.scale + ")");        
-        }*/
+    }   
+    
+    function scroll() {
+    }
+    
+    function zoom() {            
+        vis.attr("transform", "translate(" 
+                + d3.event.translate + ")scale(" 
+                + d3.event.scale + ")");        
     }
 });
