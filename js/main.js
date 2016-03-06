@@ -71,6 +71,54 @@ $(window).load(function () {
     var vis = d3.select("svg").append("g")
         .attr("class", "svg");
 
+    // key for actual data/flow amount    
+    var key = svg.append("g")
+            .attr("class", "key")
+            .attr("transform", "translate(" + (w / 60) + "," + (h - 60) + ")");
+    
+    // rectangle with color
+    key.append("rect")
+            .attr("class", "color-key")
+            .attr("fill", "url(#graph-key)")
+            .attr("width", 250)
+            .attr("y", 8)
+            .attr("height", 25)          
+            .style({"stroke": "black", "stroke-width": "0.7"});
+    
+    key.append("text")
+            .attr("class", "label")
+            .attr("style", "font-size: 14")
+            .text("Legenda");
+    
+    key.append("text")
+            .attr("class", "key-from")
+            .attr("style", "font-size: 14")
+            .attr("x", -5)
+            .attr("y", 50)
+            .text("0");
+    
+    key.append("text")
+            .attr("class", "key-to")
+            .attr("style", "font-size: 14")
+            .attr("x", 232)
+            .attr("y", 50)
+            .text("max");
+    
+    // linear gradient element for key 
+    svg.append("linearGradient")
+      .attr("id", "graph-key")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", "2%").attr("y1", "0%")
+      .attr("x2", "23%").attr("y2", "0%")
+    .selectAll("stop")
+      .data([
+        {offset: "0%", color: "rgb(200,200,200)"},
+        {offset: "100%", color: "rgb(50,50,50)"}
+      ])   
+    .enter().append("stop")
+      .attr("offset", function(d) { return d.offset; })
+      .attr("stop-color", function(d) { return d.color; });
+
     d3.json("data/sample.json", function (json) {
         root = json;
         root.fixed = true;
@@ -83,6 +131,7 @@ $(window).load(function () {
         
         getJsonData(root.nodes);
              
+        updateKey(key);     
         update();  
     });
     
@@ -315,6 +364,33 @@ $(window).load(function () {
             b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
         }
         return "rgb("+r+","+g+","+b+")";
+    }
+    
+    function updateKey() {
+        // Update label
+        $(".key .label").text(function() {
+            if (nodeAttribute === 0)
+                return "Objem dat";
+            else 
+                return "Počet toků";
+        });
+        
+        // update color range          
+        var data = [
+            {offset: "0%", color: "rgb(" + colorRange[0][0] + "," + colorRange[0][1] + "," + colorRange[0][2] + ")"},
+            {offset: "100%", color: "rgb(" + colorRange[1][0] + "," + colorRange[1][1] + "," + colorRange[1][2] + ")"}
+        ];
+        
+        var stops = d3.select('lineargradient').selectAll('stop')
+            .data(data); 
+
+        stops.enter().append('stop');
+
+        stops
+            .attr('offset', function(d) { return d.offset; })
+            .attr('stop-color', function(d) { return d.color; });
+
+        stops.exit().remove();
     }
     
     // Get amount of hidden children for each node
