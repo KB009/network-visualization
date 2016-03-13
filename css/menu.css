@@ -32,6 +32,11 @@ h3 {
   margin-bottom: 20px;
 }
 
+.slider-column{
+  float: left;
+  width: 50%;
+}
+
 .slider {
   width: 100%;
   margin: 0 10px;
@@ -50,10 +55,19 @@ h3 {
   width:300px;
 }
 
+#div-button-prefix-order {
+  margin-top: 61px;
+}
+
+
 #div-button-pin {
   /*float: ;*/
   height: 20px;
 
+}
+
+#div-button-prefix-order {
+  margin-top: 61px;
 }
 
 #button-pin {
@@ -61,12 +75,18 @@ h3 {
   width: 50px;
   margin-top: -1%;
   margin-right: 20px;
+  position: absolute;
+  bottom: 0px;
+  right: 5px;
+  margin-bottom: -15px;
+  /*style="position: absolute; bottom: 0px; right: 5px; margin-bottom: -15px;"*/
 }
 
 #topmenu {
   /*background-color: #d1cdcd;*/
   /*height: 250px;*/
   width: auto;
+  height: 200px;
   /*border: 1px solid black;*/
 }
 

@@ -1,6 +1,6 @@
 $(document).ready(function() {
   $('#customColor').button();
-  $('#button-order-prefix').button();
+  $('#button-prefix-order').button();
   $('#button-balance').button();
   $('#button-pin').button();
   $('#Pum').button();

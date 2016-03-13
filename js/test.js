@@ -45,7 +45,7 @@ $(document).ready(function() {
     )
   }).trigger('slidechange')
 
-  $('#button-order-prefix').click(function() {
+  $('#button-prefix-order').click(function() {
     $('#test-button-order-prefix').html('bum')
   })
 

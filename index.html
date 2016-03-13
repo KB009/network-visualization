@@ -24,7 +24,7 @@ and open the template in the editor.
     </head>
     <body>
         <div class="menu">
-          <div id="topmenu" style="height: 200px">   <!-- runat="server" -->
+          <div id="topmenu">   <!-- runat="server" -->
               <div class="column" style="margin-left: 2%; margin-right: -5%;">
                 <div id="div-radiobutton-display" title="Barva" class="buttonset">
                   <h2>Barva</h2>
@@ -61,7 +61,7 @@ and open the template in the editor.
               </div>
 
               <div class="column" style="width: 29%">
-                <div style="float: left; width: 50%">
+                <div class="slider-column" >
                   <h2>Filtrovat</h2>
 
                   <div id="div-flows">
@@ -80,10 +80,10 @@ and open the template in the editor.
                       <div id="slider-dataVolume" class="slider"></div>
                       <span id="slider-value-volume-max"></span>
                     </div>
+                  </div>
                 </div>
-              </div>
 
-                <div style="float: left; width:50%">
+                <div class="slider-column">
                   <h2>Velikost uzlů:</h2>
                     <h3> &nbsp </h3>
                   <div class="slider-wrapper">
@@ -94,16 +94,16 @@ and open the template in the editor.
 
               </div>
 
-               <div class="column" style="margin-top: 61px;">
-                <button id="button-order-prefix">Seřadit podle prefixu</button>
+              <div id="div-button-prefix-order" class="column">
+                <button id="button-prefix-order">Seřadit podle prefixu</button>
                 <br>
                 <button id="button-balance">Vyvážít</button>
                 <br>
               </div>
           </div>
 
-          <div style="height:20px">
-            <button id="button-pin" style="position: absolute; bottom: 0px; right: 5px; margin-bottom: -15px;">Pin</button>
+          <div id="div-button-pin">
+            <button id="button-pin" >Pin</button>
           </div>
 
         </div>
