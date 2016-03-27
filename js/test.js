@@ -1,24 +1,24 @@
 $(document).ready(function() {
 
-  $('#div-radiobutton-display input, #div-radiobutton-node input').on('change', function() {
-    $('#test-' + $(this).parent().attr('id')).html(
-      $(this).next().html()
-    )
-  }).each(function() {
-    if(this.checked) {
-      $(this).trigger('change')
-    }
-  })
+  // $('#div-radiobutton-display input, #div-radiobutton-node input').on('change', function() {
+  //   $('#test-' + $(this).parent().attr('id')).html(
+  //     $(this).next().html()
+  //   )
+  // }).each(function() {
+  //   if(this.checked) {
+  //     $(this).trigger('change')
+  //   }
+  // })
 
-  $('#checkbox-mapto input').change(function() {
-    var mapTo = ""
-    $('#checkbox-mapto input').each(function(i) {
-      if(this.checked) {
-        mapTo += $(this).next().html() + " "
-      }
-    })
-    $('#test-' + $(this).parent().attr('id')).html(mapTo)
-  }).trigger('change')
+  // $('#checkbox-mapto input').change(function() {
+  //   var mapTo = ""
+  //   $('#checkbox-mapto input').each(function(i) {
+  //     if(this.checked) {
+  //       mapTo += $(this).next().html() + " "
+  //     }
+  //   })
+  //   $('#test-' + $(this).parent().attr('id')).html(mapTo)
+  // }).trigger('change')
 
 
   // POKUS REAKCE NA CUSTOM EVENT MENUUPDATE
@@ -74,7 +74,12 @@ $(document).ready(function() {
     // console.log(Menu.getMinFlowNum());
   })
 
+console.log("Radio ", $('input[name="radio"]:checked').val());
+console.log("Radio ", $('input[name="radio2"]:checked').val());
 
+// $('input[name="radio"]').on('change', function() {
+
+// })
 
 
 // Proc tady nemuzu pristoupit k Menu
@@ -96,7 +101,15 @@ $('#menu').on('menuUpdate', function(e) {
       $('#test-slider-nodeSize').html( Menu.getNodeSize() )
       break;
 
-    
+    case 'mapColorTo':
+      $('#test-div-radiobutton-display').html( Menu.getMapColorTo )
+      break;
+
+    case 'mapNodeTo':
+      $('#test-div-radiobutton-node').html( Menu.getMapNodeTo )
+      break;
+
+
 
   }
   // if (e.detail == 'flowNum') {

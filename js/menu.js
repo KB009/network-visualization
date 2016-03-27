@@ -15,8 +15,8 @@ var menuEvent = new CustomEvent('menuUpdate');
 // })
 
 var Menu = {
-  mapColorTo: "flows",
-  mapNodeTo: "ip",
+  mapColorTo: "flows", // "flows" / "volume"
+  mapNodeTo: "ip", // "ip" / "domainName"
   mapTo: "nodes",
   colorScheme: 1,
   minFlowNum: 0, 
@@ -29,33 +29,42 @@ var Menu = {
 
   },
 
+  // -------- MAP COLOR TO  ---------------------------------------------
   setMapColorTo: function(newValue) {
     mapColorTo = newValue;
 
-    // throw event
-    // var menuEvent = new CustomEvent('menuUpdate');
-    console.log("Jsem v setMapColorTo");  
-    document.getElementById("menu").dispatchEvent(menuEvent);
-    // window.dispatchEvent(menuEvent);
-    // update JSON
-    // data.mapColorTo = newValue;
-
+    var evt = new CustomEvent('menuUpdate', { detail: 'mapColorTo'});
+    document.getElementById("menu").dispatchEvent(evt);
+  
+    console.log("Jsem v setMapColorTo", newValue);
   },
   getMapColorTo: function() {
     return mapColorTo;
   },
+
+  // -------- MAP NODE TO  ----------------------------------------------
   setMapNodeTo: function(newValue) {
     mapNodeTo = newValue;
+
+    console.log("Jsem v setMapNODEto", newValue);
+
+    var evt = new CustomEvent('menuUpdate', { detail: 'mapNodeTo'});
+    document.getElementById("menu").dispatchEvent(evt);
   },
   getMapNodeTo: function() {
     return mapNodeTo;
   },
+
+  // ---------- MAP TO -------------------------------------------------
   setMapTo: function(newValue) {
     mapTo = newValue;
   },
   getMapTo: function() {
     return mapMapTo;
   },
+
+
+  // --------  COLOR SCHEME ----------------------------------------------
   setColorScheme: function(newValue) {
     colorScheme = newValue;
   },
@@ -64,7 +73,7 @@ var Menu = {
   },
 
   // ---------- FLOW NUM -------------------------------------------------
-  setFlowNum: function(minValue, maxValue) { // *
+  setFlowNum: function(minValue, maxValue) { // *tested OK
     minFlowNum = minValue;
     maxFlowNum = maxValue;
     // set values of sliders in case the change doesnt come from them
@@ -82,7 +91,7 @@ var Menu = {
 
     console.log("Changed min/max flow value: ", minFlowNum, maxFlowNum);
   },
-  setMinFlowNum: function(minValue) {
+  setMinFlowNum: function(minValue) { // *tested OK
     minFlowNum = minValue;
     
     if ($('#slider-flows').slider('values', 0) != minValue) {
@@ -95,11 +104,11 @@ var Menu = {
 
     console.log("Changed min flow value: ", minFlowNum);
   },
-  getMinFlowNum: function() {
+  getMinFlowNum: function() { // *tested OK
     return minFlowNum;
 
   },
-  setMaxFlowNum: function(maxValue) {
+  setMaxFlowNum: function(maxValue) { // *tested OK
     maxFlowNum = maxValue;
 
     if ($('#slider-flows').slider('values', 1) != maxValue) {
@@ -112,7 +121,7 @@ var Menu = {
 
     console.log("Changed max flow value: ",  maxFlowNum);
   },
-  getMaxFlowNum: function() {
+  getMaxFlowNum: function() { // *tested OK
     return maxFlowNum;
   },
 
@@ -203,6 +212,7 @@ Menu.render = function() {
       'type':'radio',
       'name':'radio',
       'id':'radio1',
+      'value':0,  // Pocty toku
       'checked':'checked'
     }))
     .append($('<label/>', { 'for':'radio1'}).html("Počty toků"))
@@ -210,7 +220,8 @@ Menu.render = function() {
     .append($('<input/>', {
       'type':'radio',
       'name':'radio',
-      'id':'radio2'
+      'id':'radio2',
+      'value':1 // Objem dat
     }))
     .append($('<label/>', { 'for':'radio2'}).html("Objem dat"));
 
@@ -224,6 +235,7 @@ Menu.render = function() {
       'type':'radio',
       'name':'radio2',
       'id':'node-radio1',
+      'value':2,
       'checked':'checked'
     }))
     .append($('<label/>', { 'for':'node-radio1'}).html("IP adresy"))
@@ -231,7 +243,8 @@ Menu.render = function() {
     .append($('<input/>', {
       'type':'radio',
       'name':'radio2',
-      'id':'node-radio2'
+      'id':'node-radio2', 
+      'value':3
     }))
     .append($('<label/>', { 'for':'node-radio2'}).html("Doménové jméno"));
 
@@ -242,7 +255,7 @@ Menu.render = function() {
 
   $(column1).append(radioDisplay).append(radioNode);
 
-
+  // CHECKBOX / Mapuje se na uzly/spojnice
   var column2 = $('<div/>', {
     'class':'column buttonset',
     'id':'checkbox-mapto',
@@ -251,25 +264,27 @@ Menu.render = function() {
     .append($('<input/>', {
       'type':'checkbox',
       'id':'check1',
+      'name':'check',
       'checked':'checked'
     }))
     .append($('<label/>', { 'for':'check1' }).html("Uzly"))
     .append($('<br>'))
     .append($('<input/>', {
       'type':'checkbox',
+      'name':'check',
       'id':'check2'
     }))
     .append($('<label/>', { 'for':'check2' }).html("Spojnice"))
     .append($('<br>'));
 
-
+  // COLOR SCHEMES
   var column3 = $('<div/>', {
       'class':'column',
       'id':'colorSchemes'
     }).append($('<h2/>').html("Barevné škály"))
       .append($('<button/>', { 'id':'customColor' }).html("Vlastní..."));
 
-
+  // SLIDER / Filtruj min/max pocet toku
   var sliders1 = $('<div/>', { 'class':'slider-column' })
     .append($('<h2/>').html("Filtrovat"))
     .append($('<div/>', { 'id':'div-flows' })
@@ -369,7 +384,66 @@ $(document).ready(function() {
   $('#button-pin').button();
   $('#Pum').button();
 
-  
+
+
+
+  // ********* R A D I O / Map COLOR to **********
+  var rad = document.getElementsByName('radio');
+
+  for (var i = 0; i < rad.length; i++) {
+    rad[i].onclick = function() {
+      // console.log("Jsem uvnitr", this.value);
+
+      if (this.value == 0) {
+        Menu.setMapColorTo("flows");
+      }
+      if (this.value == 1) {
+        Menu.setMapColorTo("volume");
+      }
+    }
+  }
+
+  // ********* R A D I O / Map NODE to **********
+  rad = document.getElementsByName('radio2');
+
+  for (var i = 0; i < rad.length; i++) {
+    rad[i].onclick = function() {
+      // console.log("Jsem uvnitr", this.value);
+      
+      if (this.value == 2) {
+        Menu.setMapNodeTo("ip");
+      }
+      if (this.value == 3) {
+        Menu.setMapNodeTo("domainName");
+      }
+    }
+  }  
+
+  // ********** R A D I O / Map  to **************
+  var checkOpt = document.getElementsByName('check');
+
+  for (var i = 0; i < checkOpt.length; i++) {
+    checkOpt[i].onclick = function() {
+      if (this.id == "check1") {
+        if (this.checked) {
+
+        } else {
+
+        }
+        console.log("Puc check1", this.checked);
+      }
+      if (this.id == "check2") {
+        if (this.checked) {
+
+        } else {
+          
+        }
+
+        console.log("Puc check2");
+      }
+    }
+  }
+  // console.log(checkOpt);
 
   // ********** S L I D E R / Flow num ***********
   $('#slider-flows').slider({
@@ -379,12 +453,10 @@ $(document).ready(function() {
     slide: function( event, ui ) {
       // $('#slider-value-flow-min').html(ui.values[0]);
       // $('#slider-value-flow-max').html(ui.values[1]);
-      // Menu.setFlowNum(ui.values[0], ui.values[1]);
+      Menu.setFlowNum(ui.values[0], ui.values[1]);
 
-      
-      Menu.setMinFlowNum(ui.values[0]);
-      Menu.setMaxFlowNum(ui.values[1]);
-      // console.log("pokus" + Menu.getMinFlowNum());
+      // Menu.setMinFlowNum(ui.values[0]);
+      // Menu.setMaxFlowNum(ui.values[1]);
     }
   });
   $('#slider-value-flow-min').html(
@@ -424,6 +496,7 @@ $(document).ready(function() {
   $('#slider-value-nodeSize').html(
       $('#slider-nodeSize').slider('value')
    );
+
 
 
 
