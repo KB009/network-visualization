@@ -1,0 +1,29 @@
+setFlowNum
+* $('#slider-flows').slider('values', 0, minValue);
+	nastavuji hodnotu slideru v pripade, ze zmena prisla odjinud, ne od slideru
+	Neni to desne zbytecne? Protoze pokud jde zmena od nich, tak se prenastavi znovu stejne
+	Polepsila jsem si tak moc, pokud to davam pres if?
+
+
+
+Events
+* Vzdy na event musim vytvorit novy objekt?
+
+* nemam ten event posilat na urovni jednotlivych objektu (slider, etc) a teprve tam po zmene poslat zmenu do menu a json
+
+* when setting only min or max (eg. dataVolume) do I want to create a special event or is it better to do one extra assignment than have x e
+
+
+* POZOR / pokud nastavuji max a min samostatne (u slideru) poprve, tak se pusti test trida, ktera po nastaveni min chce hned vypisovat i max, ale to jeste neni nastavene
+
+
+
+TO DO 
+! Upravit JSON pro mapTo na pole
+* refactor names of radiobuttons
+* sjednotit komentare do aj
+
+
+?????
+* mužu zobecnit celou metodu reagujici na events? (Treba tak, že by název caes odpovídal "test-casename"?
+A nebylo by to vubec zbytecné?

@@ -17,7 +17,7 @@ var menuEvent = new CustomEvent('menuUpdate');
 var Menu = {
   mapColorTo: "flows", // "flows" / "volume"
   mapNodeTo: "ip", // "ip" / "domainName"
-  mapTo: "nodes",
+  mapTo: [ "nodes" ], // "nodes" / "links"
   colorScheme: 1,
   minFlowNum: 0, 
   maxFlowNum: 150, 
@@ -33,6 +33,12 @@ var Menu = {
   setMapColorTo: function(newValue) {
     mapColorTo = newValue;
 
+    if (newValue == 'flows') {
+      document.getElementById('radio1').checked = true;
+    } else {
+      document.getElementById('radio2').checked = true;
+    }
+
     var evt = new CustomEvent('menuUpdate', { detail: 'mapColorTo'});
     document.getElementById("menu").dispatchEvent(evt);
   
@@ -46,6 +52,12 @@ var Menu = {
   setMapNodeTo: function(newValue) {
     mapNodeTo = newValue;
 
+    if (newValue == 'ip') {
+      document.getElementById('node-radio1').checked = true;
+    } else {
+      document.getElementById('node-radio2').checked = true;
+    }
+
     console.log("Jsem v setMapNODEto", newValue);
 
     var evt = new CustomEvent('menuUpdate', { detail: 'mapNodeTo'});
@@ -58,9 +70,26 @@ var Menu = {
   // ---------- MAP TO -------------------------------------------------
   setMapTo: function(newValue) {
     mapTo = newValue;
+
+    if (mapTo[0] == 'nodes' || mapTo[1] == 'nodes') {
+      document.getElementById('check1').checked = true;
+    } else {
+      document.getElementById('check1').checked = false;
+    }
+
+    if (mapTo[0] == 'links' || mapTo[1] == 'links') {
+      document.getElementById('check2').checked = true;
+    } else {
+      document.getElementById('check2').checked = false;
+    }
+
+    var evt = new CustomEvent('menuUpdate', { detail: 'mapTo'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    // console.log("Jsem v setMapTo", mapTo, mapTo.length);
   },
   getMapTo: function() {
-    return mapMapTo;
+    return mapTo;
   },
 
 
@@ -419,28 +448,24 @@ $(document).ready(function() {
     }
   }  
 
-  // ********** R A D I O / Map  to **************
+  // ********** C H E C K  / Map to **************
   var checkOpt = document.getElementsByName('check');
 
   for (var i = 0; i < checkOpt.length; i++) {
     checkOpt[i].onclick = function() {
-      if (this.id == "check1") {
-        if (this.checked) {
+      var toNodes = document.getElementById('check1');
+      var toLinks = document.getElementById('check2');
 
-        } else {
+      var arg = [];
 
-        }
-        console.log("Puc check1", this.checked);
+      if (toNodes.checked) {
+        arg.push('nodes');
       }
-      if (this.id == "check2") {
-        if (this.checked) {
-
-        } else {
-          
-        }
-
-        console.log("Puc check2");
+      if (toLinks.checked) {
+        arg.push('links');
       }
+
+      Menu.setMapTo(arg);
     }
   }
   // console.log(checkOpt);

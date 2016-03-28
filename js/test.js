@@ -72,6 +72,10 @@ $(document).ready(function() {
     Menu.setFlowNum(10, 100);
     Menu.setDataVolume(33, 133);
     // console.log(Menu.getMinFlowNum());
+    // 
+    Menu.setMapColorTo('volume');
+    Menu.setMapNodeTo('domainName');
+    Menu.setMapTo(['links', 'nodes']);
   })
 
 console.log("Radio ", $('input[name="radio"]:checked').val());
@@ -108,6 +112,9 @@ $('#menu').on('menuUpdate', function(e) {
     case 'mapNodeTo':
       $('#test-div-radiobutton-node').html( Menu.getMapNodeTo )
       break;
+
+    case 'mapTo':
+      $('#test-checkbox-mapto').html( Menu.getMapTo );
 
 
 
