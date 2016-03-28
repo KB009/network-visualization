@@ -8,30 +8,39 @@
     * zkontrolovat na co potrebuji checkbox-mapto id
  */
 
-var menuEvent = new CustomEvent('menuUpdate');
 
-// document.getElementById('menu').addEventListener('menuUpdate', function(e) {
-//   console.log("Detected event");
-// })
+// ------- WORKS JUST FINE -------
+// 
+var jsonMenu;
+$.getJSON('menu.json', function(data) {
+  jsonMenu = data;
+  // for (var i in jsonMenu) {
+  //   console.log(jsonMenu[i]);
+  // }
+  
+  // init test display
+  // var evt = new CustomEvent('menuUpdate', { detail: 'init'});
+  // document.getElementById("menu").dispatchEvent(evt);
+});
 
 var Menu = {
-  mapColorTo: "flows", // "flows" / "volume"
-  mapNodeTo: "ip", // "ip" / "domainName"
-  mapTo: [ "nodes" ], // "nodes" / "links"
-  colorScheme: 1,
-  minFlowNum: 0, 
-  maxFlowNum: 150, 
-  minDataVolume: 1, 
-  maxDataVolume: 200, 
-  nodeSize: 45,
+  // mapColorTo: "flows", // "flows" / "volume"
+  // mapNodeTo: "ip", // "ip" / "domainName"
+  // mapTo: [ "nodes" ], // "nodes" / "links"
+  // colorScheme: 1,
+  // minFlowNum: 0, 
+  // maxFlowNum: 150, 
+  // minDataVolume: 1, 
+  // maxDataVolume: 200, 
+  // nodeSize: 45,
 
-  loadValuesFromJson: function() {
-
-  },
+  // loadValuesFromJson: function() {  // init
+    // TO DO 
+  // },
 
   // -------- MAP COLOR TO  ---------------------------------------------
   setMapColorTo: function(newValue) {
-    mapColorTo = newValue;
+    jsonMenu.mapColorTo = newValue;
 
     if (newValue == 'flows') {
       document.getElementById('radio1').checked = true;
@@ -42,15 +51,15 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'mapColorTo'});
     document.getElementById("menu").dispatchEvent(evt);
   
-    console.log("Jsem v setMapColorTo", newValue);
+    console.log("Jsem v setMapColorTo", jsonMenu.mapColorTo);
   },
   getMapColorTo: function() {
-    return mapColorTo;
+    return jsonMenu.mapColorTo;
   },
 
   // -------- MAP NODE TO  ----------------------------------------------
   setMapNodeTo: function(newValue) {
-    mapNodeTo = newValue;
+    jsonMenu.mapNodeTo = newValue;
 
     if (newValue == 'ip') {
       document.getElementById('node-radio1').checked = true;
@@ -58,26 +67,26 @@ var Menu = {
       document.getElementById('node-radio2').checked = true;
     }
 
-    console.log("Jsem v setMapNODEto", newValue);
+    console.log("Jsem v setMapNODEto", jsonMenu.mapNodeTo);
 
     var evt = new CustomEvent('menuUpdate', { detail: 'mapNodeTo'});
     document.getElementById("menu").dispatchEvent(evt);
   },
   getMapNodeTo: function() {
-    return mapNodeTo;
+    return jsonMenu.mapNodeTo;
   },
 
   // ---------- MAP TO -------------------------------------------------
   setMapTo: function(newValue) {
-    mapTo = newValue;
+    jsonMenu.mapTo = newValue;
 
-    if (mapTo[0] == 'nodes' || mapTo[1] == 'nodes') {
+    if (newValue[0] == 'nodes' || newValue[1] == 'nodes') {
       document.getElementById('check1').checked = true;
     } else {
       document.getElementById('check1').checked = false;
     }
 
-    if (mapTo[0] == 'links' || mapTo[1] == 'links') {
+    if (newValue[0] == 'links' || newValue[1] == 'links') {
       document.getElementById('check2').checked = true;
     } else {
       document.getElementById('check2').checked = false;
@@ -86,25 +95,25 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'mapTo'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    // console.log("Jsem v setMapTo", mapTo, mapTo.length);
+    // console.log("Jsem v setMapTo",jsonMenu. mapTo, jsonMenu.mapTo.length);
   },
   getMapTo: function() {
-    return mapTo;
+    return jsonMenu.mapTo;
   },
 
 
   // --------  COLOR SCHEME ----------------------------------------------
   setColorScheme: function(newValue) {
-    colorScheme = newValue;
+    jsonMenu.colorScheme = newValue;
   },
   getColorScheme: function() {
-    return colorScheme;
+    return jsonMenu.colorScheme;
   },
 
   // ---------- FLOW NUM -------------------------------------------------
   setFlowNum: function(minValue, maxValue) { // *tested OK
-    minFlowNum = minValue;
-    maxFlowNum = maxValue;
+    jsonMenu.minFlowNum = minValue;
+    jsonMenu.maxFlowNum = maxValue;
     // set values of sliders in case the change doesnt come from them
     if ($('#slider-flows').slider('values', 0) != minValue) {
       $('#slider-flows').slider('values', 0, minValue);
@@ -118,10 +127,10 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed min/max flow value: ", minFlowNum, maxFlowNum);
+    console.log("Changed min/max flow value: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
   },
   setMinFlowNum: function(minValue) { // *tested OK
-    minFlowNum = minValue;
+    jsonMenu.minFlowNum = minValue;
     
     if ($('#slider-flows').slider('values', 0) != minValue) {
       $('#slider-flows').slider('values', 0, minValue);
@@ -131,14 +140,14 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed min flow value: ", minFlowNum);
+    console.log("Changed min flow value: ", jsonMenu.minFlowNum);
   },
   getMinFlowNum: function() { // *tested OK
-    return minFlowNum;
+    return jsonMenu.minFlowNum;
 
   },
   setMaxFlowNum: function(maxValue) { // *tested OK
-    maxFlowNum = maxValue;
+    jsonMenu.maxFlowNum = maxValue;
 
     if ($('#slider-flows').slider('values', 1) != maxValue) {
       $('#slider-flows').slider('values', 1, maxValue);
@@ -148,16 +157,16 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed max flow value: ",  maxFlowNum);
+    console.log("Changed max flow value: ", jsonMenu.maxFlowNum);
   },
   getMaxFlowNum: function() { // *tested OK
-    return maxFlowNum;
+    return jsonMenu.maxFlowNum;
   },
 
   // ---------- DATA VOLUME -------------------------------------------------
   setDataVolume: function(minValue, maxValue) { // *tested OK
-    minDataVolume = minValue;
-    maxDataVolume = maxValue;
+    jsonMenu.minDataVolume = minValue;
+    jsonMenu.maxDataVolume = maxValue;
 
     if ($('#slider-dataVolume').slider('values', 0) != minValue) {
       $('#slider-dataVolume').slider('values', 0, minValue);
@@ -171,10 +180,10 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume to ", minDataVolume, maxDataVolume);
+    console.log("I've updated data volume to ", jsonMenu.minDataVolume, jsonMenu.maxDataVolume);
   },
   setMinDataVolume: function(minValue) { // *tested OK
-    minDataVolume = minValue;
+    jsonMenu.minDataVolume = minValue;
 
     if ($('#slider-dataVolume').slider('values', 0) != minValue) {
       $('#slider-dataVolume').slider('values', 0, minValue);
@@ -184,13 +193,13 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated MIN data volume to ", minDataVolume);
+    console.log("I've updated MIN data volume to ", jsonMenu.minDataVolume);
   },
   getMinDataVolume: function() { // *tested OK
-    return minDataVolume;
+    return jsonMenu.minDataVolume;
   },
   setMaxDataVolume: function(maxValue) { // *tested OK
-    maxDataVolume = maxValue;
+    jsonMenu.maxDataVolume = maxValue;
 
     if ($('#slider-dataVolume').slider('values', 1) != maxValue) {
       $('#slider-dataVolume').slider('values', 1, maxValue);
@@ -200,15 +209,15 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated MAX data volume to ", maxDataVolume);
+    console.log("I've updated MAX data volume to ", jsonMenu.maxDataVolume);
   },
   getMaxDataVolume: function() { // *tested OK
-    return maxDataVolume;
+    return jsonMenu.maxDataVolume;
   },
 
   // ---------- NODE SIZE -------------------------------------------------
   setNodeSize: function(newValue) { // *tested OK
-    nodeSize = newValue;
+    jsonMenu.nodeSize = newValue;
 
     $('#slider-nodeSize').slider('value', newValue);
     $('#slider-value-nodeSize').html( newValue );
@@ -216,10 +225,10 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'nodeSize'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated node size to ", nodeSize);
+    console.log("I've updated node size to ", jsonMenu.nodeSize);
   },
   getNodeSize: function() { // *tested OK
-    return nodeSize;
+    return jsonMenu.nodeSize;
   },
 }
 
@@ -370,31 +379,33 @@ Menu.pin = function() {
 
 $(document).ready(function() {
 
-  var menu = {
-    "map-color-to": "flows",
-    "map-node-to" : "ip",
-    "mapTo" : "nodes",
-    "color-scheme" : 1,
-    "min-num-of-flows" : 0,
-    "max-num-of-flows" : 150,
-    "min-data-volume" : 1,
-    "max-data-volume" : 200,
-    "node-size" : 45
-  }
+  // var menu = {
+  //   "map-color-to": "flows",
+  //   "map-node-to" : "ip",
+  //   "mapTo" : "nodes",
+  //   "color-scheme" : 1,
+  //   "min-num-of-flows" : 0,
+  //   "max-num-of-flows" : 150,
+  //   "min-data-volume" : 1,
+  //   "max-data-volume" : 200,
+  //   "node-size" : 45
+  // }
 
-  for (var i in menu) {
-      console.log(menu.mapTo);
-      console.log(menu[i]);
-    }
+  // for (var i in menu) {
+  //     console.log(menu.mapTo);
+  //     console.log(menu[i]);
+  //   }
 
-// ------- WORKS JUST FINE -------
-//   $.getJSON('menu.json', function(data) {
-//     console.log("jsem tu");
-//     for (var i in data) {
-//       console.log(data.mapTo);
-//       console.log(data[i]);
-//     }
-// });  
+
+  // $(function() {
+  // console.log("uprostred");
+
+  //  for (var i in menuu) {
+  //     console.log("jsme 2");
+  //     console.log(menuu.mapTo);
+  //     console.log(menuu[i]);
+  //   }
+  // })
 
   
 

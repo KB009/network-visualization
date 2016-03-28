@@ -21,20 +21,6 @@ $(document).ready(function() {
   // }).trigger('change')
 
 
-  // POKUS REAKCE NA CUSTOM EVENT MENUUPDATE
-  // $('#slider-flows').on('menuUpdate', function(e) {
-  //   console.log("Som tu");
-  //   if (e.detail == 'flowNum') {
-  //     $('#test-slider-flows-min').html(
-  //       $('#slider-flows').slider('values', 0)
-  //       )
-  //     $('#test-slider-flows-max').html(
-  //       $('#slider-flows').slider('values', 1)
-  //     )
-  //     console.log("Pum");
-  //   }
-  // })
-
   // $('#slider-flows').on('slidechange', function() {
   //   $('#test-slider-flows-min').html(
   //     $('#slider-flows').slider('values', 0)
@@ -78,17 +64,9 @@ $(document).ready(function() {
     Menu.setMapTo(['links', 'nodes']);
   })
 
-console.log("Radio ", $('input[name="radio"]:checked').val());
-console.log("Radio ", $('input[name="radio2"]:checked').val());
 
-// $('input[name="radio"]').on('change', function() {
-
-// })
-
-
-// Proc tady nemuzu pristoupit k Menu
 $('#menu').on('menuUpdate', function(e) {
-  console.log("Jsem v menuUpdate event", e.detail);
+  // console.log("Jsem v menuUpdate event", e.detail);
 
   switch(e.detail) {
     case 'flowNum':
@@ -106,37 +84,34 @@ $('#menu').on('menuUpdate', function(e) {
       break;
 
     case 'mapColorTo':
-      $('#test-div-radiobutton-display').html( Menu.getMapColorTo )
+      $('#test-div-radiobutton-display').html( Menu.getMapColorTo() )
       break;
 
     case 'mapNodeTo':
-      $('#test-div-radiobutton-node').html( Menu.getMapNodeTo )
+      $('#test-div-radiobutton-node').html( Menu.getMapNodeTo() )
       break;
 
     case 'mapTo':
-      $('#test-checkbox-mapto').html( Menu.getMapTo );
+      $('#test-checkbox-mapto').html( Menu.getMapTo() );
+      break;
 
+    case 'init':
+      $('#test-div-radiobutton-display').html( Menu.getMapColorTo() )
+      $('#test-div-radiobutton-node').html( Menu.getMapNodeTo() )
+      $('#test-checkbox-mapto').html( Menu.getMapTo() );
+  
+      $('#test-slider-flows-min').html( Menu.getMinFlowNum() )
+      $('#test-slider-flows-max').html( Menu.getMaxFlowNum() )
+      $('#test-dataVolume-min').html( Menu.getMinDataVolume() )
+      $('#test-dataVolume-max').html( Menu.getMaxDataVolume() )
+      $('#test-slider-nodeSize').html( Menu.getNodeSize() )
+      break;
+  }    
 
+})
 
-  }
-  // if (e.detail == 'flowNum') {
-  //     $('#test-slider-flows-min').html(
-  //       $('#slider-flows').slider('values', 0)
-  //       // Menu.getMinFlowNum();
-  //       )
-  //     $('#test-slider-flows-max').html(
-  //       $('#slider-flows').slider('values', 1)
-  //     )
-  //     console.log("Pum");
-  //   }
-
-  // $('#test-slider-flows-min').html(
-  //     $('#slider-flows').slider('values', 0)
-  //   )
-
-  //   $('#test-slider-flows-max').html(
-  //     $('#slider-flows').slider('values', 1)
-  //   )
-}) 
+  // INICIALIZACE TEST MENU
+  var evt = new CustomEvent('menuUpdate', { detail: 'init'});
+  document.getElementById("menu").dispatchEvent(evt);
 
 })

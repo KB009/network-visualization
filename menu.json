@@ -1,10 +1,10 @@
 {
     "mapColorTo": "flows",
     "mapNodeTo" : "ip",
-    "mapTo" : "nodes",
+    "mapTo" : [ "nodes" ],
     "colorScheme" : 1,
-    "minNumOfFlows" : 0,
-    "maxNumOfFlows" : 150,
+    "minFlowNum" : 0,
+    "maxFlowNum" : 150,
     "minDataVolume" : 1,
     "maxDataVolume" : 200,
     "nodeSize" : 45
