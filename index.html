@@ -7,23 +7,67 @@ and open the template in the editor.
 <html>
     <head>
         <title>Network visualization</title>
-        <meta charset="UTF-8"> 
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="images/favicon.png" rel="icon" type="image/png" />
         <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link rel="stylesheet" type="text/css" href="css/menu.css">
+        <link rel="stylesheet" href="js/lib/jquery-ui-1.11.4.custom/jquery-ui.css">
 
-        <script type="text/javascript" src="js/lib/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="js/lib/jquery-2.2.1.min.js"></script>
         <script type="text/javascript" src="js/lib/jquery-ui.min.js"></script>
         <script type="text/javascript" src="js/lib/d3.v3.min.js" charset="utf-8"></script>
+
+        <!-- <script type="text/javascript" src="js/main.js"></script> -->
+        <script type="text/javascript" src="js/menu.js"></script>
+        <!-- <script type="application/json" src="menu.json"></script>  -->
+
     </head>
     <body>
-        <div class="menu">
-            <!--div></div-->
-        </div>
+        <div id="menu"></div>
+
         <script type="text/javascript" src="js/main.js"></script>
         <div id="dialog">
             <div class="contents"></div>
         </div>
+
+
+        <div style="padding: 10px">
+          <div style="margin: 10px">
+            Barva: <span id="test-div-radiobutton-display"></span>
+          </div>
+          <div style="margin: 10px">
+            Uzel: <span id="test-div-radiobutton-node"></span>
+          </div>
+          <div style="margin: 10px">
+            Mapovat na: <span id="test-checkbox-mapto"></span>
+          </div>
+          <div style="margin: 10px">
+            Barevné škály: <span id="test-colorSchemes"></span>
+          </div>
+          <div style="margin: 10px">
+            Počty toků : <span id="test-slider-flows-min"></span> (min);
+              <span id="test-slider-flows-max"></span> (max)
+          </div>
+          <div style="margin: 10px">
+            Objem dat: <span id="test-dataVolume-min"></span> (min);
+              <span id="test-dataVolume-max"></span> (max)
+          </div>
+          <div style="margin: 10px">
+            Velikost uzlů: <span id="test-slider-nodeSize"></span>
+          </div>
+          <div style="margin: 10px">
+            Seřadit podle prefixu: <span id="test-button-order-prefix"></span>
+          </div>
+          <div style="margin: 10px">
+            Vyvážit: <span id="test-button-balance"></span>
+          </div>
+
+        </div>
+
+        <!-- <script type="text/javascript" src="js/main.js"></script> -->
+        <script type="text/javascript" src="js/test.js"></script>
+
     </body>
 </html>
