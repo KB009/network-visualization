@@ -108,8 +108,8 @@ $(window).load(function () {
     svg.append("linearGradient")
       .attr("id", "graph-key")
       .attr("gradientUnits", "userSpaceOnUse")
-      .attr("x1", "2%").attr("y1", "0%")
-      .attr("x2", "23%").attr("y2", "0%")
+      .attr("x1", "1%").attr("y1", "0%")
+      .attr("x2", "15%").attr("y2", "0%")
     .selectAll("stop")
       .data([
         {offset: "0%", color: "rgb(200,200,200)"},
