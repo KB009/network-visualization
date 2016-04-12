@@ -1,0 +1,109 @@
+body {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+button {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 180px;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: bolder;
+  margin-bottom: ;
+}
+
+h3 {
+  font-size: 13px;
+  font-weight: normal;
+  margin-bottom: 0.4em;
+  margin-left: 10px;
+}
+
+.column {
+  width: 19%;
+  /*height: 150px;*/
+  float: left;
+  margin-top: 20px;
+}
+.buttonset {
+  margin-bottom: 20px;
+}
+
+.slider-column{
+  float: left;
+  width: 50%;
+}
+
+.slider {
+  width: 100%;
+  margin: 0 10px;
+  /*width: 70%*/
+}
+
+.radiobutton{
+  width: 250px;
+}
+
+.label{
+  font-weight: bold;
+}
+
+#div-radiobutton-display {
+  width:300px;
+}
+
+#div-button-prefix-order {
+  margin-top: 61px;
+}
+
+
+#div-button-pin {
+  /*float: ;*/
+  height: 20px;
+  background-color: #d1cdcd;
+}
+
+#div-button-prefix-order {
+  margin-top: 61px;
+}
+
+#button-pin {
+  float: right;
+  width: 50px;
+  /*margin-top: -1%;*/
+  margin-right: 20px;
+  position: absolute;
+  /*bottom: 0px;*/
+  right: 5px;
+  margin-bottom: -15px;
+  /*style="position: absolute; bottom: 0px; right: 5px; margin-bottom: -15px;"*/
+}
+
+#menu {
+  /*height: 220px;*/
+}
+
+#topmenu {
+  background-color: #d1cdcd;
+  /*height: 250px;*/
+  width: auto;
+  height: 200px;
+  /*border: 1px solid black;*/
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-flow: row nowrap;
+  margin: 10px 0;
+  width: 250px;
+  justify-content: space-between;
+}
+
+.slider-wrapper > span {
+  margin: 0 10px;
+  width: 1em;
+  font-weight: bold;
+}

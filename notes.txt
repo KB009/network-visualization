@@ -1,0 +1,37 @@
+setFlowNum
+* $('#slider-flows').slider('values', 0, minValue);
+	nastavuji hodnotu slideru v pripade, ze zmena prisla odjinud, ne od slideru
+	Neni to desne zbytecne? Protoze pokud jde zmena od nich, tak se prenastavi znovu stejne
+	Polepsila jsem si tak moc, pokud to davam pres if?
+
+
+
+Events
+* Vzdy na event musim vytvorit novy objekt?
+
+* nemam ten event posilat na urovni jednotlivych objektu (slider, etc) a teprve tam po zmene poslat zmenu do menu a json
+
+* when setting only min or max (eg. dataVolume) do I want to create a special event or is it better to do one extra assignment than have x e
+
+
+* POZOR / pokud nastavuji max a min samostatne (u slideru) poprve, tak se pusti test trida, ktera po nastaveni min chce hned vypisovat i max, ale to jeste neni nastavene
+
+
+
+TO DO 
+! /done/ Upravit JSON pro mapTo na pole
+!!!
+* refactor names of radiobuttons + id
+* sjednotit komentare do aj
+* nedat vsechny stringy z menu do promennych? (flows, ip, ...)
+* zjisti, jestil mám dobre dvojrovnáse\
+
+
+?????
+* mužu zobecnit celou metodu reagujici na events? (Treba tak, že by název caes odpovídal "test-casename"?
+A nebylo by to vubec zbytecné?
+
+ZEPTAT SE LUCKY
+* Jak to udelat tak, abych mohla pustit na zacátku initTestovehoZobrazeni (aby byl nactený i json atd. Není problém, že test.js je dole na spodku menu a já mám pak document.ready() a je ready, az se zpracuje i test.js? Ale pritom by se stejne mel json nacist uz predtim podle me.
+
+* potreba resit namespace? napr stejne id v ruznych souborech
