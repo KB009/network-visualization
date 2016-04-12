@@ -59,6 +59,7 @@ body {
 
 #dialog {
     font-size: 14px;
+    padding: 0; 
 }
 
 #dialog .contents table {

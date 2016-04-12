@@ -6,7 +6,7 @@
 
 /* global d3 */
 
-$(window).load(function () {
+$(window).ready(function () {
     var w = $(window).width(),
         h = $(window).height() - 3,
         link,
@@ -15,10 +15,12 @@ $(window).load(function () {
         node,
         nodes,
         linkAttribute = 0, // mapping colors on links - 0 for data, 1 for flows
-        nodeAttribute = 0, // mapping colors on nodes - 0 for data, 1 for flows
+        nodeAttribute = 1, // mapping colors on nodes - 0 for data, 1 for flows
         colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
         fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
+        dataRange,
+        flowsRange,
         lineSize = 2.2,
         nodeSize = 1,
         nodeWidth = 90 * nodeSize,
@@ -27,7 +29,7 @@ $(window).load(function () {
         allChildrenNodes = [],
         sortingType = 2,
         root;
-                       
+                             
     this.getLinks = function () {
         return links;
     };
@@ -95,7 +97,7 @@ $(window).load(function () {
             .attr("style", "font-size: 14")
             .attr("x", -5)
             .attr("y", 50)
-            .text("0");
+            .text("min");
     
     key.append("text")
             .attr("class", "key-to")
@@ -131,7 +133,7 @@ $(window).load(function () {
         
         getJsonData(root.nodes);
              
-        updateKey(key);     
+        updateKey(key);           
         update();  
     });
     
@@ -153,9 +155,12 @@ $(window).load(function () {
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
+        dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
+        flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
+        
         createLinks();
         createNodes();
-        
+              
         // bind zoom on Alt + mousewheel 
         $(window).keydown(function (event) {
             event.preventDefault();
@@ -275,6 +280,7 @@ $(window).load(function () {
 
         // Enter any new nodes and show them as rectangles
         groupNodes.append("rect")
+                .attr("class", "background")
                 .attr("x", 0)//function(d) { return d.x; })
                 .attr("y", 0)//function(d) { return d.y; })
                 .attr("rx", 2)
@@ -327,7 +333,7 @@ $(window).load(function () {
                 .style("font-size",nodeHeight + "px");       
     }
 
-    function tick() {   
+    function tick() {  
         // Translate position of every link and node in svg
         link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
                 .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
@@ -349,7 +355,9 @@ $(window).load(function () {
         // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             var number = d.data;   
-            var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
+            var r, g, b, norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
+            if (norm > 1) norm = 1;
+            if (norm < 0) norm = 0;
             r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
             g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
             b = Math.round(norm * colorRange[1][2]  + (1 - norm) * colorRange[0][2]);
@@ -357,8 +365,10 @@ $(window).load(function () {
         
         // else if d has nodeAttribute or linkAttribute 1
        else {
-            var number = d.flows;   
-            var r, g, b, norm = (number - fullDataRange[0]) / (fullDataRange[1] - fullDataRange[0]);
+            var number = d.flows; 
+            var r, g, b, norm = (number - flowsRange[0]) / (flowsRange[1] - flowsRange[0]);
+            if (norm > 1) norm = 1;
+            if (norm < 0) norm = 0;
             r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
             g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
             b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
@@ -373,6 +383,21 @@ $(window).load(function () {
                 return "Objem dat";
             else 
                 return "Počet toků";
+        });
+        
+        // update minimial and maximal values
+        $(".key .key-from").text(function() {
+            if (nodeAttribute === 0 && dataRange != undefined)
+                return dataRange[0];
+            else if (flowsRange != undefined)
+                return flowsRange[0];
+        });
+        
+        $(".key .key-to").text(function() {
+            if (nodeAttribute === 0 && dataRange != undefined)
+                return dataRange[1];
+            else if (flowsRange != undefined)
+                return flowsRange[1];
         });
         
         // update color range          
@@ -415,7 +440,7 @@ $(window).load(function () {
 
         var options = {
             autoOpen: false,
-            height: 300,
+            height: 310,
             width: 220,
             resizable: false,
             modal: true,
@@ -743,7 +768,11 @@ $(window).load(function () {
         });
         
         update();
-    }       
+    }  
+    
+    /**
+     * Helper :
+     */
     
     // Returns a list of all nodes under the root.   
     function flatten(root) {
@@ -762,16 +791,19 @@ $(window).load(function () {
     function updateColorRange(newValue) {
         var newData = newValue.data;
         var newFlows = newValue.flows; 
-        
+
         if (newData < fullDataRange[0])
                 fullDataRange[0] = newData;
         else if (newData > fullDataRange[1])
                 fullDataRange[1] = newData;
             
-        if (newFlows < fullDataRange[0])
-                fullDataRange[0] = newFlows;
-        else if (newFlows > fullDataRange[1])
-                fullDataRange[1] = newFlows;    
+        if (newFlows < fullFlowsRange[0])
+                fullFlowsRange[0] = newFlows;
+        else if (newFlows > fullFlowsRange[1])
+                fullFlowsRange[1] = newFlows;  
+            
+        Menu.setDataVolume(fullDataRange[0],fullDataRange[1]);    
+        Menu.setFlowNum(fullFlowsRange[0],fullFlowsRange[1]);    
     }
     
     //helper for converting ip address into string without periods, with letters on beginning
@@ -950,4 +982,45 @@ $(window).load(function () {
         vis.attr("transform", "translate(" + d3.event.translate + 
                                  ")scale(" + d3.event.scale + ")");        
     }
+    
+    /**
+     * Menu changes listener, updates the graph
+     */ 
+    $('#menu').on('menuUpdate', function(e) {
+        switch(e.detail) {
+            case 'dataVolume':
+                dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
+                nodeTransition()
+                break;
+            case 'flowNum':
+                flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
+                nodeTransition();
+                break;
+            case 'mapColorTo':
+                var mapping = Menu.getMapColorTo();
+                if (mapping === 'volume') {
+                    nodeAttribute = 0;
+                    dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
+                    nodeTransition();  
+                }
+                else {
+                    nodeAttribute = 1;
+                    flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
+                    nodeTransition();
+                }
+                break;
+            default:
+                break;
+        }
+        
+        function nodeTransition() {
+            nodes.forEach(function (d) {
+                    var l = d3.select("#"+ convertIp(d.id) + " .background");
+                    l.transition()
+                        .duration(10)
+                        .style("fill", color(d));
+            });               
+            updateKey(key); 
+        }
+    });
 });
