@@ -116,7 +116,7 @@ var Menu = {
    * Sets the range (min, max) of flow num slider. 
    * Should be called before setting display range for new data.
    */
-  setFlowNumSliderRange: function( minValue, maxValue ) { // DONE? TEST !
+  setFlowNumSliderRange: function( minValue, maxValue ) {
     jsonMenu.minFlowNum = minValue;
     jsonMenu.maxFlowNum = maxValue;
 
@@ -142,7 +142,7 @@ var Menu = {
 
     console.log("Changed flow slider range to: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
   },
-  setMinFlowNum: function(minValue) { // TO DO 
+  setMinFlowNum: function(minValue) {DO 
     jsonMenu.minFlowNum = minValue;
     
     $('#slider-flows').slider("option", "min", minValue);
@@ -159,11 +159,11 @@ var Menu = {
 
     console.log("Changed min flow value: ", jsonMenu.minFlowNum);
   },
-  getMinFlowNum: function() { // *tested OK
+  getMinFlowNum: function() {
     return jsonMenu.minFlowNum;
 
   },
-  setMaxFlowNum: function(maxValue) { // TO DO 
+  setMaxFlowNum: function(maxValue) { 
     jsonMenu.maxFlowNum = maxValue;
 
     $('#slider-flows').slider("option", "max", maxValue);
@@ -180,12 +180,12 @@ var Menu = {
 
     console.log("Changed max flow value: ", jsonMenu.maxFlowNum);
   },
-  getMaxFlowNum: function() { // *tested OK
+  getMaxFlowNum: function() {
     return jsonMenu.maxFlowNum;
   },
 
   // ----- FLOW NUM DISPLAY RANGE ----------------------------------------
-  setFlowNumDisplayRange: function(fromValue, toValue) { // TO DO 
+  setFlowNumDisplayRange: function(fromValue, toValue) {
     // check whether fromValue and toValue belong to (min, max) range of the slider
     if (fromValue < jsonMenu.minFlowNum) {
       fromValue = jsonMenu.minFlowNum;
@@ -270,7 +270,7 @@ var Menu = {
   },
 
   // ------- DATA VOLUME SLIDER RANGE ---------------------------------------
-  setDataVolumeSliderRange: function(minValue, maxValue) { // 
+  setDataVolumeSliderRange: function(minValue, maxValue) {
     jsonMenu.minDataVolume = minValue;
     jsonMenu.maxDataVolume = maxValue;
 
@@ -340,7 +340,7 @@ var Menu = {
 
   // ------- DATA VOLUME DISPLAY RANGE --------------------------------------
 
-  setDataVolumeDisplayRange: function(fromValue, toValue) { // 
+  setDataVolumeDisplayRange: function(fromValue, toValue) {
     // check whether fromValue and toValue belongs to (min, max) range of the slider
     if (fromValue < jsonMenu.minDataVolume) {
       fromValue = jsonMenu.minDataVolume;
@@ -417,7 +417,7 @@ var Menu = {
 
     console.log("I've updated display to data volume to ", jsonMenu.dataVolumeDisplayTo);
   },
-  getDataVolumeDisplayTo: function() { // *tested OK
+  getDataVolumeDisplayTo: function() {
     return jsonMenu.dataVolumeDisplayTo;
   },
 
