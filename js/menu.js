@@ -123,11 +123,16 @@ var Menu = {
     $('#slider-flows').slider("option", "min", minValue);
     $('#slider-flows').slider("option", "max", maxValue);
     
-    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayFrom ) {
+    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayFrom) {
       Menu.setFlowNumDisplayFrom(jsonMenu.minFlowNum);
     }
-
-    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayTo ) {
+    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayTo) {
+      Menu.setFlowNumDisplayTo(jsonMenu.minFlowNum);
+    }
+    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayFrom) {
+      Menu.setFlowNumDisplayFrom(jsonMenu.maxFlowNum);
+    }
+    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayTo) {
       Menu.setFlowNumDisplayTo(jsonMenu.maxFlowNum);
     }
 
@@ -142,7 +147,13 @@ var Menu = {
     
     $('#slider-flows').slider("option", "min", minValue);
     
-    // TO DO / Dispatch what event? 
+    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayFrom) {
+      Menu.setFlowNumDisplayFrom(jsonMenu.minFlowNum);
+    }
+    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayTo) {
+      Menu.setFlowNumDisplayTo(jsonMenu.minFlowNum);
+    }
+
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
@@ -157,7 +168,13 @@ var Menu = {
 
     $('#slider-flows').slider("option", "max", maxValue);
 
-    // TO DO / Dispatch what event? 
+    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayFrom) {
+      Menu.setFlowNumDisplayFrom(jsonMenu.maxFlowNum);
+    }
+    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayTo) {
+      Menu.setFlowNumDisplayTo(jsonMenu.maxFlowNum);
+    }
+
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
@@ -172,6 +189,12 @@ var Menu = {
     // check whether fromValue and toValue belong to (min, max) range of the slider
     if (fromValue < jsonMenu.minFlowNum) {
       fromValue = jsonMenu.minFlowNum;
+    }
+    if (fromValue > jsonMenu.maxFlowNum) {
+      fromValue = jsonMenu.maxFlowNum;
+    }
+    if (toValue < jsonMenu.minFlowNum) {
+      toValue = jsonMenu.minFlowNum;
     }
     if (toValue > jsonMenu.maxFlowNum) {
       toValue = jsonMenu.maxFlowNum;
@@ -200,6 +223,9 @@ var Menu = {
     if (fromValue < jsonMenu.minFlowNum) {
       fromValue = jsonMenu.minFlowNum;
     }
+    if (fromValue > jsonMenu.maxFlowNum) {
+      fromValue = jsonMenu.maxFlowNum;
+    }
 
     jsonMenu.flowNumDisplayFrom = fromValue;
     
@@ -219,6 +245,9 @@ var Menu = {
   },
   setFlowNumDisplayTo: function( toValue ) {
     // check whether toValue belongs to (min, max) range of the slider
+    if (toValue < jsonMenu.minFlowNum) {
+      toValue = jsonMenu.minFlowNum;
+    }
     if (toValue > jsonMenu.maxFlowNum) {
       toValue = jsonMenu.maxFlowNum;
     }
@@ -245,22 +274,20 @@ var Menu = {
     jsonMenu.minDataVolume = minValue;
     jsonMenu.maxDataVolume = maxValue;
 
-
     $('#slider-dataVolume').slider("option", "min", minValue);
     $('#slider-dataVolume').slider("option", "max", maxValue);
     
-    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom ) {
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom) {
       Menu.setDataVolumeDisplayFrom(jsonMenu.minDataVolume);
     }
     if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayTo) {
       Menu.setDataVolumeDisplayTo(jsonMenu.minDataVolume);
     }
-
-    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo ) {
-      Menu.setDataVolumeDisplayTo(jsonMenu.maxDataVolume);
-    }
-    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayFrom ) {
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayFrom) {
       Menu.setDataVolumeDisplayFrom(jsonMenu.maxDataVolume);
+    }
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo) {
+      Menu.setDataVolumeDisplayTo(jsonMenu.maxDataVolume);
     }
     
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
@@ -273,8 +300,11 @@ var Menu = {
 
     $('#slider-dataVolume').slider("option", "min", minValue);
 
-    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom ) {
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom) {
       Menu.setDataVolumeDisplayFrom(jsonMenu.minDataVolume);
+    }
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayTo) {
+      Menu.setDataVolumeDisplayTo(jsonMenu.minDataVolume);
     }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
@@ -290,8 +320,11 @@ var Menu = {
 
     $('#slider-dataVolume').slider("option", "max", maxValue);
 
-    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo ) {
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo) {
       Menu.setDataVolumeDisplayTo(jsonMenu.maxDataVolume);
+    }
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayFrom) {
+      Menu.setDataVolumeDisplayFrom(jsonMenu.maxDataVolume);
     }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
@@ -311,6 +344,12 @@ var Menu = {
     // check whether fromValue and toValue belongs to (min, max) range of the slider
     if (fromValue < jsonMenu.minDataVolume) {
       fromValue = jsonMenu.minDataVolume;
+    }
+    if (fromValue > jsonMenu.maxDataVolume) {
+      fromValue = jsonMenu.maxDataVolume;
+    }
+    if (toValue < jsonMenu.minDataVolume) {
+      toValue = jsonMenu.minDataVolume;
     }
     if (toValue > jsonMenu.maxDataVolume) {
       toValue = jsonMenu.maxDataVolume;
@@ -338,6 +377,9 @@ var Menu = {
     if (fromValue < jsonMenu.minDataVolume) {
       fromValue = jsonMenu.minDataVolume;
     }
+    if (fromValue > jsonMenu.maxDataVolume) {
+      fromValue = jsonMenu.maxDataVolume;
+    }
 
     jsonMenu.dataVolumeDisplayFrom = fromValue;
 
@@ -356,6 +398,9 @@ var Menu = {
   },
   setDataVolumeDisplayTo: function(toValue) {
     // check whether toValue belongs to (min, max) range of the slider
+    if (toValue < jsonMenu.minDataVolume) {
+      toValue = jsonMenu.minDataVolume;
+    }
     if (toValue > jsonMenu.maxDataVolume) {
       toValue = jsonMenu.maxDataVolume;
     }
