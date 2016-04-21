@@ -5,7 +5,11 @@
     "colorScheme" : 1,
     "minFlowNum" : 0,
     "maxFlowNum" : 150,
+    "flowNumDisplayFrom" : 10,
+    "flowNumDisplayTo" : 100,
     "minDataVolume" : 1,
     "maxDataVolume" : 200,
+    "dataVolumeDisplayFrom" : 10,
+    "dataVolumeDisplayTo" : 150,
     "nodeSize" : 45
 }

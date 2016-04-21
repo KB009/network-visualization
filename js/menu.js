@@ -110,33 +110,39 @@ var Menu = {
     return jsonMenu.colorScheme;
   },
 
-  // ---------- FLOW NUM -------------------------------------------------
-  setFlowNum: function(minValue, maxValue) { // *tested OK
+
+  // ----- FLOW NUM SLIDER RANGE -----------------------------------------
+  /**
+   * Sets the range (min, max) of flow num slider. 
+   * Should be called before setting display range for new data.
+   */
+  setFlowNumSliderRange: function( minValue, maxValue ) { // DONE? TEST !
     jsonMenu.minFlowNum = minValue;
     jsonMenu.maxFlowNum = maxValue;
-    // set values of sliders in case the change doesnt come from them
-    if ($('#slider-flows').slider('values', 0) != minValue) {
-      $('#slider-flows').slider('values', 0, minValue);
-      $('#slider-value-flow-min').html(minValue);
-    }
-    if ($('#slider-flows').slider('values', 1) != maxValue) {
-      $('#slider-flows').slider('values', 1, maxValue);
-      $('#slider-value-flow-max').html(maxValue);
-    }
+
+    $('#slider-flows').slider("option", "min", minValue);
+    $('#slider-flows').slider("option", "max", maxValue);
     
+    if (jsonMenu.minFlowNum > jsonMenu.flowNumDisplayFrom ) {
+      Menu.setFlowNumDisplayFrom(jsonMenu.minFlowNum);
+    }
+
+    if (jsonMenu.maxFlowNum < jsonMenu.flowNumDisplayTo ) {
+      Menu.setFlowNumDisplayTo(jsonMenu.maxFlowNum);
+    }
+
+    // TO DO / Dispatch event?
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed min/max flow value: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
+    console.log("Changed flow slider range to: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
   },
-  setMinFlowNum: function(minValue) { // *tested OK
+  setMinFlowNum: function(minValue) { // TO DO 
     jsonMenu.minFlowNum = minValue;
     
-    if ($('#slider-flows').slider('values', 0) != minValue) {
-      $('#slider-flows').slider('values', 0, minValue);
-      $('#slider-value-flow-min').html(minValue);
-    }
+    $('#slider-flows').slider("option", "min", minValue);
     
+    // TO DO / Dispatch what event? 
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
@@ -146,14 +152,12 @@ var Menu = {
     return jsonMenu.minFlowNum;
 
   },
-  setMaxFlowNum: function(maxValue) { // *tested OK
+  setMaxFlowNum: function(maxValue) { // TO DO 
     jsonMenu.maxFlowNum = maxValue;
 
-    if ($('#slider-flows').slider('values', 1) != maxValue) {
-      $('#slider-flows').slider('values', 1, maxValue);
-      $('#slider-value-flow-max').html(maxValue);
-    }
+    $('#slider-flows').slider("option", "max", maxValue);
 
+    // TO DO / Dispatch what event? 
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
@@ -163,56 +167,213 @@ var Menu = {
     return jsonMenu.maxFlowNum;
   },
 
-  // ---------- DATA VOLUME -------------------------------------------------
-  setDataVolume: function(minValue, maxValue) { // *tested OK
+  // ----- FLOW NUM DISPLAY RANGE ----------------------------------------
+  setFlowNumDisplayRange: function(fromValue, toValue) { // TO DO 
+    // check whether fromValue and toValue belong to (min, max) range of the slider
+    if (fromValue < jsonMenu.minFlowNum) {
+      fromValue = jsonMenu.minFlowNum;
+    }
+    if (toValue > jsonMenu.maxFlowNum) {
+      toValue = jsonMenu.maxFlowNum;
+    }
+
+    jsonMenu.flowNumDisplayFrom = fromValue;
+    jsonMenu.flowNumDisplayTo = toValue;
+
+    // set values of sliders in case the change doesnt come from them
+    if ($('#slider-flows').slider('values', 0) != fromValue) {
+      $('#slider-flows').slider('values', 0, fromValue);
+      $('#slider-value-flow-min').html(fromValue);
+    }
+    if ($('#slider-flows').slider('values', 1) != toValue) {
+      $('#slider-flows').slider('values', 1, toValue);
+      $('#slider-value-flow-max').html(toValue);
+    }
+    
+    var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("Changed display min/max flow value: ", jsonMenu.flowNumDisplayFrom, jsonMenu.flowNumDisplayTo);
+  },
+  setFlowNumDisplayFrom: function( fromValue ) {
+    // check whether fromValue belongs to (min, max) range of the slider
+    if (fromValue < jsonMenu.minFlowNum) {
+      fromValue = jsonMenu.minFlowNum;
+    }
+
+    jsonMenu.flowNumDisplayFrom = fromValue;
+    
+    if ($('#slider-flows').slider('values', 0) != fromValue) {
+      $('#slider-flows').slider('values', 0, fromValue);
+      $('#slider-value-flow-min').html(fromValue);
+    }
+    
+    // TO DO -- adjust following
+    var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("Changed displayFrom flow value: ", jsonMenu.flowNumDisplayFrom);
+  },
+  getFlowNumDisplayFrom: function() {
+    return jsonMenu.flowNumDisplayFrom;
+  },
+  setFlowNumDisplayTo: function( toValue ) {
+    // check whether toValue belongs to (min, max) range of the slider
+    if (toValue > jsonMenu.maxFlowNum) {
+      toValue = jsonMenu.maxFlowNum;
+    }
+    jsonMenu.flowNumDisplayTo = toValue;
+
+    if ($('#slider-flows').slider('values', 1) != toValue) {
+      $('#slider-flows').slider('values', 1, toValue);
+      $('#slider-value-flow-max').html(toValue);
+    }
+
+    // TO DO -- adjust following
+    var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("Changed displayTo flow value: ", jsonMenu.flowNumDisplayTo);
+    
+  }, 
+  getFlowNumDisplayTo: function() {
+    return jsonMenu.flowNumDisplayTo;
+  },
+
+  // ------- DATA VOLUME SLIDER RANGE ---------------------------------------
+  setDataVolumeSliderRange: function(minValue, maxValue) { // 
     jsonMenu.minDataVolume = minValue;
     jsonMenu.maxDataVolume = maxValue;
 
-    if ($('#slider-dataVolume').slider('values', 0) != minValue) {
-      $('#slider-dataVolume').slider('values', 0, minValue);
-      $('#slider-value-volume-min').html(minValue);
+
+    $('#slider-dataVolume').slider("option", "min", minValue);
+    $('#slider-dataVolume').slider("option", "max", maxValue);
+    
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom ) {
+      Menu.setDataVolumeDisplayFrom(jsonMenu.minDataVolume);
     }
-    if ($('#slider-dataVolume').slider('values', 1) != maxValue) {
-      $('#slider-dataVolume').slider('values', 1, maxValue);
-      $('#slider-value-volume-max').html(maxValue);
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayTo) {
+      Menu.setDataVolumeDisplayTo(jsonMenu.minDataVolume);
+    }
+
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo ) {
+      Menu.setDataVolumeDisplayTo(jsonMenu.maxDataVolume);
+    }
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayFrom ) {
+      Menu.setDataVolumeDisplayFrom(jsonMenu.maxDataVolume);
     }
     
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume to ", jsonMenu.minDataVolume, jsonMenu.maxDataVolume);
+    console.log("I've updated data volume SLIDER range to ", jsonMenu.minDataVolume, jsonMenu.maxDataVolume);
   },
-  setMinDataVolume: function(minValue) { // *tested OK
+  setMinDataVolume: function(minValue) { // 
     jsonMenu.minDataVolume = minValue;
 
-    if ($('#slider-dataVolume').slider('values', 0) != minValue) {
-      $('#slider-dataVolume').slider('values', 0, minValue);
-      $('#slider-value-volume-min').html(minValue);
+    $('#slider-dataVolume').slider("option", "min", minValue);
+
+    if (jsonMenu.minDataVolume > jsonMenu.dataVolumeDisplayFrom ) {
+      Menu.setDataVolumeDisplayFrom(jsonMenu.minDataVolume);
     }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated MIN data volume to ", jsonMenu.minDataVolume);
+    console.log("I've updated data volume SLIDER MIN to ", jsonMenu.minDataVolume);
   },
-  getMinDataVolume: function() { // *tested OK
+  getMinDataVolume: function() { 
     return jsonMenu.minDataVolume;
   },
-  setMaxDataVolume: function(maxValue) { // *tested OK
+  setMaxDataVolume: function(maxValue) { //
     jsonMenu.maxDataVolume = maxValue;
 
-    if ($('#slider-dataVolume').slider('values', 1) != maxValue) {
-      $('#slider-dataVolume').slider('values', 1, maxValue);
-      $('#slider-value-volume-max').html(maxValue);
+    $('#slider-dataVolume').slider("option", "max", maxValue);
+
+    if (jsonMenu.maxDataVolume < jsonMenu.dataVolumeDisplayTo ) {
+      Menu.setDataVolumeDisplayTo(jsonMenu.maxDataVolume);
     }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated MAX data volume to ", jsonMenu.maxDataVolume);
+    console.log("I've updated data volume SLIDER MAX to ", jsonMenu.maxDataVolume);
   },
   getMaxDataVolume: function() { // *tested OK
     return jsonMenu.maxDataVolume;
+  },
+
+
+
+  // ------- DATA VOLUME DISPLAY RANGE --------------------------------------
+
+  setDataVolumeDisplayRange: function(fromValue, toValue) { // 
+    // check whether fromValue and toValue belongs to (min, max) range of the slider
+    if (fromValue < jsonMenu.minDataVolume) {
+      fromValue = jsonMenu.minDataVolume;
+    }
+    if (toValue > jsonMenu.maxDataVolume) {
+      toValue = jsonMenu.maxDataVolume;
+    }
+
+    jsonMenu.dataVolumeDisplayFrom = fromValue;
+    jsonMenu.dataVolumeDisplayTo = toValue;
+
+    // if ($('#slider-dataVolume').slider('values', 0) != fromValue) {
+      $('#slider-dataVolume').slider('values', 0, fromValue);
+      $('#slider-value-volume-min').html(fromValue);
+    // }
+    // if ($('#slider-dataVolume').slider('values', 1) != toValue) {
+      $('#slider-dataVolume').slider('values', 1, toValue);
+      $('#slider-value-volume-max').html(toValue);
+    // }
+    
+    var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("I've updated data volume DISPLAY range to ", jsonMenu.dataVolumeDisplayFrom, jsonMenu.dataVolumeDisplayTo);
+  },
+  setDataVolumeDisplayFrom: function(fromValue) {
+    // check whether fromValue belongs to (min, max) range of the slider
+    if (fromValue < jsonMenu.minDataVolume) {
+      fromValue = jsonMenu.minDataVolume;
+    }
+
+    jsonMenu.dataVolumeDisplayFrom = fromValue;
+
+    // if ($('#slider-dataVolume').slider('values', 0) != fromValue) {
+      $('#slider-dataVolume').slider('values', 0, fromValue);
+      $('#slider-value-volume-min').html(fromValue);
+    // }
+
+    var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("I've updated display from data volume to ", jsonMenu.dataVolumeDisplayFrom);
+  },
+  getDataVolumeDisplayFrom: function() { //
+    return jsonMenu.dataVolumeDisplayFrom;
+  },
+  setDataVolumeDisplayTo: function(toValue) {
+    // check whether toValue belongs to (min, max) range of the slider
+    if (toValue > jsonMenu.maxDataVolume) {
+      toValue = jsonMenu.maxDataVolume;
+    }
+
+    jsonMenu.dataVolumeDisplayTo = toValue;
+
+    // if ($('#slider-dataVolume').slider('values', 1) != toValue) {
+      $('#slider-dataVolume').slider('values', 1, toValue);
+      $('#slider-value-volume-max').html(toValue);
+    // }
+
+    var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
+    document.getElementById("menu").dispatchEvent(evt);
+
+    console.log("I've updated display to data volume to ", jsonMenu.dataVolumeDisplayTo);
+  },
+  getDataVolumeDisplayTo: function() { // *tested OK
+    return jsonMenu.dataVolumeDisplayTo;
   },
 
   // ---------- NODE SIZE -------------------------------------------------
@@ -377,6 +538,15 @@ Menu.pin = function() {
 // **********************************************************************
 
 
+// var changeFlowSliderMin = function( newMin ) {
+//   $('#slider-flows').slider("option", "min", newMin);
+//   console.log
+// }
+
+// var changeFlowSliderMax = function( newMax ) {
+//   $('#slider-flows').slider("option", "max", newMax);
+// }
+
 $(document).ready(function() {
 
   // var menu = {
@@ -489,7 +659,7 @@ $(document).ready(function() {
     slide: function( event, ui ) {
       // $('#slider-value-flow-min').html(ui.values[0]);
       // $('#slider-value-flow-max').html(ui.values[1]);
-      Menu.setFlowNum(ui.values[0], ui.values[1]);
+      Menu.setFlowNumDisplayRange(ui.values[0], ui.values[1]);
 
       // Menu.setMinFlowNum(ui.values[0]);
       // Menu.setMaxFlowNum(ui.values[1]);
@@ -502,13 +672,15 @@ $(document).ready(function() {
     $('#slider-flows').slider('values', 1)
   )
 
+  
+
   // ********* S L I D E R / Data Volume **********
   $('#slider-dataVolume').slider({
     max: 200,
     range: true,
     values: [ 1, 200 ],
     slide: function( event, ui ) {
-      Menu.setDataVolume(ui.values[0], ui.values[1]);
+      Menu.setDataVolumeDisplayRange(ui.values[0], ui.values[1]);
     }
   });
   $('#slider-value-volume-min').html(  // volume vs dataVolume - sjednotit!
