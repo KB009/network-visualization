@@ -49,19 +49,43 @@ $(document).ready(function() {
   // }).trigger('slidechange')
 
   $('#button-prefix-order').click(function() {
-    $('#test-button-order-prefix').html('bum')
+    $('#test-button-order-prefix').html('bum');
+    Menu.setFlowNum(10, 1000);
   })
 
   $('#button-balance').click(function() {
     $('#test-button-balance').html('BUM');
     console.log("puc");
-    Menu.setFlowNum(10, 100);
-    Menu.setDataVolume(33, 133);
+    
     // console.log(Menu.getMinFlowNum());
+    // // 
+    // Menu.setMapColorTo('volume');
+    // Menu.setMapNodeTo('domainName');
+    // Menu.setMapTo(['links', 'nodes']);
+    
+    // Menu.setFlowNum()
+    // changeFlowSliderMin(-5);
+    // changeFlowSliderMax(1000);
     // 
-    Menu.setMapColorTo('volume');
-    Menu.setMapNodeTo('domainName');
-    Menu.setMapTo(['links', 'nodes']);
+    
+    // Menu.setFlowNumSliderRange(-5, 1000);
+    // Menu.setFlowNumDisplayRange(10, 1000);
+
+    Menu.setMinFlowNum(-20);
+    Menu.setMaxFlowNum(650);
+
+    // Menu.setFlowNumDisplayRange(-105,4000);
+    Menu.setFlowNumDisplayFrom(-105);
+    Menu.setFlowNumDisplayTo(4000);
+
+    // Menu.setDataVolumeSliderRange(1000, 5555);
+    Menu.setMinDataVolume(1000);
+    Menu.setMaxDataVolume(6565);
+    // Menu.setDataVolumeDisplayRange(55, 333333);
+    Menu.setDataVolumeDisplayFrom(55);
+    Menu.setDataVolumeDisplayTo(333333);
+
+    
   })
 
 
@@ -72,11 +96,15 @@ $('#menu').on('menuUpdate', function(e) {
     case 'flowNum':
       $('#test-slider-flows-min').html( Menu.getMinFlowNum() )
       $('#test-slider-flows-max').html( Menu.getMaxFlowNum() )
+      $('#test-slider-flows-display-from').html( Menu.getFlowNumDisplayFrom() )
+      $('#test-slider-flows-display-to').html( Menu.getFlowNumDisplayTo() )
       break;
 
     case 'dataVolume':
       $('#test-dataVolume-min').html( Menu.getMinDataVolume() )
       $('#test-dataVolume-max').html( Menu.getMaxDataVolume() )
+      $('#test-dataVolume-display-from').html( Menu.getDataVolumeDisplayFrom() )
+      $('#test-dataVolume-display-to').html( Menu.getDataVolumeDisplayTo() )
       break;
 
     case 'nodeSize':
