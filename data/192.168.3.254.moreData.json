@@ -17,6 +17,7 @@
       },
       {
         "id": "192.168.3.222",
+        "dnsName": "xyservice.example.com",
         "flows": 18,
         "data": 616
       },
@@ -37,6 +38,7 @@
       },
       {
         "id": "192.168.3.70",
+        "dnsName": "xyservice2.example.com",
         "flows": 12,
         "data": 336
       },

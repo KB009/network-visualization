@@ -8,7 +8,7 @@
 
 $(window).ready(function () {
     var w = $(window).width(),
-        h = $(window).height() - 3,
+        h = $(window).height() - 250,//3,
         link,
         links,
         circle, 
@@ -23,11 +23,12 @@ $(window).ready(function () {
         flowsRange,
         lineSize = 2.2,
         nodeSize = 1,
-        nodeWidth = 90 * nodeSize,
+        nodeWidth = 92 * nodeSize,
         nodeHeight = 25 * nodeSize,
         childrenLinks = [],
         allChildrenNodes = [],
         sortingType = 2,
+        useDomainNames = false,
         root;
                                        
     this.getLinks = function () {
@@ -42,10 +43,10 @@ $(window).ready(function () {
         return force;
     }; 
 
-    /**
+    /***************************************************************************
      * Initiation of layout
      * 
-     */
+     **************************************************************************/
     
     var zoom = d3.behavior.zoom()
         .scaleExtent([0.3, 3])
@@ -74,6 +75,7 @@ $(window).ready(function () {
         .attr("class", "svg");
 
     var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+    
     // key for actual data/flow amount    
     var key = svg.append("g")
             .attr("class", "key")
@@ -106,7 +108,7 @@ $(window).ready(function () {
             .attr("x", 232)
             .attr("y", 50)
             .text("max");
-    
+       
     // linear gradient element for key 
     svg.append("linearGradient")
       .attr("id", "graph-key")
@@ -258,6 +260,7 @@ $(window).ready(function () {
                 .attr("r", 5)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
                 .on("contextmenu", linkClick)
+                .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
                 .on("mouseout", mouseOut);
     }
@@ -308,9 +311,15 @@ $(window).ready(function () {
             
         // ip address of node
         groupNodes.append("text")
+                .attr("class","label")
                 .attr("dx", nodeHeight/5)
                 .attr("dy", nodeHeight - nodeHeight/3)
-                .text(function(d) { return d.id;})
+                .text(function(d) {
+                    if (useDomainNames && d.dnsName != undefined)
+                        return d.dnsName.substring(0,(nodeHeight/8)) + "...";
+                    else
+                        return d.id;
+                })
                 .style("font-size",nodeHeight/2.2 + "px")
                 .on("contextmenu", nodeClick)
                 .on("mouseover", mouseOver)
@@ -808,10 +817,7 @@ $(window).ready(function () {
         return nodes;
     }
       
-    function updateColorRange(newValue) {    
-        console.log(newValue.flows);
-        console.log(fullFlowsRange);
-        
+    function updateColorRange(newValue) {          
         var newData = newValue.data;
         var newFlows = newValue.flows; 
         
@@ -1067,9 +1073,14 @@ $(window).ready(function () {
     }
 
     function nodeMouseMove(d) {
-        if (d.from === undefined && d.to === undefined) 
+        if (d.from === undefined && d.to === undefined && d.dnsName !== undefined) {
+            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + d.flows + "<br>Data: " + d.data + "<br>Doménové jméno: " + d.dnsName)
+                .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
+        }
+        else if (d.from === undefined && d.to === undefined && d.dnsName === undefined) {
             tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + d.flows + "<br>Data: " + d.data)
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
+        }
         else {
             tooltip.html("<b>Info o lince<br> z " + d.from + " do " + d.to + "</b><br>Toky: " + d.flows + "<br>Data: " + d.data)
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");}       
@@ -1078,17 +1089,8 @@ $(window).ready(function () {
     /**
      * Menu changes listener, updates the graph
      */ 
-    $('#menu').on('menuUpdate', function(e) {
-        function setDataRange() {
-            dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
-            nodeTransition();
-        }
-        
-        function setFlowRange() {
-            flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
-            nodeTransition();
-        }
-        
+    $('#menu').on('menuUpdate', function(e) {    
+        //console.log(e.detail);
         switch(e.detail) {
             case 'dataVolume':
                 setDataRange();
@@ -1107,11 +1109,32 @@ $(window).ready(function () {
                     setFlowRange();
                 }
                 break;
+            case 'mapNodeTo':
+                var nodeMapping = Menu.getMapNodeTo();
+                if (nodeMapping === "ip")
+                    useDomainNames = false;
+                else
+                    useDomainNames = true;
+                
+                if (nodes != undefined) {
+                    nodes.forEach(function (d) {
+                        var l = d3.select("#"+ convertIp(d.id) + " .label");
+                        l.transition()
+                            .duration(10)
+                            .text(function(d) {
+                    if (useDomainNames && d.dnsName != undefined)
+                        return d.dnsName.substring(0,(nodeWidth/8)) + "...";
+                    else
+                        return d.id;
+                });
+                    });              
+                }
+                break;
             default:
                 break;
         }
         
-        function nodeTransition() {
+        function colorTransition() {
             if (nodes != undefined ) {
                 nodes.forEach(function (d) {
                         var l = d3.select("#"+ convertIp(d.id) + " .background");
@@ -1121,6 +1144,16 @@ $(window).ready(function () {
                 });               
                 updateKey(key); 
             }
+        }
+        
+        function setDataRange() {
+            dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+            colorTransition();
+        }
+        
+        function setFlowRange() {
+            flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
+            colorTransition();
         }
     });
 });
