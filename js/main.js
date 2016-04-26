@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* global d3 */
+/* global d3, Menu */
 
 $(window).ready(function () {
     var w = $(window).width(),
@@ -29,7 +29,7 @@ $(window).ready(function () {
         allChildrenNodes = [],
         sortingType = 2,
         root;
-                             
+                                       
     this.getLinks = function () {
         return links;
     };
@@ -73,6 +73,7 @@ $(window).ready(function () {
     var vis = d3.select("svg").append("g")
         .attr("class", "svg");
 
+    var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
     // key for actual data/flow amount    
     var key = svg.append("g")
             .attr("class", "key")
@@ -127,21 +128,27 @@ $(window).ready(function () {
         root.x = w / 2;
         root.y = h / 2 - 80; 
         
+        getJsonData(root.nodes);
+        
         root.nodes.forEach(function (node) {
-            node.weight = 1;         
+            node.weight = 1;   
+            updateColorRange(node);
         }); 
         
-        getJsonData(root.nodes);
+        Menu.setDataVolumeSliderRange(fullDataRange[0], fullDataRange[1]);
+        Menu.setDataVolumeDisplayRange(fullDataRange[0], fullDataRange[1]);
+        Menu.setFlowNumSliderRange(fullFlowsRange[0], fullFlowsRange[1]);
+        Menu.setFlowNumDisplayRange(fullFlowsRange[0], fullFlowsRange[1]);        
              
         updateKey(key);           
         update();  
     });
     
-    /** 
+    /***************************************************************************
      * Update is called everytime the graph is changed (more data is gathered).
      * If we want a change to be propagated visually, we must call this function.
      * 
-     */    
+     **************************************************************************/    
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
@@ -155,12 +162,12 @@ $(window).ready(function () {
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
-        dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
-        flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
-        
+        //dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+        //flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
+              
         createLinks();
         createNodes();
-              
+                        
         // bind zoom on Alt + mousewheel 
         $(window).keydown(function (event) {
             event.preventDefault();
@@ -187,9 +194,9 @@ $(window).ready(function () {
                 .start();     
     }
     
-    /**
+    /***************************************************************************
      * 
-     */
+     **************************************************************************/
     function createLinks() {
         var nodeIds = [], 
             linkIds = [];
@@ -198,9 +205,6 @@ $(window).ready(function () {
         // (we need objects in links, not only ids)
         nodes.forEach(function(n) {
             nodeIds.push(n.id);
-            
-            // get range of data and flows from every VISIBLE node
-            updateColorRange(n);
 
             // assigning nodes to every "from" and "to" in links
             links.forEach(function(l) {
@@ -219,7 +223,7 @@ $(window).ready(function () {
                  }
             });          
         });
-        
+               
         childrenLinks.forEach(function(childLink) {
            if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
                if(linkIds.indexOf(childLink.from + ", " + childLink.to) === -1)
@@ -249,16 +253,24 @@ $(window).ready(function () {
                 .attr("cx", 100)
                 .attr("cy", 100)
                 .attr("r", 5)
-                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"});
+                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
+                .on("contextmenu", linkClick)
+                .on("mousemove", nodeMouseMove)
+                .on("mouseout", mouseOut);
     }
     
-    /**
+    /***************************************************************************
      * 
-     */
+     **************************************************************************/
     function createNodes() {
         // Update the nodes…
         node = vis.selectAll("g.node")
-            .data(nodes, function (d) { return d.id;});
+            .data(nodes, function (d) {
+                console.log(d.flows);
+                // get range of data and flows from every VISIBLE node
+                updateColorRange(d);
+                return d.id;
+            });
     
         // create group of nodes
         var groupNodes = node.enter().append("g")
@@ -286,14 +298,22 @@ $(window).ready(function () {
                 .attr("rx", 2)
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
-                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"});  
+                .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
+                .on("contextmenu", nodeClick)
+                .on("mouseover", mouseOver)
+                .on("mousemove", nodeMouseMove)
+                .on("mouseout", mouseOut);
             
         // ip address of node
         groupNodes.append("text")
                 .attr("dx", nodeHeight/5)
                 .attr("dy", nodeHeight - nodeHeight/3)
                 .text(function(d) { return d.id;})
-                .style("font-size",nodeHeight/2.2 + "px");
+                .style("font-size",nodeHeight/2.2 + "px")
+                .on("contextmenu", nodeClick)
+                .on("mouseover", mouseOver)
+                .on("mousemove", nodeMouseMove)
+                .on("mouseout", mouseOut);
         
         // find only collapsible nodes
         var collapsible = vis.selectAll("g.collapsible");
@@ -355,7 +375,7 @@ $(window).ready(function () {
         // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             var number = d.data;   
-            var r, g, b, norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
+            var r, g, b, norm = (number - dataRange[0]) / ((dataRange[1] - dataRange[0]) + 0.001); //we must add some very small number in order to prevent division by zero
             if (norm > 1) norm = 1;
             if (norm < 0) norm = 0;
             r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
@@ -366,12 +386,12 @@ $(window).ready(function () {
         // else if d has nodeAttribute or linkAttribute 1
        else {
             var number = d.flows; 
-            var r, g, b, norm = (number - flowsRange[0]) / (flowsRange[1] - flowsRange[0]);
+            var r, g, b, norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]) + 0.001);
             if (norm > 1) norm = 1;
             if (norm < 0) norm = 0;
-            r = Math.round(norm * colorRange[0][0]   + (1 - norm) * colorRange[1][0]);
-            g = Math.round(norm * colorRange[0][1] + (1 - norm) * colorRange[1][1]);
-            b = Math.round(norm * colorRange[0][2]  + (1 - norm) * colorRange[1][2]);
+            r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
+            g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
+            b = Math.round(norm * colorRange[1][2]  + (1 - norm) * colorRange[0][2]);
         }
         return "rgb("+r+","+g+","+b+")";
     }
@@ -490,7 +510,6 @@ $(window).ready(function () {
                 allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
                 allChildren[allChildren.length-1].push(false);
-                updateColorRange(child);
             });
         }
         if(d.children) {
@@ -499,7 +518,6 @@ $(window).ready(function () {
                 allChildren.push([]);
                 allChildren[allChildren.length-1].push(child);
                 allChildren[allChildren.length-1].push(true);
-                updateColorRange(child);
             });
         }
                       
@@ -770,9 +788,9 @@ $(window).ready(function () {
         update();
     }  
     
-    /**
+    /***************************************************************************
      * Helper :
-     */
+     **************************************************************************/
     
     // Returns a list of all nodes under the root.   
     function flatten(root) {
@@ -787,12 +805,12 @@ $(window).ready(function () {
         root.forEach(function(node){ recurse(node);});
         return nodes;
     }
-    
+      
     function updateColorRange(newValue) {
         var newData = newValue.data;
         var newFlows = newValue.flows; 
 
-        if (newData < fullDataRange[0])
+        if (newData < fullDataRange[0]) 
                 fullDataRange[0] = newData;
         else if (newData > fullDataRange[1])
                 fullDataRange[1] = newData;
@@ -800,10 +818,48 @@ $(window).ready(function () {
         if (newFlows < fullFlowsRange[0])
                 fullFlowsRange[0] = newFlows;
         else if (newFlows > fullFlowsRange[1])
-                fullFlowsRange[1] = newFlows;  
-            
-        Menu.setDataVolume(fullDataRange[0],fullDataRange[1]);    
-        Menu.setFlowNum(fullFlowsRange[0],fullFlowsRange[1]);    
+                fullFlowsRange[1] = newFlows; 
+        
+        // actual ranges for data and flow
+        dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+        flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
+        
+        // data-slider's 'from' and 'to' positions are set accordingly  
+        if(dataRange[0] === Menu.getMinDataVolume() && dataRange[1] === Menu.getMaxDataVolume()) {
+            Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
+            //Menu.setDataVolumeDisplayFrom(fullDataRange[0]);
+            Menu.setDataVolumeDisplayRange(fullDataRange[0], fullDataRange[1]);
+        }
+        
+        // only data-slider's 'from' position is set at the beginning
+        else if(dataRange[0] === Menu.getMinDataVolume() && dataRange[1] !== Menu.getMaxDataVolume()) {
+            Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
+            Menu.setDataVolumeDisplayFrom(fullDataRange[0]);
+        }    
+        // only data-slider's 'to' position is set at the end
+        else if(dataRange[1] === Menu.getMaxDataVolume()) {
+            Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
+            Menu.setDataVolumeDisplayTo(fullDataRange[1]);
+        }
+        // flow-slider's 'from' and 'to' positions are set accordingly
+        if(flowsRange[0] === Menu.getMinFlowNum() && flowsRange[1] === Menu.getMaxFlowNum()) {
+            Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
+            Menu.setFlowNumDisplayRange(fullFlowsRange[0], fullFlowsRange[1]);
+        }      
+        // flow-slider's 'from' positions are set at the beginning
+        else if(flowsRange[0] === Menu.getMinFlowNum()) {
+            Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
+            Menu.setFlowNumDisplayRange(fullFlowsRange[0],fullFlowsRange[1]);
+        }
+        // flow-slider's 'to' position is set at the end
+        else if(flowsRange[1] === Menu.getMaxFlowNum()) {
+            Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
+            Menu.setFlowNumDisplayTo(fullFlowsRange[1]);
+        }
+        
+        // set new ranges fro data and flows
+        dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+        flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
     }
     
     //helper for converting ip address into string without periods, with letters on beginning
@@ -901,11 +957,11 @@ $(window).ready(function () {
         }
     }   
     
-    /**
+    /***************************************************************************
      * 
      * Manipulation functions
      * 
-     */
+     **************************************************************************/
     
     // fix position of any node on dragstart and enable dragging
     function dragstart(d) {
@@ -983,30 +1039,63 @@ $(window).ready(function () {
                                  ")scale(" + d3.event.scale + ")");        
     }
     
+    function nodeClick(){
+        //d3.event.preventDefault();
+        //TODO
+    }
+    
+    function linkClick(){
+        //d3.event.preventDefault(); 
+        //TODO
+    }
+    
+    function mouseOver() {
+            tooltip.transition().delay(500).duration(500).style("opacity", 1);     
+    }
+
+    function mouseOut() {
+        tooltip.transition().duration(10).style("opacity", 0);
+    }
+
+    function nodeMouseMove(d) {
+        if (d.from === undefined && d.to === undefined) 
+            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + d.flows + "<br>Data: " + d.data)
+                .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
+        else {
+            tooltip.html("<b>Info o lince<br> z " + d.from + " do " + d.to + "</b><br>Toky: " + d.flows + "<br>Data: " + d.data)
+                .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");}       
+    }
+    
     /**
      * Menu changes listener, updates the graph
      */ 
     $('#menu').on('menuUpdate', function(e) {
+        function setDataRange() {
+            dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+            nodeTransition();
+        }
+        
+        function setFlowRange() {
+            flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
+            nodeTransition();
+        }
+        
         switch(e.detail) {
             case 'dataVolume':
-                dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
-                nodeTransition()
+                setDataRange();
                 break;
             case 'flowNum':
-                flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
-                nodeTransition();
+                setFlowRange();
                 break;
             case 'mapColorTo':
                 var mapping = Menu.getMapColorTo();
                 if (mapping === 'volume') {
                     nodeAttribute = 0;
-                    dataRange = [Menu.getMinDataVolume(), Menu.getMaxDataVolume()];
-                    nodeTransition();  
+                    setDataRange();
                 }
                 else {
                     nodeAttribute = 1;
-                    flowsRange = [Menu.getMinFlowNum(), Menu.getMaxFlowNum()];
-                    nodeTransition();
+                    setFlowRange();
                 }
                 break;
             default:
@@ -1014,13 +1103,15 @@ $(window).ready(function () {
         }
         
         function nodeTransition() {
-            nodes.forEach(function (d) {
-                    var l = d3.select("#"+ convertIp(d.id) + " .background");
-                    l.transition()
-                        .duration(10)
-                        .style("fill", color(d));
-            });               
-            updateKey(key); 
+            if (nodes != undefined ) {
+                nodes.forEach(function (d) {
+                        var l = d3.select("#"+ convertIp(d.id) + " .background");
+                        l.transition()
+                            .duration(10)
+                            .style("fill", color(d));
+                });               
+                updateKey(key); 
+            }
         }
     });
 });
