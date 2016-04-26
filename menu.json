@@ -2,7 +2,7 @@
     "mapColorTo": "flows",
     "mapNodeTo" : "ip",
     "mapTo" : [ "nodes" ],
-    "colorScheme" : 1,
+    "colorScheme" : [ "#fafa4b", "#0d9bf5" ],
     "minFlowNum" : 0,
     "maxFlowNum" : 150,
     "flowNumDisplayFrom" : 10,

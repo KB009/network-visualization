@@ -28,13 +28,27 @@ h3 {
   float: left;
   margin-top: 20px;
 }
-.buttonset {
-  margin-bottom: 20px;
+
+.buttonset-column {
+  width: 45%;
+  float: left;
+  margin-top:20px;
 }
 
-.slider-column{
+.buttonset {
+  margin-bottom: 20px;
+  /*width: 100%;  Nemusi vubec byt*/
+}
+
+.buttons-column {
+  width: 13.76%;
   float: left;
-  width: 50%;
+  margin-top: 20px;
+}
+
+.slider-column {
+  float: left;
+  width: 65%;
 }
 
 .slider {
@@ -51,8 +65,53 @@ h3 {
   font-weight: bold;
 }
 
+.color-scheme-button {
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 22px;
+  width: 50px;
+}
+
+
+.slider-wrapper {
+  display: flex;
+  flex-flow: row nowrap;
+  margin: 10px 0;
+  width: 90%;
+  justify-content: space-between;
+}
+
+.slider-wrapper > span {
+  margin: 0 10px;
+  width: 1em;
+  font-weight: bold;
+}
+
+#buttonset-block {
+  width: 24.4%;
+  /*height: 100%;*/
+}
+
+#slider-block {
+  width: 50.04%;
+  /*height: 100%;*/
+  float: left;
+  margin-top:20px;
+
+}
+
+#colorSchemes{
+  /*width: 150px;*/
+}
+
+#slider-nodeSize-column {
+  width: 28% ;
+  float:left;
+}
+
+
 #div-radiobutton-display {
-  width:300px;
+  /*width:300px;*/
 }
 
 #div-button-prefix-order {
@@ -84,6 +143,7 @@ h3 {
 
 #menu {
   /*height: 220px;*/
+  /*font-family: Verdana, Geneva, sans-serif;*/
 }
 
 #topmenu {
@@ -92,18 +152,4 @@ h3 {
   width: auto;
   height: 200px;
   /*border: 1px solid black;*/
-}
-
-.slider-wrapper {
-  display: flex;
-  flex-flow: row nowrap;
-  margin: 10px 0;
-  width: 250px;
-  justify-content: space-between;
-}
-
-.slider-wrapper > span {
-  margin: 0 10px;
-  width: 1em;
-  font-weight: bold;
 }

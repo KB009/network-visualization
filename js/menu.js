@@ -103,12 +103,12 @@ var Menu = {
 
 
   // --------  COLOR SCHEME ----------------------------------------------
-  setColorScheme: function(newValue) {
-    jsonMenu.colorScheme = newValue;
-  },
-  getColorScheme: function() {
-    return jsonMenu.colorScheme;
-  },
+  // setColorScheme: function(newValue) {
+  //   jsonMenu.colorScheme = newValue;
+  // },
+  // getColorScheme: function() {
+  //   return jsonMenu.colorScheme;
+  // },
 
 
   // ----- FLOW NUM SLIDER RANGE -----------------------------------------
@@ -492,7 +492,7 @@ Menu.render = function() {
     }))
     .append($('<label/>', { 'for':'node-radio2'}).html("Doménové jméno"));
 
-  var column1 = $('<div/>', { 'class':'column' }).css({
+  var column1 = $('<div/>', { 'class':'buttonset-column' }).css({
     'margin-left': "2%",
     'margin-right': "-5%"
   });
@@ -501,7 +501,8 @@ Menu.render = function() {
 
   // CHECKBOX / Mapuje se na uzly/spojnice
   var column2 = $('<div/>', {
-    'class':'column buttonset',
+    // 'class':'column buttonset',
+    'class':'buttonset',
     'id':'checkbox-mapto',
   }).css({ 'margin-right': '-5%' })
     .append($('<h2/>').html("Mapovat na"))
@@ -521,12 +522,30 @@ Menu.render = function() {
     .append($('<label/>', { 'for':'check2' }).html("Spojnice"))
     .append($('<br>'));
 
+  var column2Wrap = $('<div/>', { 'class':'buttonset-column'}).append(column2);
+  var buttonsetBlock = $('<div/>', { 'id':'buttonset-block'});
+  $(buttonsetBlock).append(column1).append(column2Wrap);
+
   // COLOR SCHEMES
   var column3 = $('<div/>', {
-      'class':'column',
+      'class':'buttons-column',
       'id':'colorSchemes'
     }).append($('<h2/>').html("Barevné škály"))
-      .append($('<button/>', { 'id':'customColor' }).html("Vlastní..."));
+      .append($('<button/>', { 'id':'colorScheme1', 'class':'color-scheme-button' }).css({
+        'background-image': 'url(images/color-schemes/color-schemes-01.png)',
+        'margin-right': '10px'
+      })).append($('<button/>', { 'id':'colorScheme2', 'class':'color-scheme-button' }).css({
+        'background-image': 'url(images/color-schemes/color-schemes-02.png)'
+      })).append($('<br>')
+      ).append($('<button/>', { 'id':'colorScheme3', 'class':'color-scheme-button' }).css({
+        'background-image': 'url(images/color-schemes/color-schemes-03.png)',
+        'margin-right': '10px'
+      })).append($('<button/>', { 'id':'colorScheme4', 'class':'color-scheme-button' }).css({
+        'background-image': 'url(images/color-schemes/color-schemes-04.png)'
+      })).append($('<br>')).append($('<button/>', { 'id':'colorSchemeCustom' }).css({
+        // 'height':'22px',
+        'width': '110px'
+      }).html("Vlastní...")); // .html("Vlastní..."));
 
   // SLIDER / Filtruj min/max pocet toku
   var sliders1 = $('<div/>', { 'class':'slider-column' })
@@ -547,7 +566,7 @@ Menu.render = function() {
         )
       )
     
-  var nodeSize = $('<div/>', { 'class':'slider-column' })
+  var nodeSize = $('<div/>', { 'id':'slider-nodeSize-column' })
     .append($('<h2/>').html("Velikost uzlů:"))
     .append($('<h3/>').html(" &nbsp "))
     .append($('<div/>', { 'class':'slider-wrapper' })
@@ -555,21 +574,27 @@ Menu.render = function() {
       .append($('<span/>', { 'id':'slider-value-nodeSize' }))
       )
 
-  var column4 = $('<div/>', { 'class':'column' }).css({ 'width':'29%' })
+  var column4 = $('<div/>', { 'id':'slider-block' }) // .css({ 'width':'29%' })
     .append(sliders1).append(nodeSize);
 
 
   var column5 = $('<div/>', {
     'id':'div-button-prefix-order',
-    'class':'column'
-  }).append($('<button/>', { 'id':'button-prefix-order' }).html("Seřadit podle prefixu"))
+    'class':'buttons-column'
+  }).append($('<button/>', { 'id':'button-prefix-order' }).css({
+    'width':'120px'
+  }).html("Seřadit podle prefixu"))
     .append($('<br>'))
-    .append($('<button/>', { 'id':'button-balance' }).html("Vyvážit"))
+    .append($('<button/>', { 'id':'button-balance' }).css({
+      'width':'120px'
+    }).html("Vyvážit"))
     .append($('<br>'));
 
   // })
 
-  $(menuwrapper).append(column1).append(column2).append(column3).append(column4).append(column5);
+
+  $(menuwrapper).append(buttonsetBlock).append(column3).append(column4).append(column5);
+  // $(menuwrapper).append(column1).append(column2).append(column3).append(column4).append(column5);
   return menuwrapper;
 }
 
@@ -633,7 +658,11 @@ $(document).ready(function() {
 
 
 
-  $('#customColor').button();
+  $('#colorScheme1').button();
+  $('#colorScheme2').button();
+  $('#colorScheme3').button();
+  $('#colorScheme4').button();
+  $('#colorSchemeCustom').button();
   $('#button-prefix-order').button();
   $('#button-balance').button();
   $('#button-pin').button();
