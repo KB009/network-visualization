@@ -133,12 +133,7 @@ $(window).ready(function () {
         root.nodes.forEach(function (node) {
             node.weight = 1;   
             updateColorRange(node);
-        }); 
-        
-        Menu.setDataVolumeSliderRange(fullDataRange[0], fullDataRange[1]);
-        Menu.setDataVolumeDisplayRange(fullDataRange[0], fullDataRange[1]);
-        Menu.setFlowNumSliderRange(fullFlowsRange[0], fullFlowsRange[1]);
-        Menu.setFlowNumDisplayRange(fullFlowsRange[0], fullFlowsRange[1]);        
+        });      
              
         updateKey(key);           
         update();  
@@ -158,12 +153,20 @@ $(window).ready(function () {
         
         getJsonData(nodes);
                                     
-        // On update reset max and min values in force
+        // On update reload max and min node values in force
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
-        //dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
-        //flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
+        nodes.forEach(function (node) { 
+            if (node.data < fullDataRange[0])
+                fullDataRange[0] = node.data;
+            if (node.data > fullDataRange[1])
+                fullDataRange[1] = node.data;
+            if (node.data < fullFlowsRange[0])
+                fullFlowsRange[0] = node.data;
+            if (node.flows > fullFlowsRange[1])
+                fullFlowsRange[1] = node.flows;
+        }); 
               
         createLinks();
         createNodes();
@@ -266,7 +269,6 @@ $(window).ready(function () {
         // Update the nodes…
         node = vis.selectAll("g.node")
             .data(nodes, function (d) {
-                console.log(d.flows);
                 // get range of data and flows from every VISIBLE node
                 updateColorRange(d);
                 return d.id;
@@ -806,33 +808,35 @@ $(window).ready(function () {
         return nodes;
     }
       
-    function updateColorRange(newValue) {
+    function updateColorRange(newValue) {    
+        console.log(newValue.flows);
+        console.log(fullFlowsRange);
+        
         var newData = newValue.data;
         var newFlows = newValue.flows; 
+        
+        // reload actual ranges for data and flow
+        dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
+        flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
 
         if (newData < fullDataRange[0]) 
                 fullDataRange[0] = newData;
-        else if (newData > fullDataRange[1])
+        if (newData > fullDataRange[1])
                 fullDataRange[1] = newData;
             
         if (newFlows < fullFlowsRange[0])
                 fullFlowsRange[0] = newFlows;
-        else if (newFlows > fullFlowsRange[1])
+        if (newFlows > fullFlowsRange[1])
                 fullFlowsRange[1] = newFlows; 
         
-        // actual ranges for data and flow
-        dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
-        flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
         
-        // data-slider's 'from' and 'to' positions are set accordingly  
+        // previous data-slider's 'from' and 'to' positions are set accordingly  
         if(dataRange[0] === Menu.getMinDataVolume() && dataRange[1] === Menu.getMaxDataVolume()) {
             Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
-            //Menu.setDataVolumeDisplayFrom(fullDataRange[0]);
             Menu.setDataVolumeDisplayRange(fullDataRange[0], fullDataRange[1]);
-        }
-        
+        } 
         // only data-slider's 'from' position is set at the beginning
-        else if(dataRange[0] === Menu.getMinDataVolume() && dataRange[1] !== Menu.getMaxDataVolume()) {
+        else if(dataRange[0] === Menu.getMinDataVolume()) {
             Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
             Menu.setDataVolumeDisplayFrom(fullDataRange[0]);
         }    
@@ -841,21 +845,26 @@ $(window).ready(function () {
             Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);
             Menu.setDataVolumeDisplayTo(fullDataRange[1]);
         }
+        else
+            Menu.setDataVolumeSliderRange(fullDataRange[0],fullDataRange[1]);           
+        
         // flow-slider's 'from' and 'to' positions are set accordingly
         if(flowsRange[0] === Menu.getMinFlowNum() && flowsRange[1] === Menu.getMaxFlowNum()) {
             Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
             Menu.setFlowNumDisplayRange(fullFlowsRange[0], fullFlowsRange[1]);
         }      
-        // flow-slider's 'from' positions are set at the beginning
+        // flow-slider's 'from' position is set at the beginning
         else if(flowsRange[0] === Menu.getMinFlowNum()) {
             Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
-            Menu.setFlowNumDisplayRange(fullFlowsRange[0],fullFlowsRange[1]);
+            Menu.setFlowNumDisplayFrom(fullFlowsRange[0]);
         }
         // flow-slider's 'to' position is set at the end
         else if(flowsRange[1] === Menu.getMaxFlowNum()) {
             Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
             Menu.setFlowNumDisplayTo(fullFlowsRange[1]);
         }
+        else
+            Menu.setFlowNumSliderRange(fullFlowsRange[0],fullFlowsRange[1]);    
         
         // set new ranges fro data and flows
         dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
