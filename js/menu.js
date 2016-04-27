@@ -577,7 +577,7 @@ Menu.render = function() {
 
 
   var column5 = $('<div/>', {
-    'id':'div-button-prefix-order',
+    'id':'div-button-column',
     'class':'buttons-column'
   }).append($('<button/>', { 'id':'button-prefix-order' }).css({
     'width':'120px'

@@ -110,25 +110,18 @@ h3 {
   float:left;
 }
 
-
-#div-radiobutton-display {
-  /*width:300px;*/
+#div-button-column {
+  margin-top: 50px;
 }
 
-#div-button-prefix-order {
-  margin-top: 61px;
+#button-prefix-order {
+  display: none;
 }
-
 
 #div-button-pin {
-  /*float: ;*/
   height: 20px;
   background-color: #d1cdcd;
   opacity: 0.95;
-}
-
-#div-button-prefix-order {
-  margin-top: 61px;
 }
 
 #button-pin {

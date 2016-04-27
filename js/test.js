@@ -64,7 +64,7 @@ $(document).ready(function() {
 
   $('#button-prefix-order').click(function() {
     $('#test-button-order-prefix').html('bum');
-    Menu.setFlowNum(10, 1000);
+    // Menu.setFlowNum(10, 1000);
   })
 
   $('#button-balance').click(function() {
