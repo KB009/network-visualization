@@ -14,13 +14,6 @@
 var jsonMenu;
 $.getJSON('menu.json', function(data) {
   jsonMenu = data;
-  // for (var i in jsonMenu) {
-  //   console.log(jsonMenu[i]);
-  // }
-  
-  // init test display
-  // var evt = new CustomEvent('menuUpdate', { detail: 'init'});
-  // document.getElementById("menu").dispatchEvent(evt);
 });
 
 var Menu = {
@@ -507,7 +500,6 @@ Menu.render = function() {
 
   // CHECKBOX / Mapuje se na uzly/spojnice
   var column2 = $('<div/>', {
-    // 'class':'column buttonset',
     'class':'buttonset',
     'id':'checkbox-mapto',
   }).css({ 'margin-right': '-5%' })
@@ -596,11 +588,9 @@ Menu.render = function() {
     }).html("Vyvážit"))
     .append($('<br>'));
 
-  // })
 
 
   $(menuwrapper).append(buttonsetBlock).append(column3).append(column4).append(column5);
-  // $(menuwrapper).append(column1).append(column2).append(column3).append(column4).append(column5);
   return menuwrapper;
 }
 
@@ -614,67 +604,10 @@ Menu.pin = function() {
 // **********************************************************************
 
 
-// var changeFlowSliderMin = function( newMin ) {
-//   $('#slider-flows').slider("option", "min", newMin);
-//   console.log
-// }
-
-// var changeFlowSliderMax = function( newMax ) {
-//   $('#slider-flows').slider("option", "max", newMax);
-// }
-
 $(document).ready(function() {
 
-  // var menu = {
-  //   "map-color-to": "flows",
-  //   "map-node-to" : "ip",
-  //   "mapTo" : "nodes",
-  //   "color-scheme" : 1,
-  //   "min-num-of-flows" : 0,
-  //   "max-num-of-flows" : 150,
-  //   "min-data-volume" : 1,
-  //   "max-data-volume" : 200,
-  //   "node-size" : 45
-  // }
-
-  // for (var i in menu) {
-  //     console.log(menu.mapTo);
-  //     console.log(menu[i]);
-  //   }
-
-
-  // $(function() {
-  // console.log("uprostred");
-
-  //  for (var i in menuu) {
-  //     console.log("jsme 2");
-  //     console.log(menuu.mapTo);
-  //     console.log(menuu[i]);
-  //   }
-  // })
-
-  
-
-
-  // $('#column1').prepend(Menu.render())
-  // 
-  // $('#menu').prepand
   $('#menu').append(Menu.render())
   $('#menu').append(Menu.pin());
-
-
-
-  $('#colorScheme1').button();
-  $('#colorScheme2').button();
-  $('#colorScheme3').button();
-  $('#colorScheme4').button();
-  $('#colorSchemeCustom').button();
-  $('#button-prefix-order').button();
-  $('#button-balance').button();
-  $('#button-pin').button();
-  $('#Pum').button();
-
-
 
 
   // ********* R A D I O / Map COLOR to **********
@@ -729,7 +662,28 @@ $(document).ready(function() {
       Menu.setMapTo(arg);
     }
   }
-  // console.log(checkOpt);
+
+
+  // ********* B U T T O N S / colorSchemes **********
+  $('#colorScheme1').button();
+  $('#colorScheme2').button();
+  $('#colorScheme3').button();
+  $('#colorScheme4').button();
+  $('#colorSchemeCustom').button();
+
+  $('#colorScheme1').click(function() {
+    Menu.setColorScheme("#FAFA4B", "#0D9BF5");   // zluto-modra stupnice
+  })
+  $('#colorScheme2').click(function() {
+    Menu.setColorScheme("#F0F3FE", "#33559B");   // bilo-modra stupnice
+  })
+  $('#colorScheme3').click(function() {
+    Menu.setColorScheme("#E66101", "#5E3C99");   // oranzovo-fialova
+  })
+  $('#colorScheme4').click(function() {
+    Menu.setColorScheme("#DCDCDD", "#393B3D");   // sedotonova stupnice
+  })
+
 
   // ********** S L I D E R / Flow num ***********
   $('#slider-flows').slider({
@@ -737,12 +691,7 @@ $(document).ready(function() {
     range: true,
     values: [ 0, 150 ],
     slide: function( event, ui ) {
-      // $('#slider-value-flow-min').html(ui.values[0]);
-      // $('#slider-value-flow-max').html(ui.values[1]);
       Menu.setFlowNumDisplayRange(ui.values[0], ui.values[1]);
-
-      // Menu.setMinFlowNum(ui.values[0]);
-      // Menu.setMaxFlowNum(ui.values[1]);
     }
   });
   $('#slider-value-flow-min').html(
@@ -786,67 +735,29 @@ $(document).ready(function() {
    );
 
 
-$('#colorScheme1').click(function() {
-  Menu.setColorScheme("#FAFA4B", "#0D9BF5");   // zluto-modra stupnice
-})
-$('#colorScheme2').click(function() {
-  Menu.setColorScheme("#F0F3FE", "#33559B");   // bilo-modra stupnice
-})
-$('#colorScheme3').click(function() {
-  Menu.setColorScheme("#E66101", "#5E3C99");   // oranzovo-fialova
-})
-$('#colorScheme4').click(function() {
-  Menu.setColorScheme("#DCDCDD", "#393B3D");   // sedotonova stupnice
-})
+  // ********* B U T T O N S / Others **********
+  $('#button-prefix-order').button();
+  $('#button-balance').button();
+  $('#button-pin').button();
 
 
-$(function () {
-  function runEffect() {
-    // $('#topmenu').hide('slide', {direction: 'up'}, 1000, callback );
-    $('#topmenu').slideToggle();
-  };
+  $(function () {
+    function runEffect() {
+      // $('#topmenu').hide('slide', {direction: 'up'}, 1000, callback );
+      $('#topmenu').slideToggle();
+    };
 
-  function callback() {
-    setTimeout(function() {
-      $('#topmenu').removeAttr( 'style' ).hide().fadeIn();
-    }, 1000);
-  };
+    function callback() {
+      setTimeout(function() {
+        $('#topmenu').removeAttr( 'style' ).hide().fadeIn();
+      }, 1000);
+    };
 
-  $( '#button-pin' ).click(function() {
-    runEffect();
-    return false;
+    $( '#button-pin' ).click(function() {
+      runEffect();
+      return false;
+    });
   });
-});
 
 
 })
-
-// $(function() {
-  // $('#radiobutton-display').buttonset();
-  // $('#radiobutton-node').buttonset();
-  // $('#checkbox-mapto').buttonset();
-// });
-
-// ------ SLIDERS ---------
-
-
-// function pucButton() {
-//     console.log("puc");
-//     Menu.setFlowNum(10, 100);
-//   }
-// POKUS / nastavit hodnoty slideru externe
-// $("#button-balance").on('click', pucButton);
-// $("#button-balance").click(function() {
-//     console.log("puc");
-//     Menu.setFlowNum(10, 100);
-//   });
-
-//
-// // Getter
-// var max = $( '.selector' ).slider( 'option', 'max' );
-//
-// // Setter
-// $( '.selector' ).slider( 'option', 'max', 50 );
-
-
-
