@@ -425,7 +425,7 @@ var Menu = {
     jsonMenu.nodeSize = newValue;
 
     $('#slider-nodeSize').slider('value', newValue);
-    $('#slider-value-nodeSize').html( newValue );
+    // $('#slider-value-nodeSize').html( newValue );
 
     var evt = new CustomEvent('menuUpdate', { detail: 'nodeSize'});
     document.getElementById("menu").dispatchEvent(evt);
@@ -569,7 +569,7 @@ Menu.render = function() {
     .append($('<h3/>').html(" &nbsp "))
     .append($('<div/>', { 'class':'slider-wrapper' })
       .append($('<div/>', { 'id':'slider-nodeSize', 'class':'slider' }))
-      .append($('<span/>', { 'id':'slider-value-nodeSize' }))
+      // .append($('<span/>', { 'id':'slider-value-nodeSize' }))
       )
 
   var column4 = $('<div/>', { 'id':'slider-block' }) // .css({ 'width':'29%' })
@@ -721,9 +721,10 @@ $(document).ready(function() {
 
   // ********* S L I D E R / Node size **********
   $('#slider-nodeSize').slider({
-    value: 45,
-    min: 10,
-    max: 70,
+    value: 1.0,
+    min: 0.5,
+    max: 2.0,
+    step: 0.1,
     slide: function( event, ui ) {
       Menu.setNodeSize(ui.value);
     }
