@@ -48,6 +48,20 @@ $(document).ready(function() {
   //   )
   // }).trigger('slidechange')
 
+  $('#colorScheme1').click(function() {
+    console.log(Menu.getColorScheme());   // zluto-modra stupnice
+  })
+  $('#colorScheme2').click(function() {
+    console.log(Menu.getColorScheme());   // bilo-modra stupnice
+  })
+  $('#colorScheme3').click(function() {
+    console.log(Menu.getColorScheme());   // oranzovo-fialova
+  })
+  $('#colorScheme4').click(function() {
+    console.log(Menu.getColorScheme());   // sedotonova stupnice
+  })
+
+
   $('#button-prefix-order').click(function() {
     $('#test-button-order-prefix').html('bum');
     Menu.setFlowNum(10, 1000);

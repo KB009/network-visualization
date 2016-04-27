@@ -103,12 +103,18 @@ var Menu = {
 
 
   // --------  COLOR SCHEME ----------------------------------------------
-  // setColorScheme: function(newValue) {
-  //   jsonMenu.colorScheme = newValue;
-  // },
-  // getColorScheme: function() {
-  //   return jsonMenu.colorScheme;
-  // },
+  setColorScheme: function( minColor, maxColor ) {
+    jsonMenu.colorScheme = [ minColor, maxColor ];
+  },
+  getColorScheme: function() {
+    return jsonMenu.colorScheme;
+  },
+  getColorSchemeMinColor: function() {
+    return jsonMenu.colorScheme[0];
+  },
+  getColorSchemeMaxColor: function() {
+    return jsonMenu.colorScheme[0];
+  },
 
 
   // ----- FLOW NUM SLIDER RANGE -----------------------------------------
@@ -780,6 +786,18 @@ $(document).ready(function() {
    );
 
 
+$('#colorScheme1').click(function() {
+  Menu.setColorScheme("#FAFA4B", "#0D9BF5");   // zluto-modra stupnice
+})
+$('#colorScheme2').click(function() {
+  Menu.setColorScheme("#F0F3FE", "#33559B");   // bilo-modra stupnice
+})
+$('#colorScheme3').click(function() {
+  Menu.setColorScheme("#E66101", "#5E3C99");   // oranzovo-fialova
+})
+$('#colorScheme4').click(function() {
+  Menu.setColorScheme("#DCDCDD", "#393B3D");   // sedotonova stupnice
+})
 
 
 $(function () {
