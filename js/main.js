@@ -14,7 +14,7 @@ $(window).ready(function () {
         circle, 
         node,
         nodes,
-        linkAttribute = 0, // mapping colors on links - 0 for data, 1 for flows
+        linkAttribute = 1, // mapping colors on links - 0 for data, 1 for flows
         nodeAttribute = 1, // mapping colors on nodes - 0 for data, 1 for flows
         colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
@@ -244,17 +244,23 @@ $(window).ready(function () {
                 .attr("class", "link")
                 .append("line")
                 .attr("class", "link-border")
-                .style({"stroke-width": lineSize+1.4, "stroke": "#000"});
+                .style({"stroke-width": lineSize+0.7, "stroke": "#000"});
         
         // add border to every link
         vis.selectAll(".link").append("line")
                 .attr("class", "link-line")
+                .attr("id", function(d) {
+                    return convertIp(d.from)+"-"+convertIp(d.to);
+                })
                 .style({"stroke-width": lineSize, "stroke": color});
 
         // add info-circle for every link       
         circle = vis.selectAll(".link")
                 .append("circle")
                 .attr("class","info")
+                .attr("id", function(d) {
+                    return convertIp(d.from)+"-"+convertIp(d.to);
+                })
                 .attr("cx", 100)
                 .attr("cy", 100)
                 .attr("r", 5)
@@ -316,7 +322,7 @@ $(window).ready(function () {
                 .attr("dy", nodeHeight - nodeHeight/3)
                 .text(function(d) {
                     if (useDomainNames && d.dnsName != undefined)
-                        return d.dnsName.substring(0,(nodeHeight/8)) + "...";
+                        return d.dnsName.substring(0,10) + "...";
                     else
                         return d.id;
                 })
@@ -386,23 +392,23 @@ $(window).ready(function () {
         // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             var number = d.data;   
-            var r, g, b, norm = (number - dataRange[0]) / ((dataRange[1] - dataRange[0]) + 0.001); //we must add some very small number in order to prevent division by zero
-            if (norm > 1) norm = 1;
-            if (norm < 0) norm = 0;
-            r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
+            var r, g, b, norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
+            if (norm > 1 || (isNaN(norm) && number === fullDataRange[0])) norm = 1;
+            if (norm < 0 || (isNaN(norm) && number === fullDataRange[1])) norm = 0;
+            r = Math.round(norm * colorRange[1][0] + (1 - norm) * colorRange[0][0]);
             g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
-            b = Math.round(norm * colorRange[1][2]  + (1 - norm) * colorRange[0][2]);
+            b = Math.round(norm * colorRange[1][2] + (1 - norm) * colorRange[0][2]);
         }
         
         // else if d has nodeAttribute or linkAttribute 1
        else {
             var number = d.flows; 
-            var r, g, b, norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]) + 0.001);
-            if (norm > 1) norm = 1;
-            if (norm < 0) norm = 0;
-            r = Math.round(norm * colorRange[1][0]   + (1 - norm) * colorRange[0][0]);
+            var r, g, b, norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]));
+            if (norm > 1 || (isNaN(norm) && number === fullFlowsRange[0])) norm = 1;
+            if (norm < 0 || (isNaN(norm) && number === fullFlowsRange[1])) norm = 0;
+            r = Math.round(norm * colorRange[1][0] + (1 - norm) * colorRange[0][0]);
             g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
-            b = Math.round(norm * colorRange[1][2]  + (1 - norm) * colorRange[0][2]);
+            b = Math.round(norm * colorRange[1][2] + (1 - norm) * colorRange[0][2]);
         }
         return "rgb("+r+","+g+","+b+")";
     }
@@ -1102,10 +1108,12 @@ $(window).ready(function () {
                 var mapping = Menu.getMapColorTo();
                 if (mapping === 'volume') {
                     nodeAttribute = 0;
+                    linkAttribute = 0;
                     setDataRange();
                 }
                 else {
                     nodeAttribute = 1;
+                    linkAttribute = 1;
                     setFlowRange();
                 }
                 break;
@@ -1123,7 +1131,7 @@ $(window).ready(function () {
                             .duration(10)
                             .text(function(d) {
                     if (useDomainNames && d.dnsName != undefined)
-                        return d.dnsName.substring(0,(nodeWidth/8)) + "...";
+                        return d.dnsName.substring(0,10) + "...";
                     else
                         return d.id;
                 });
@@ -1137,13 +1145,22 @@ $(window).ready(function () {
         function colorTransition() {
             if (nodes != undefined ) {
                 nodes.forEach(function (d) {
-                        var l = d3.select("#"+ convertIp(d.id) + " .background");
-                        l.transition()
-                            .duration(10)
-                            .style("fill", color(d));
+                        var n = d3.select("#"+ convertIp(d.id) + " .background");
+                        n.style("fill", color(d));
                 });               
-                updateKey(key); 
             }
+            
+            if (links != undefined ) {
+                links.forEach(function (d) {
+                        var l = d3.select(".info#"+ convertIp(d.from) + "-" + convertIp(d.to)),
+                            c = d3.select(".link-line#"+ convertIp(d.from) + "-" + convertIp(d.to));
+                            
+                        l.style("fill", color(d));                    
+                        c.style("stroke", color(d));
+                });               
+            }
+            
+            updateKey(key); 
         }
         
         function setDataRange() {
