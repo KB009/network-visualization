@@ -81,11 +81,20 @@ h3 {
   justify-content: space-between;
 }
 
-.slider-wrapper > span {
+/*.slider-wrapper > span {*/
+.sliderLabelLeft {
+  margin: 0 10px;
+  width: 8em;
+  font-weight: bold;
+  text-align: right;
+}
+
+.sliderLabelRight {
   margin: 0 10px;
   width: 1em;
   font-weight: bold;
 }
+
 
 #buttonset-block {
   width: 24.4%;
