@@ -1,0 +1,14 @@
+Network Vis
+ - moc uzlů
+    - zblízka/zdálky
+ - málo uzlů
+ - s posunutým sliderem 
+ - nabídka filtrování
+ - info uzlů/linek
+ - různé barevné škály
+ 
+ GeoVis
+ - základní mapa se zdrojovými adresami
+ - základní mapa s cílovými/zdrojovými adresami
+ - kliknutý stát s jeho cílovými adresami
+ - kliknutý stát (pravým) s jeho sunburst
