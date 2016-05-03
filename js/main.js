@@ -8,7 +8,7 @@
 
 $(window).ready(function () {
     var w = $(window).width(),
-        h = $(window).height() - 250,//3,
+        h = $(window).height() - 3,
         link,
         links,
         circle, 
@@ -16,7 +16,7 @@ $(window).ready(function () {
         nodes,
         linkAttribute = 1, // mapping colors on links - 0 for data, 1 for flows
         nodeAttribute = 1, // mapping colors on nodes - 0 for data, 1 for flows
-        colorRange = [[250,250,75], [0,150,255]], //color range in format: [from[R,G,B], to[R,G,B]] 
+        colorRange = ["#FAFA4B", "#0096FF"], //color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
         fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
         dataRange,
@@ -112,9 +112,9 @@ $(window).ready(function () {
     // linear gradient element for key 
     svg.append("linearGradient")
       .attr("id", "graph-key")
-      .attr("gradientUnits", "userSpaceOnUse")
+      //.attr("gradientUnits", "userSpaceOnUse")
       .attr("x1", "1%").attr("y1", "0%")
-      .attr("x2", "15%").attr("y2", "0%")
+      .attr("x2", "110%").attr("y2", "0%")
     .selectAll("stop")
       .data([
         {offset: "0%", color: "rgb(200,200,200)"},
@@ -389,28 +389,24 @@ $(window).ready(function () {
     }
 
     function color(d) {
+        var number, norm;
         // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
-            var number = d.data;   
-            var r, g, b, norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
+            number = d.data;
+            norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
             if (norm > 1 || (isNaN(norm) && number === fullDataRange[0])) norm = 1;
             if (norm < 0 || (isNaN(norm) && number === fullDataRange[1])) norm = 0;
-            r = Math.round(norm * colorRange[1][0] + (1 - norm) * colorRange[0][0]);
-            g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
-            b = Math.round(norm * colorRange[1][2] + (1 - norm) * colorRange[0][2]);
         }
         
         // else if d has nodeAttribute or linkAttribute 1
        else {
-            var number = d.flows; 
-            var r, g, b, norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]));
+            number = d.flows; 
+            norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]));
             if (norm > 1 || (isNaN(norm) && number === fullFlowsRange[0])) norm = 1;
             if (norm < 0 || (isNaN(norm) && number === fullFlowsRange[1])) norm = 0;
-            r = Math.round(norm * colorRange[1][0] + (1 - norm) * colorRange[0][0]);
-            g = Math.round(norm * colorRange[1][1] + (1 - norm) * colorRange[0][1]);
-            b = Math.round(norm * colorRange[1][2] + (1 - norm) * colorRange[0][2]);
+            
         }
-        return "rgb("+r+","+g+","+b+")";
+        return d3.interpolateRgb(colorRange[0], colorRange[1])(norm);
     }
     
     function updateKey() {
@@ -439,8 +435,8 @@ $(window).ready(function () {
         
         // update color range          
         var data = [
-            {offset: "0%", color: "rgb(" + colorRange[0][0] + "," + colorRange[0][1] + "," + colorRange[0][2] + ")"},
-            {offset: "100%", color: "rgb(" + colorRange[1][0] + "," + colorRange[1][1] + "," + colorRange[1][2] + ")"}
+            {offset: "0%", color: colorRange[0]},
+            {offset: "100%", color: colorRange[1]}
         ];
         
         var stops = d3.select('lineargradient').selectAll('stop')
@@ -1138,6 +1134,10 @@ $(window).ready(function () {
                     });              
                 }
                 break;
+            case "setColorScheme":
+                colorRange = Menu.getColorScheme();
+                colorTransition();
+                break;
             default:
                 break;
         }
@@ -1145,8 +1145,12 @@ $(window).ready(function () {
         function colorTransition() {
             if (nodes != undefined ) {
                 nodes.forEach(function (d) {
-                        var n = d3.select("#"+ convertIp(d.id) + " .background");
-                        n.style("fill", color(d));
+                        var node = d3.select("#" + convertIp(d.id) + " .background");
+                        //fontColor = (parseInt(color(d).substring(1,7), 16) < parseInt("0D9BF5", 16)) ? 'white':'black',
+                        //text = d3.select("#" + convertIp(d.id) + " .label");
+                        node.style("fill", color(d));
+                        //text.style("fill", fontColor);
+                        
                 });               
             }
             

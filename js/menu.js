@@ -98,6 +98,9 @@ var Menu = {
   // --------  COLOR SCHEME ----------------------------------------------
   setColorScheme: function( minColor, maxColor ) {
     jsonMenu.colorScheme = [ minColor, maxColor ];
+    
+    var evt = new CustomEvent('menuUpdate', { detail: 'setColorScheme'});
+    document.getElementById("menu").dispatchEvent(evt);
   },
   getColorScheme: function() {
     return jsonMenu.colorScheme;
@@ -203,14 +206,14 @@ var Menu = {
     jsonMenu.flowNumDisplayTo = toValue;
 
     // set values of sliders in case the change doesnt come from them
-    if ($('#slider-flows').slider('values', 0) != fromValue) {
+    //if ($('#slider-flows').slider('values', 0) != fromValue) {
       $('#slider-flows').slider('values', 0, fromValue);
       $('#slider-value-flow-min').html(fromValue);
-    }
-    if ($('#slider-flows').slider('values', 1) != toValue) {
+    //}
+    //if ($('#slider-flows').slider('values', 1) != toValue) {
       $('#slider-flows').slider('values', 1, toValue);
       $('#slider-value-flow-max').html(toValue);
-    }
+    //}
     
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
@@ -228,10 +231,10 @@ var Menu = {
 
     jsonMenu.flowNumDisplayFrom = fromValue;
     
-    if ($('#slider-flows').slider('values', 0) != fromValue) {
+    //if ($('#slider-flows').slider('values', 0) != fromValue) {
       $('#slider-flows').slider('values', 0, fromValue);
       $('#slider-value-flow-min').html(fromValue);
-    }
+    //}
     
     // TO DO -- adjust following
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
@@ -252,10 +255,10 @@ var Menu = {
     }
     jsonMenu.flowNumDisplayTo = toValue;
 
-    if ($('#slider-flows').slider('values', 1) != toValue) {
+    //if ($('#slider-flows').slider('values', 1) != toValue) {
       $('#slider-flows').slider('values', 1, toValue);
       $('#slider-value-flow-max').html(toValue);
-    }
+    //}
 
     // TO DO -- adjust following
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
@@ -678,10 +681,10 @@ $(document).ready(function() {
     Menu.setColorScheme("#F0F3FE", "#33559B");   // bilo-modra stupnice
   })
   $('#colorScheme3').click(function() {
-    Menu.setColorScheme("#E66101", "#5E3C99");   // oranzovo-fialova
+    Menu.setColorScheme("#FCCD6D", "#5E3C99");   // oranzovo-fialova
   })
   $('#colorScheme4').click(function() {
-    Menu.setColorScheme("#DCDCDD", "#393B3D");   // sedotonova stupnice
+    Menu.setColorScheme("#ECECEC", "#393B3D");   // sedotonova stupnice
   })
 
 
