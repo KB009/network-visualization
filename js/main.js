@@ -294,6 +294,7 @@ $(window).ready(function () {
         
         // finds central node and adds special border (rectangle) to it
         groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
+                .attr("class", "central")
                 .attr("x", -3)
                 .attr("y", -3)
                 .attr("rx", 2)
@@ -346,8 +347,9 @@ $(window).ready(function () {
                 .attr("height", nodeHeight)
                 .style({"fill": "#E7E8E9", "stroke-width": 0.7, "stroke": "#000"});
     
+         // the collapsible button's indicator of hidden children        
          collapsible.append("rect")
-                .attr("class", "filter-nodes")
+                .attr("class", "filter-nodes-indicator")
                 .on("dblclick", filterNodes )
                 .on("contextmenu", toggleNodes )
                 .attr("x", nodeWidth - 1)
@@ -1134,9 +1136,57 @@ $(window).ready(function () {
                     });              
                 }
                 break;
-            case "setColorScheme":
+            case 'setColorScheme':
                 colorRange = Menu.getColorScheme();
                 colorTransition();
+                break;
+            case 'nodeSize':
+                nodeSize = Menu.getNodeSize();
+                nodeWidth = 92 * nodeSize,
+                nodeHeight = 25 * nodeSize;
+                
+                if (nodes != undefined ) {
+                    nodes.forEach(function (d) {
+                        // all node parts must be found separately 
+                        var node = d3.select("#" + convertIp(d.id) + " .background"),
+                            centralNode = d3.select("#" + convertIp(d.id) + " .central"),
+                            label = d3.select("#" + convertIp(d.id) + " .label"),
+                            filterButton = d3.select("#" + convertIp(d.id) + " rect.filter-nodes"),
+                            filterButtonIn = d3.select("#" + convertIp(d.id) + " rect.filter-nodes-indicator"),
+                            filterSign = d3.select("#" + convertIp(d.id) + " text.filter-nodes");
+
+                        node.attr("width", nodeWidth)
+                            .attr("height", nodeHeight);
+                    
+                        centralNode
+                            .attr("width", nodeWidth+6)
+                            .attr("height", nodeHeight+6);    
+
+                        label.attr("dx", nodeHeight/5)
+                             .attr("dy", nodeHeight - nodeHeight/3)
+                             .style("font-size",nodeHeight/2.2 + "px");
+
+                        filterButton
+                                .attr("x", nodeWidth - 1)
+                                .attr("width", 25 * nodeSize)
+                                .attr("height", 25 * nodeSize); 
+
+                        filterButtonIn
+                                .attr("width", nodeHeight)
+                                .attr("height", computeHeight)
+                                .attr("x", nodeWidth - 1)
+                                .attr("y", function(d) { return nodeHeight - computeHeight(d);})
+                                .style("stroke-dasharray", 0+","+nodeHeight+","+nodeHeight*3);
+
+                        filterSign
+                                .attr("dx", nodeWidth + nodeHeight/7 - 1)
+                                .attr("dy", nodeHeight - nodeHeight/5)
+                                .style("font-size",nodeHeight + "px");
+                        
+                        // tick is called to adjust link positions according to nodes
+                        tick();
+                    });               
+                }
                 break;
             default:
                 break;

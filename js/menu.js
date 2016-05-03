@@ -727,7 +727,7 @@ $(document).ready(function() {
     value: 1.0,
     min: 0.5,
     max: 2.0,
-    step: 0.1,
+    step: 0.01,
     slide: function( event, ui ) {
       Menu.setNodeSize(ui.value);
     }
