@@ -265,7 +265,7 @@ $(window).ready(function () {
                 .attr("cy", 100)
                 .attr("r", 5)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
-                .on("contextmenu", linkClick)
+                .on("dblclick", linkClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
                 .on("mouseout", mouseOut);
@@ -311,7 +311,7 @@ $(window).ready(function () {
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
-                .on("contextmenu", nodeClick)
+                .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
                 .on("mouseout", mouseOut);
@@ -328,7 +328,7 @@ $(window).ready(function () {
                         return d.id;
                 })
                 .style("font-size",nodeHeight/2.2 + "px")
-                .on("contextmenu", nodeClick)
+                .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
                 .on("mouseout", mouseOut);
@@ -1059,13 +1059,15 @@ $(window).ready(function () {
     }
     
     function nodeClick(){
-        //d3.event.preventDefault();
-        //TODO
+        d3.event.preventDefault();
+        var event = new CustomEvent("getInfo", { detail: "getNodeInfo"});
+        alert("Událost: " + event.detail);
     }
     
     function linkClick(){
-        //d3.event.preventDefault(); 
-        //TODO
+        d3.event.preventDefault();
+        var event = new CustomEvent("getInfo", { detail: "getLinkInfo"});
+        alert("Událost: " + event.detail);
     }
     
     function mouseOver() {
