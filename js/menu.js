@@ -44,7 +44,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'mapColorTo'});
     document.getElementById("menu").dispatchEvent(evt);
   
-    console.log("Jsem v setMapColorTo", jsonMenu.mapColorTo);
+    //console.log("Jsem v setMapColorTo", jsonMenu.mapColorTo);
   },
   getMapColorTo: function() {
     return jsonMenu.mapColorTo;
@@ -60,7 +60,7 @@ var Menu = {
       document.getElementById('node-radio2').checked = true;
     }
 
-    console.log("Jsem v setMapNODEto", jsonMenu.mapNodeTo);
+    //console.log("Jsem v setMapNODEto", jsonMenu.mapNodeTo);
 
     var evt = new CustomEvent('menuUpdate', { detail: 'mapNodeTo'});
     document.getElementById("menu").dispatchEvent(evt);
@@ -88,7 +88,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'mapTo'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    // console.log("Jsem v setMapTo",jsonMenu. mapTo, jsonMenu.mapTo.length);
+    // //console.log("Jsem v setMapTo",jsonMenu. mapTo, jsonMenu.mapTo.length);
   },
   getMapTo: function() {
     return jsonMenu.mapTo;
@@ -121,7 +121,7 @@ var Menu = {
   setFlowNumSliderRange: function( minValue, maxValue ) {
     jsonMenu.minFlowNum = minValue;
     jsonMenu.maxFlowNum = maxValue;
-
+    
     $('#slider-flows').slider("option", "min", minValue);
     $('#slider-flows').slider("option", "max", maxValue);
     
@@ -142,7 +142,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed flow slider range to: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
+    //console.log("Changed flow slider range to: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
   },
   setMinFlowNum: function(minValue) {DO 
     jsonMenu.minFlowNum = minValue;
@@ -159,7 +159,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed min flow value: ", jsonMenu.minFlowNum);
+    //console.log("Changed min flow value: ", jsonMenu.minFlowNum);
   },
   getMinFlowNum: function() {
     return jsonMenu.minFlowNum;
@@ -180,7 +180,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed max flow value: ", jsonMenu.maxFlowNum);
+    //console.log("Changed max flow value: ", jsonMenu.maxFlowNum);
   },
   getMaxFlowNum: function() {
     return jsonMenu.maxFlowNum;
@@ -208,17 +208,17 @@ var Menu = {
     // set values of sliders in case the change doesnt come from them
     //if ($('#slider-flows').slider('values', 0) != fromValue) {
       $('#slider-flows').slider('values', 0, fromValue);
-      $('#slider-value-flow-min').html(fromValue);
+      $('#slider-value-flow-min').html(NumberFormatter.format(fromValue));
     //}
     //if ($('#slider-flows').slider('values', 1) != toValue) {
       $('#slider-flows').slider('values', 1, toValue);
-      $('#slider-value-flow-max').html(toValue);
+      $('#slider-value-flow-max').html(NumberFormatter.format(toValue));
     //}
     
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed display min/max flow value: ", jsonMenu.flowNumDisplayFrom, jsonMenu.flowNumDisplayTo);
+    //console.log("Changed display min/max flow value: ", jsonMenu.flowNumDisplayFrom, jsonMenu.flowNumDisplayTo);
   },
   setFlowNumDisplayFrom: function( fromValue ) {
     // check whether fromValue belongs to (min, max) range of the slider
@@ -233,14 +233,14 @@ var Menu = {
     
     //if ($('#slider-flows').slider('values', 0) != fromValue) {
       $('#slider-flows').slider('values', 0, fromValue);
-      $('#slider-value-flow-min').html(fromValue);
+      $('#slider-value-flow-min').html(NumberFormatter.format(fromValue));
     //}
     
     // TO DO -- adjust following
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed displayFrom flow value: ", jsonMenu.flowNumDisplayFrom);
+    //console.log("Changed displayFrom flow value: ", jsonMenu.flowNumDisplayFrom);
   },
   getFlowNumDisplayFrom: function() {
     return jsonMenu.flowNumDisplayFrom;
@@ -257,14 +257,14 @@ var Menu = {
 
     //if ($('#slider-flows').slider('values', 1) != toValue) {
       $('#slider-flows').slider('values', 1, toValue);
-      $('#slider-value-flow-max').html(toValue);
+      $('#slider-value-flow-max').html(NumberFormatter.format(toValue));
     //}
 
     // TO DO -- adjust following
     var evt = new CustomEvent('menuUpdate', { detail: 'flowNum'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("Changed displayTo flow value: ", jsonMenu.flowNumDisplayTo);
+    //console.log("Changed displayTo flow value: ", jsonMenu.flowNumDisplayTo);
     
   }, 
   getFlowNumDisplayTo: function() {
@@ -295,7 +295,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume SLIDER range to ", jsonMenu.minDataVolume, jsonMenu.maxDataVolume);
+    //console.log("I've updated data volume SLIDER range to ", jsonMenu.minDataVolume, jsonMenu.maxDataVolume);
   },
   setMinDataVolume: function(minValue) { // 
     jsonMenu.minDataVolume = minValue;
@@ -312,7 +312,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume SLIDER MIN to ", jsonMenu.minDataVolume);
+    //console.log("I've updated data volume SLIDER MIN to ", jsonMenu.minDataVolume);
   },
   getMinDataVolume: function() { 
     return jsonMenu.minDataVolume;
@@ -332,7 +332,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume SLIDER MAX to ", jsonMenu.maxDataVolume);
+    //console.log("I've updated data volume SLIDER MAX to ", jsonMenu.maxDataVolume);
   },
   getMaxDataVolume: function() { // *tested OK
     return jsonMenu.maxDataVolume;
@@ -362,17 +362,17 @@ var Menu = {
 
     // if ($('#slider-dataVolume').slider('values', 0) != fromValue) {
       $('#slider-dataVolume').slider('values', 0, fromValue);
-      $('#slider-value-volume-min').html(fromValue);
+      $('#slider-value-volume-min').html(NumberFormatter.format(fromValue, true));
     // }
     // if ($('#slider-dataVolume').slider('values', 1) != toValue) {
       $('#slider-dataVolume').slider('values', 1, toValue);
-      $('#slider-value-volume-max').html(toValue);
+      $('#slider-value-volume-max').html(NumberFormatter.format(toValue, true));
     // }
     
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated data volume DISPLAY range to ", jsonMenu.dataVolumeDisplayFrom, jsonMenu.dataVolumeDisplayTo);
+    //console.log("I've updated data volume DISPLAY range to ", jsonMenu.dataVolumeDisplayFrom, jsonMenu.dataVolumeDisplayTo);
   },
   setDataVolumeDisplayFrom: function(fromValue) {
     // check whether fromValue belongs to (min, max) range of the slider
@@ -387,13 +387,13 @@ var Menu = {
 
     // if ($('#slider-dataVolume').slider('values', 0) != fromValue) {
       $('#slider-dataVolume').slider('values', 0, fromValue);
-      $('#slider-value-volume-min').html(fromValue);
+      $('#slider-value-volume-min').html(NumberFormatter.format(fromValue, true));
     // }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated display from data volume to ", jsonMenu.dataVolumeDisplayFrom);
+    //console.log("I've updated display from data volume to ", jsonMenu.dataVolumeDisplayFrom);
   },
   getDataVolumeDisplayFrom: function() { //
     return jsonMenu.dataVolumeDisplayFrom;
@@ -411,13 +411,13 @@ var Menu = {
 
     // if ($('#slider-dataVolume').slider('values', 1) != toValue) {
       $('#slider-dataVolume').slider('values', 1, toValue);
-      $('#slider-value-volume-max').html(toValue);
+      $('#slider-value-volume-max').html(NumberFormatter.format(toValue, true));
     // }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'dataVolume'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated display to data volume to ", jsonMenu.dataVolumeDisplayTo);
+    //console.log("I've updated display to data volume to ", jsonMenu.dataVolumeDisplayTo);
   },
   getDataVolumeDisplayTo: function() {
     return jsonMenu.dataVolumeDisplayTo;
@@ -433,7 +433,7 @@ var Menu = {
     var evt = new CustomEvent('menuUpdate', { detail: 'nodeSize'});
     document.getElementById("menu").dispatchEvent(evt);
 
-    console.log("I've updated node size to ", jsonMenu.nodeSize);
+    //console.log("I've updated node size to ", jsonMenu.nodeSize);
   },
   getNodeSize: function() { // *tested OK
     return jsonMenu.nodeSize;
@@ -618,7 +618,7 @@ $(document).ready(function() {
 
   for (var i = 0; i < rad.length; i++) {
     rad[i].onclick = function() {
-      // console.log("Jsem uvnitr", this.value);
+      // //console.log("Jsem uvnitr", this.value);
 
       if (this.value == 0) {
         Menu.setMapColorTo("flows");
@@ -634,7 +634,7 @@ $(document).ready(function() {
 
   for (var i = 0; i < rad.length; i++) {
     rad[i].onclick = function() {
-      // console.log("Jsem uvnitr", this.value);
+      // //console.log("Jsem uvnitr", this.value);
       
       if (this.value == 2) {
         Menu.setMapNodeTo("ip");
@@ -712,7 +712,7 @@ $(document).ready(function() {
     range: true,
     values: [ 1, 200 ],
     slide: function( event, ui ) {
-      Menu.setDataVolumeDisplayRange(ui.values[0], ui.values[1]);
+      Menu.setDataVolumeDisplayRange(ui.values[0],ui.values[1]);
     }
   });
   $('#slider-value-volume-min').html(  // volume vs dataVolume - sjednotit!

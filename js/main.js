@@ -421,19 +421,15 @@ $(window).ready(function () {
         });
         
         // update minimial and maximal values
-        $(".key .key-from").text(function() {
-            if (nodeAttribute === 0 && dataRange != undefined)
-                return dataRange[0];
-            else if (flowsRange != undefined)
-                return flowsRange[0];
-        });
-        
-        $(".key .key-to").text(function() {
-            if (nodeAttribute === 0 && dataRange != undefined)
-                return dataRange[1];
-            else if (flowsRange != undefined)
-                return flowsRange[1];
-        });
+        if (nodeAttribute === 0 && dataRange != undefined) {
+            $(".key .key-from").html(NumberFormatter.format(dataRange[0],true));   
+            $(".key .key-to").html(NumberFormatter.format(dataRange[1],true));  
+        }
+        else if (nodeAttribute === 1 && dataRange != undefined) {
+            $(".key .key-from").html(NumberFormatter.format(flowsRange[0]));   
+            $(".key .key-to").html(NumberFormatter.format(flowsRange[1])); 
+        }
+
         
         // update color range          
         var data = [
@@ -472,6 +468,7 @@ $(window).ready(function () {
 
     // Filter children on double click.
     function filterNodes(d) {
+        //var node = d3.select("#" + convertIp(d.id) + "");
 
         var options = {
             autoOpen: false,
@@ -625,7 +622,7 @@ $(window).ready(function () {
         });
         
         //var lastChecked = null;  
-        checkboxes.click(function(event){
+        checkboxes.click(function(){
             // select/deselect main checkbox according to number of selected nodes
             if($('#dialog table :checkbox:checked').length === $('#dialog table :checkbox').length){
                 $('#dialog #selectAll').prop('checked',true);
@@ -649,7 +646,7 @@ $(window).ready(function () {
         });  
         
         // on click on submit button update force with new nodes
-        $("#dialog #submit").click(function() {
+        $("#dialog #submit").click(function() {           
             $('#dialog table :checkbox').each(function(i, box) {
                 var nodeId = $(box).attr('id').replace('checkbox-ip-','').replace(/\-/g,'.');
                 // we find actual node in hidden or visible children
@@ -753,6 +750,12 @@ $(window).ready(function () {
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();
+        var node = d3.select("#" + convertIp(d.id) + "");
+
+        node.transition()
+                .duration(1000)
+                .attr("transform","translate("+ (d.px + 100) + "," + (d.py + 100) +")");
+        
         //there are some visible children -> hide all
         if (d.children.length > 0) {
             
@@ -1080,15 +1083,15 @@ $(window).ready(function () {
 
     function nodeMouseMove(d) {
         if (d.from === undefined && d.to === undefined && d.dnsName !== undefined) {
-            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + d.flows + "<br>Data: " + d.data + "<br>Doménové jméno: " + d.dnsName)
+            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true) + "<br>Doménové jméno: " + d.dnsName)
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
         }
         else if (d.from === undefined && d.to === undefined && d.dnsName === undefined) {
-            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + d.flows + "<br>Data: " + d.data)
+            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true))
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
         }
         else {
-            tooltip.html("<b>Info o lince<br> z " + d.from + " do " + d.to + "</b><br>Toky: " + d.flows + "<br>Data: " + d.data)
+            tooltip.html("<b>Info o lince<br> z " + d.from + " do " + d.to + "</b><br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true))
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");}       
     }
     
@@ -1096,7 +1099,6 @@ $(window).ready(function () {
      * Menu changes listener, updates the graph
      */ 
     $('#menu').on('menuUpdate', function(e) {    
-        //console.log(e.detail);
         switch(e.detail) {
             case 'dataVolume':
                 setDataRange();
@@ -1130,11 +1132,11 @@ $(window).ready(function () {
                         l.transition()
                             .duration(10)
                             .text(function(d) {
-                    if (useDomainNames && d.dnsName != undefined)
-                        return d.dnsName.substring(0,10) + "...";
-                    else
-                        return d.id;
-                });
+                                if (useDomainNames && d.dnsName != undefined)
+                                    return d.dnsName.substring(0,10) + "...";
+                                else
+                                    return d.id;
+                            });
                     });              
                 }
                 break;
@@ -1157,7 +1159,10 @@ $(window).ready(function () {
                             filterButtonIn = d3.select("#" + convertIp(d.id) + " rect.filter-nodes-indicator"),
                             filterSign = d3.select("#" + convertIp(d.id) + " text.filter-nodes");
 
-                        node.attr("width", nodeWidth)
+                        node.transition()
+            .duration(1000)
+            .attr("width", nodeWidth)
+                                .attr("transform","translate(0,100)")
                             .attr("height", nodeHeight);
                     
                         centralNode
@@ -1198,11 +1203,7 @@ $(window).ready(function () {
             if (nodes != undefined ) {
                 nodes.forEach(function (d) {
                         var node = d3.select("#" + convertIp(d.id) + " .background");
-                        //fontColor = (parseInt(color(d).substring(1,7), 16) < parseInt("0D9BF5", 16)) ? 'white':'black',
-                        //text = d3.select("#" + convertIp(d.id) + " .label");
-                        node.style("fill", color(d));
-                        //text.style("fill", fontColor);
-                        
+                        node.style("fill", color(d));                        
                 });               
             }
             
