@@ -74,7 +74,11 @@ $(window).ready(function () {
     var vis = d3.select("svg").append("g")
         .attr("class", "svg");
 
-    var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+    var tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .on("mouseover", mouseOver)
+            .on("mouseout", mouseOut)
+            .style("opacity", 0);
     
     // key for actual data/flow amount    
     var key = svg.append("g")
@@ -750,12 +754,6 @@ $(window).ready(function () {
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();
-        var node = d3.select("#" + convertIp(d.id) + "");
-
-        node.transition()
-                .duration(1000)
-                .attr("transform","translate("+ (d.px + 100) + "," + (d.py + 100) +")");
-        
         //there are some visible children -> hide all
         if (d.children.length > 0) {
             
@@ -1078,16 +1076,16 @@ $(window).ready(function () {
     }
 
     function mouseOut() {
-        tooltip.transition().duration(10).style("opacity", 0);
+        tooltip.transition().delay(800).duration(500).style("opacity", 0);
     }
 
     function nodeMouseMove(d) {
         if (d.from === undefined && d.to === undefined && d.dnsName !== undefined) {
-            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true) + "<br>Doménové jméno: " + d.dnsName)
+            tooltip.html("<b>Info o uzlu <br>" + d.id + ":</b><br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true) + "<br>Doménové jméno: " + d.dnsName)
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
         }
         else if (d.from === undefined && d.to === undefined && d.dnsName === undefined) {
-            tooltip.html("<b>Info o uzlu:</b>" + "<br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true))
+            tooltip.html("<b>Info o uzlu <br>" + d.id + ":</b><br>Toky: " + NumberFormatter.format(d.flows) + "<br>Data: " + NumberFormatter.format(d.data, true))
                 .style("left", (d3.event.layerX) + 10 + "px").style("top", (d3.event.layerY) + 10 + "px");
         }
         else {
@@ -1159,10 +1157,11 @@ $(window).ready(function () {
                             filterButtonIn = d3.select("#" + convertIp(d.id) + " rect.filter-nodes-indicator"),
                             filterSign = d3.select("#" + convertIp(d.id) + " text.filter-nodes");
 
-                        node.transition()
+                        /*node.transition()
             .duration(1000)
             .attr("width", nodeWidth)
-                                .attr("transform","translate(0,100)")
+                                .attr("transform","translate(0,100)")*/
+                        node.attr("width", nodeWidth)
                             .attr("height", nodeHeight);
                     
                         centralNode
