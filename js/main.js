@@ -620,9 +620,9 @@ $(window).ready(function () {
                       
         //sort nodes in array
         if (sortingType == 0) 
-            allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? 1 : -1;});
+            allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? -1 : 1;});
         else if (sortingType == 1) 
-            allChildren.sort(function(a, b){return a[0].data > b[0].data ? 1 : -1;});
+            allChildren.sort(function(a, b){return a[0].data > b[0].data ? -1 : 1;});
         else
             allChildren.sort(function(a, b){return compareIPs(a[0].id, b[0].id) });
         
@@ -804,7 +804,7 @@ $(window).ready(function () {
                     return compareIPs(a.innerText,b.innerText);
                 }
                     
-                return obj1 > obj2 ? 1 : -1;
+                return obj1 > obj2 ? -1 : 1;
             });
             
             $.each(rows, function(i, row){
