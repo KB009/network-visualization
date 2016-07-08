@@ -144,7 +144,7 @@ var Menu = {
 
     //console.log("Changed flow slider range to: ", jsonMenu.minFlowNum, jsonMenu.maxFlowNum);
   },
-  setMinFlowNum: function(minValue) {DO 
+  setMinFlowNum: function(minValue) { 
     jsonMenu.minFlowNum = minValue;
     
     $('#slider-flows').slider("option", "min", minValue);
