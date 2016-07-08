@@ -179,7 +179,6 @@ $(window).ready(function () {
         
         //load new extreme values from each link
         links.forEach(function (link) {
-            console.log(link);
             if (link.data < fullDataRange[0])
                 fullDataRange[0] = link.data;
             if (link.data > fullDataRange[1])
@@ -586,9 +585,9 @@ $(window).ready(function () {
         
         //append new content
         $(".contents").append("<p style='float:left'>Seřadit podle:</p><form id='sortNodes'>");
-        $(".contents #sortNodes").append("<input type='radio' name='sort' value='0'/><label data-labelfor='0'>Počty toků</label></br>");
-        $(".contents #sortNodes").append("<input type='radio' name='sort' value='1'/><label data-labelfor='1'>Objem dat</label></br>");
-        $(".contents #sortNodes").append("<input type='radio' name='sort' value='2'/><label data-labelfor='2'>Prefix</label></br>");
+        $(".contents #sortNodes").append("<input id='input-flow' type='radio' name='sort' value='0'/><label for='input-flow'>Počty toků</label></br>");
+        $(".contents #sortNodes").append("<input id='input-data' type='radio' name='sort' value='1'/><label for='input-data'>Objem dat</label></br>");
+        $(".contents #sortNodes").append("<input id='input-prefix' type='radio' name='sort' value='2'/><label for='input-prefix'>Prefix</label></br>");
         $(".contents").append('<input type="checkbox" id="selectAll" name="selectAll">');
         $(".contents").append('<button type="submit" id="submit" name="submit">Zobrazit vybrané</button>');
         $(".contents").append("<table class='filter-children'>");
@@ -624,14 +623,16 @@ $(window).ready(function () {
             allChildren.sort(function(a, b){return a[0].flows > b[0].flows ? 1 : -1;});
         else if (sortingType == 1) 
             allChildren.sort(function(a, b){return a[0].data > b[0].data ? 1 : -1;});
-        else 
-            allChildren.sort(compareIPs);
-            
+        else
+            allChildren.sort(function(a, b){return compareIPs(a[0].id, b[0].id) });
+        
+        /*This function compares IPs for retrieval of their positions in sorted array. 
+         * It also contains comparsion of IPv4 and IPv6. */
         function compareIPs(a, b){
             // both addresses are IPv4
-            if (a[0].id.indexOf('.') !== -1 && b[0].id.indexOf('.') !== -1) {
-                var arrayA = a[0].id.split('.'),
-                    arrayB = b[0].id.split('.');
+            if (a.indexOf('.') !== -1 && b.indexOf('.') !== -1) {
+                var arrayA = a.split('.'),
+                    arrayB = b.split('.');
             
                 for (var i = 0; i < 4; i++) {
                     if (parseInt(arrayA[i]) > parseInt(arrayB[i]))
@@ -641,9 +642,9 @@ $(window).ready(function () {
                 }
             }
             // both addresses are IPv6
-            else if (a[0].id.indexOf(':') !== -1 && b[0].id.indexOf(':') !== -1) {
-                var arrayA = a[0].id.split(':'),
-                    arrayB = b[0].id.split(':');
+            else if (a.indexOf(':') !== -1 && b.indexOf(':') !== -1) {
+                var arrayA = a.split(':'),
+                    arrayB = b.split(':');
             
                 var arrayLength = arrayA.length < arrayB.length ? arrayA.length : arrayB.length;    
                 
@@ -663,9 +664,9 @@ $(window).ready(function () {
                         return -1;
                 }                    
             }
-            //one IPv6, one IPv4 -> TODO priority
+            //one IPv6, one IPv4
             else {
-                if (a[0].id.indexOf(':') !== -1)
+                if (a.indexOf(':') !== -1)
                     return 1;
                 else
                     return -1;
@@ -800,8 +801,7 @@ $(window).ready(function () {
                     obj2 = parseInt($(b).find('td #data').val());
                 }
                 else {
-                    obj1 = a.innerText;
-                    obj2 = b.innerText;
+                    return compareIPs(a.innerText,b.innerText);
                 }
                     
                 return obj1 > obj2 ? 1 : -1;
