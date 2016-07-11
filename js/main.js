@@ -312,7 +312,7 @@ $(window).ready(function () {
                     if(d.hasChildren) return "node collapsible";
                     else return "node";
                 })
-                .attr("id", function (d) { return convertIp(d.id);})    
+                .attr("id", function (d) { return convertIp(d.id);})
                 .call(drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -330,7 +330,7 @@ $(window).ready(function () {
                 .attr("class", "background")
                 .attr("x", 0)//function(d) { return d.x; })
                 .attr("y", 0)//function(d) { return d.y; })
-                .attr("rx", 2)
+                //.attr("rx", 0)
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": colorStrokes})
@@ -433,7 +433,7 @@ $(window).ready(function () {
         circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
                 .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
       
-        node.attr("transform", function (d) { return "translate(" + (d.x + 10) + "," + (d.y + 10)+ ")";});
+        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
     }
 
     function color(d) {
@@ -554,7 +554,7 @@ $(window).ready(function () {
         var options = {
             autoOpen: false,
             height: 310,
-            width: 220,
+            width: 221,
             resizable: false,
             modal: true,
             dialogClass: 'children-selector',

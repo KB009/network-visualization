@@ -14,6 +14,9 @@ body {
 }
 .node {
     cursor: default;
+    -webkit-user-select: none; /* Chrome/Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
   /* stroke: #000; */
   /* stroke-width: 1px; */
 }
@@ -66,6 +69,10 @@ body {
 
 
 /*jQueryUI*/
+/*
+#submit {
+    //width: 80%;
+}*/
 
 .children-selector .ui-dialog-titlebar {
     display:none;
