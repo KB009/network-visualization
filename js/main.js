@@ -1,7 +1,5 @@
 /* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * 
  */
 
 /* global d3, Menu, NumberFormatter */
@@ -61,8 +59,8 @@ $(window).ready(function () {
     var force = d3.layout.force()
         .on("tick", tick)
         .on("end", end)
-        .charge(-1000)
-        .chargeDistance(5000)
+        .friction(0.7)
+        .charge(-2000)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
 
@@ -404,7 +402,7 @@ $(window).ready(function () {
         //console.log(d3.select("#" + convertIp(clickedNode.id) + ""));
         //console.log(d3.select(clickedNode));
         var node2 = d3.select("#" + convertIp(clickedNode.id) + "");
-        console.log(node2);
+        //console.log(node2);
         
         /*clickedNode.fixed = true;
         clickedNode.transition()
@@ -434,9 +432,7 @@ $(window).ready(function () {
 
         circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
                 .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
-
-        //console.log("node");        
-        //console.log(node);        
+      
         node.attr("transform", function (d) { return "translate(" + (d.x + 10) + "," + (d.y + 10)+ ")";});
     }
 
@@ -547,7 +543,7 @@ $(window).ready(function () {
         allChildren +=  hiddenChildren;
             
         norm = (hiddenChildren - 0) / (allChildren - 0);
-        height = norm*nodeHeight;//Math.round(norm * nodeHeight   + (1 - norm) * nodeHeight);
+        height = norm*nodeHeight;
         return height;   
     }
 
@@ -707,8 +703,7 @@ $(window).ready(function () {
                     $(event.target).prop('checked', false);
             }
         });
-        
-        //var lastChecked = null;  
+         
         checkboxes.click(function(){
             // select/deselect main checkbox according to number of selected nodes
             if($('#dialog table :checkbox:checked').length === $('#dialog table :checkbox').length){
@@ -742,33 +737,11 @@ $(window).ready(function () {
                 
                 // if this node should be visible (is checked) and currently is hidden, we need to replace it
                 if ($(box).prop('checked') === true && actualHiddenNode !== undefined) {
-                    actualHiddenNode = actualHiddenNode[0];
-
-                    //check all nodes for adjacency with actualHiddenNode
-                    nodes.forEach(function(n) {
-                       if (n.hasChildren) {
-                           var commonChild = findNodeById(n._children, actualHiddenNode.id);
-                           if (commonChild) {
-                               n._children.splice($.inArray(commonChild[0], n._children),1);
-                               n.children.push(commonChild[0]);
-                           }
-                       } 
-                    });                   
+                    switchVisibility(actualHiddenNode[0], true, false);                
                 }
                 // if this node should be hidden (is not checked) and is currently visible, we need to replace it
                 else if ($(box).prop('checked') === false && actualVisibleNode !== undefined) {
-                    actualVisibleNode = actualVisibleNode[0];
-                    
-                    //check all nodes for adjacency with actualVisibleNode
-                    nodes.forEach(function(n) {
-                        if (n.hasChildren) {
-                            var commonChild = findNodeById(n.children, actualVisibleNode.id);
-                            if (commonChild) {
-                                n.children.splice($.inArray(commonChild[0], n.children),1);
-                                n._children.push(commonChild[0]);
-                            }
-                        } 
-                    });
+                    switchVisibility(actualVisibleNode[0], false, false);
                 }       
             });
             
@@ -830,36 +803,21 @@ $(window).ready(function () {
                 
                 $(".contents table").append("<tr " + styleColor + ">" + firstTd + secondTd + "</tr>");
             });
-        }
+        }      
     }
     
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();
         
-        var node = d3.select("#" + convertIp(d.id) + "");
-        
-        node.transition()
-                .duration(1000)
-                .attr("transform","translate("+ (d.px + 100) + "," + (d.py + 100) +")");
-        //there are some visible children -> hide all
+        //there are some visible children -> hide them all
         if (d.children.length > 0) {
             
-            //d.quick_toggle = d.children;
+            d.quick_toggle = d.children;
             d._children = $.merge(d._children, d.children);
             d.children = [];
             
-            nodes.forEach(function(node) {
-                if (node.hasChildren) 
-                    d.quick_toggle.forEach(function(toggle) {
-                        var commonChild = findNodeById(node.children, toggle.id);
-                        if (commonChild) {
-                            node.children.splice($.inArray(commonChild[0], node.children), 1);
-                            node._children.push(commonChild[0]);
-                        }
-                    });               
-            });
-            
+            switchVisibility(d, false, true);           
         }
         //all children are hidden -> show latest 'quick toggle' list 
         else {
@@ -871,26 +829,82 @@ $(window).ready(function () {
                 return d.quick_toggle.indexOf( el ) === -1;
             });
             
-            nodes.forEach(function(node) {
-                if (node.hasChildren) 
-                    d.quick_toggle.forEach(function(child) {
-                        var commonChild = findNodeById(node._children, child.id);
-                        if (commonChild) {
-                            node._children.splice($.inArray(commonChild[0], node._children), 1);
-                            node.children.push(commonChild[0]);
-                        }
-                    });               
-            });
+            switchVisibility(d, true, true); 
         }
         
         links.forEach(function(link, i){
             if(d._children.indexOf(link.source) !== -1 || d._children.indexOf(link.target) !== -1) {
-                links.splice(i);
-            }
+                    links.splice(i);
+                }
         });
         
         update();
-    }  
+    } 
+    
+   /**
+     * Checks whether there are children for each node that match some given node. 
+     * Those children should be (in)visible
+     * 
+     * @param {type} actualNode the node whose children are checked
+     * @param {type} nodeVisibility determines whether we want the children to become hidden or visible
+     * @param {type} quickToggle is true when "fast toggle" is triggered
+     */
+    function switchVisibility(actualNode, nodeVisibility, quickToggle) {
+        //check all nodes for adjacency with actualNode
+        nodes.forEach(function(n) {
+            // if n has children and should be set as visible
+           if (n.hasChildren && nodeVisibility) {
+                if (quickToggle) {
+                    actualNode.quick_toggle.forEach(function(child) {
+                        showCommonChild(n, child);
+                    }); 
+                }
+                else {
+                    showCommonChild(n, actualNode);
+                }
+           } 
+           // if n has children and should be set as invisible, 
+           // all children should be set to invisible as well
+           else if (n.hasChildren) {
+                if (quickToggle) {
+                    actualNode.quick_toggle.forEach(function(toggle) {
+                        if (toggle.children !== undefined && toggle.children.length !== 0) {
+                            toggle.children.forEach(function(grandChild) {
+                                switchVisibility(grandChild, false);
+                            });
+                        }
+                        hideCommonChild(n, toggle);
+                    }); 
+               }
+               else {
+                    // if the node that is supposed to be hidden contains more visible children,
+                    // it must be checked, wheter these children are shared between other nodes.
+                    if (actualNode.children !== undefined && actualNode.children.length !== 0) {
+                        actualNode.children.forEach(function(grandChild) {
+                            switchVisibility(grandChild, false, false);
+                        });
+                    }
+                    hideCommonChild(n, actualNode);        
+                }
+            }
+        }); 
+        
+        function showCommonChild(node, child) {
+            var commonChild = findNodeById(node._children, child.id);
+            if (commonChild) {
+                node._children.splice($.inArray(commonChild[0], node._children), 1);
+                node.children.push(commonChild[0]);
+            }
+        }
+        
+        function hideCommonChild(node, child) {
+            var commonChild = findNodeById(node.children, child.id);
+            if (commonChild) {
+                node.children.splice($.inArray(commonChild[0], node.children), 1);
+                node._children.push(commonChild[0]);
+            }
+        }
+    }
     
     /***************************************************************************
      * Helper :
@@ -1071,6 +1085,12 @@ $(window).ready(function () {
      * 
      **************************************************************************/
     
+    function balanceGraph() {
+        for (var i = 0; i < nodes.length; i++) {
+                    nodes[i].fixed = false;
+        }
+    }
+    
     // fix position of any node on dragstart and enable dragging
     function dragstart(d) {     
         d3.event.sourceEvent.stopPropagation();
@@ -1092,8 +1112,18 @@ $(window).ready(function () {
     } 
     
     function setNodePosition(node, event) {
+        /*var skip = false;
+        
+        //V2: node is visible but not connected
+        if (nodes.indexOf(node) === -1 && node.children !== undefined && node.children.length > 0) {
+            node.children.forEach(function (ch) {
+                if (nodes.indexOf(ch) !== -1)
+                    skip = true;
+            });
+        }*/
+        
         // Node has visible children for moving
-        if (node.children) {
+        if (node.children /*&& !skip*/) {
             node.children.forEach(function (ch) {
                 setNodePosition(ch, event);
                 ch.px += event.dx;
@@ -1101,7 +1131,7 @@ $(window).ready(function () {
             });
         }
         // node has hidden children that need to have their positions changed as well
-        if (node._children) {
+        if (node._children /*&& !skip*/) {
             node._children.forEach(function (ch) {
                 setNodePosition(ch, event);
                 ch.px += event.dx;
@@ -1191,11 +1221,11 @@ $(window).ready(function () {
                          "<br>Data: " + NumberFormatter.format(d.data, true))
                 .style("left", (d3.event.layerX) + 5 + "px").style("top", (d3.event.layerY) + 5 + "px");}       
     }
-    
+       
     /***************************************************************************
      * Menu changes listener, updates the graph
      **************************************************************************/ 
-    $('#menu').on('menuUpdate', function(e) {    
+    $('#menu').on('menuUpdate', function(e) {   
         switch(e.detail) {
             case 'dataVolume':
                 setDataRange();
@@ -1293,11 +1323,11 @@ $(window).ready(function () {
                 //get the new mapping value
                 var mapping = Menu.getMapTo();
                 setPropertyMapping(mapping);   
-                break;
+                break;    
             default:
                 break;
         }
-        
+              
         function colorTransition() {
             if (nodes != undefined ) {
                 nodes.forEach(function (d) {
@@ -1372,6 +1402,11 @@ $(window).ready(function () {
                 nodes.forEach(function (d) {
                     d3.select("#" + convertIp(d.id) + " .background").style("fill", color(d));
                 });
-        }
+        }       
+    });
+    
+    $('#button-balance').click(function() {
+            console.log("balance");
+            balanceGraph();
     });
 });

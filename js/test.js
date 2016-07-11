@@ -1,4 +1,4 @@
-$(document).ready(function() {
+/*$(document).ready(function() {
 
   // $('#div-radiobutton-display input, #div-radiobutton-node input').on('change', function() {
   //   $('#test-' + $(this).parent().attr('id')).html(
@@ -156,4 +156,4 @@ $('#menu').on('menuUpdate', function(e) {
   var evt = new CustomEvent('menuUpdate', { detail: 'init'});
   document.getElementById("menu").dispatchEvent(evt);
 
-})
+})*/
