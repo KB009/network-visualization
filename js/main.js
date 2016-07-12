@@ -60,11 +60,30 @@ $(window).ready(function () {
     var force = d3.layout.force()
         .on("tick", tick)
         .on("end", end)
-        .friction(0.5)
-        .charge(-2000)
+        .friction(0.1)
+        .charge(function (d) {return d.children ? -5000 : -2000 ;})
         .gravity(0)
-        .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
+        .linkDistance(function (d) {
+            //TODO for not central
+            var movement = ((d.source.children !== undefined && d.source.children.length > 0)
+            && d.source.parent === undefined && d.target.id === centralNode);
+    
+            if (movement && !d.source.moved) {
+                d.source.moved = true;
+                d.source.fixed = false;
+            }
+            
+            return movement ? nodeWidth * nodeSize * 4 : nodeWidth * nodeSize * 2;         
+        })
         .size([w, h - 160]);
+
+/* .linkDistance(function (d) {
+            console.log(d);
+            return ((d.source.children !== undefined && d.source.children.length > 0)
+            && d.source.parent === undefined && d.target.id === centralNode) ? 
+            nodeWidth * nodeSize * 4 : nodeWidth * nodeSize * 2;
+        })
+    */
 
     var svg = d3.select("body").append("svg")
         .attr("width", w)
@@ -413,7 +432,7 @@ $(window).ready(function () {
                     else return "+";
                 })
                 .style("fill", colorStrokes)
-                .style("font-size",nodeHeight + "px");       
+                .style("font-size",nodeHeight + "px");        
     }
     
     function positionChild(node) {
@@ -479,7 +498,7 @@ $(window).ready(function () {
             .attr("transform","translate(0,0)");*/      
     }
 
-    function tick() {  
+    function tick() { 
         // Translate position of every link and node in svg
         link.attr("x1", function (d) { return d.source.x + nodeWidth / 2;})
                 .attr("y1", function (d) { return d.source.y + nodeHeight / 2;})
@@ -494,7 +513,7 @@ $(window).ready(function () {
         circle.attr("cx", function(d) { return (d.source.x + nodeWidth/2 + d.target.x + nodeWidth/2) /2;})
                 .attr("cy", function(d) { return (d.source.y + nodeHeight/2 + d.target.y + nodeHeight/2) /2;});
       
-        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});
+        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});  
     }
 
     function color(d) {
@@ -821,7 +840,7 @@ $(window).ready(function () {
                 }
             });
             update(d);
-            $('#dialog').dialog('close'); 
+           $('#dialog').dialog('close'); 
         });
         
         //get new sorting type for list of nodes on change of radio buttons
@@ -1056,7 +1075,7 @@ $(window).ready(function () {
     
     function end() {
         for (var i = 0; i < nodes.length; i++) {
-                    nodes[i].fixed = true;
+            nodes[i].fixed = true;
         }
     }
     
@@ -1162,7 +1181,8 @@ $(window).ready(function () {
     
     function balanceGraph() {
         for (var i = 0; i < nodes.length; i++) {
-                    nodes[i].fixed = false;
+            if (!nodes[i].isCentral)
+                nodes[i].fixed = false;
         }
         force.resume();
     }
@@ -1405,7 +1425,7 @@ $(window).ready(function () {
         }
               
         function colorTransition() {
-            if (nodes != undefined ) {
+            if (nodes !== undefined ) {
                 nodes.forEach(function (d) {
                         var node = d3.select("#" + convertIp(d.id) + " .background"),
                             central = d3.select("#" + convertIp(d.id) + " .central"),
@@ -1450,6 +1470,10 @@ $(window).ready(function () {
             colorTransition();
         }
         
+        /**
+         * Sets mapping of data or flow amount on links and nodes
+         * @param {type} newMapping the new requested mapping (array with size at most 2, containing String values "links" or "nodes")
+         */
         function setPropertyMapping(newMapping) {  
             var iterateNodes = false, 
                 iterateLinks = false;
@@ -1482,7 +1506,10 @@ $(window).ready(function () {
     });
     
     $('#button-balance').click(function() {
-            console.log("balance");
             balanceGraph();
+    });
+    
+    $('#button-stop').click(function() {
+            end();
     });
 });

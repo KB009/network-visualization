@@ -582,9 +582,9 @@ Menu.render = function() {
   var column5 = $('<div/>', {
     'id':'div-button-column',
     'class':'buttons-column'
-  }).append($('<button/>', { 'id':'button-prefix-order' }).css({
+  }).append($('<button/>', { 'id':'button-stop' }).css({
     'width':'120px'
-  }).html("Seřadit podle prefixu"))
+  }).html("Zastavit"))
     .append($('<br>'))
     .append($('<button/>', { 'id':'button-balance' }).css({
       'width':'120px'
@@ -774,7 +774,7 @@ $(document).ready(function() {
 
 
   // ********* B U T T O N S / Others **********
-  $('#button-prefix-order').button();
+  $('#button-stop').button();
   $('#button-balance').button();
   $('#button-pin').button();
 
