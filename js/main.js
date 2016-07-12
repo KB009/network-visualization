@@ -77,14 +77,6 @@ $(window).ready(function () {
         })
         .size([w, h - 160]);
 
-/* .linkDistance(function (d) {
-            console.log(d);
-            return ((d.source.children !== undefined && d.source.children.length > 0)
-            && d.source.parent === undefined && d.target.id === centralNode) ? 
-            nodeWidth * nodeSize * 4 : nodeWidth * nodeSize * 2;
-        })
-    */
-
     var svg = d3.select("body").append("svg")
         .attr("width", w)
         .attr("height", h)
@@ -137,7 +129,6 @@ $(window).ready(function () {
     // linear gradient element for key 
     svg.append("linearGradient")
       .attr("id", "graph-key")
-      //.attr("gradientUnits", "userSpaceOnUse")
       .attr("x1", "1%").attr("y1", "0%")
       .attr("x2", "110%").attr("y2", "0%")
     .selectAll("stop")
@@ -180,7 +171,7 @@ $(window).ready(function () {
      * If we want a change to be propagated visually, we must call this function.
      * 
      **************************************************************************/    
-    function update(clickedNode) {
+    function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
         
@@ -193,6 +184,22 @@ $(window).ready(function () {
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
         
+        createLinks();
+        
+        //load new extreme values from each link
+        links.forEach(function (link) {
+            if (link.data < fullDataRange[0])
+                fullDataRange[0] = link.data;
+            if (link.data > fullDataRange[1])
+                fullDataRange[1] = link.data;
+            if (link.flows < fullFlowsRange[0])
+                fullFlowsRange[0] = link.flows;
+            if (link.flows > fullFlowsRange[1])
+                fullFlowsRange[1] = link.flows;
+        }); 
+        
+        createNodes();
+        
         //load new extreme values from each node
         nodes.forEach(function (node) { 
             if (node.data < fullDataRange[0])
@@ -204,25 +211,7 @@ $(window).ready(function () {
             if (node.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = node.flows;
         }); 
-        
-        //load new extreme values from each link
-        links.forEach(function (link) {
-            if (link.data < fullDataRange[0])
-                fullDataRange[0] = link.data;
-            if (link.data > fullDataRange[1])
-                fullDataRange[1] = link.data;
-            if (link.data < fullFlowsRange[0])
-                fullFlowsRange[0] = link.data;
-            if (link.flows > fullFlowsRange[1])
-                fullFlowsRange[1] = link.flows;
-        });
-                              
-        createLinks();
-        createNodes();
-        
-        if (clickedNode !== undefined)
-            pullNode(clickedNode);
-        
+                                         
         // bind zoom on Alt + mousewheel 
         $(window).keydown(function (event) {
             if(event.altKey){
@@ -334,12 +323,12 @@ $(window).ready(function () {
                 // get range of data and flows from every VISIBLE node
                 updateColorRange(d);
                 
-                //d.fixed = true;
-                
-                // a node is given a position around it's parent node
+                // a node is given an initial position around it's parent node
                 // this does not aply for central node
-                if (!d.isCentral)
+                if (!d.isCentral && !d.positioned) {
+                    d.positioned = true;
                     d = positionChild(d); 
+                }
                 
                 return d.id;
             });
@@ -473,30 +462,9 @@ $(window).ready(function () {
 
         node.x = central.x + /*i */ 200 * Math.cos(angle);
         node.y = central.y + /*i */ 200 * Math.sin(angle);
-
-        return node;
-    }
-    
-    function pullNode(clickedNode) {
-        //console.log(clickedNode);
-        //console.log(d3.select("#" + convertIp(clickedNode.id) + ""));
-        //console.log(d3.select(clickedNode));
-        var node2 = d3.select("#" + convertIp(clickedNode.id) + "");
-        //console.log(node2);
         
-        /*clickedNode.fixed = true;
-        clickedNode.transition()
-          .duration(1000)
-            .attr("transform" ,"translate(" + 1000 + "," + 1000 + ")");*/
-    
-        //clickedNode.fixed = false;
-        //clickedNode.px = 100;
-        //clickedNode.py = 100;
-        //d3.select(clickedNode).dy = 100;
-        /*clickedNode.transition()
-            .duration(1000)
-            .attr("transform","translate(0,0)");*/      
-    }
+        return node;
+    }  
 
     function tick() { 
         // Translate position of every link and node in svg
@@ -839,6 +807,7 @@ $(window).ready(function () {
                     links.splice(i);
                 }
             });
+            d.fixed = false;
             update(d);
            $('#dialog').dialog('close'); 
         });
@@ -921,7 +890,7 @@ $(window).ready(function () {
                     links.splice(i);
                 }
         });
-        
+        d.fixed = false;
         update();
     } 
     
