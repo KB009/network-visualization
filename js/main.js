@@ -28,7 +28,8 @@ $(window).ready(function () {
         allChildrenNodes = [],
         sortingType = 2,
         useDomainNames = false,
-        root;
+        root,
+        centralNode;
                                        
     this.getLinks = function () {
         return links;
@@ -59,8 +60,9 @@ $(window).ready(function () {
     var force = d3.layout.force()
         .on("tick", tick)
         .on("end", end)
-        .friction(0.7)
+        .friction(0.5)
         .charge(-2000)
+        .gravity(0)
         .linkDistance(function (d) {return d.target._children ? nodeWidth * 1 : nodeWidth * 2 ;}) //TODO: should link distance be dependent on nodeSize or constant?
         .size([w, h - 160]);
 
@@ -139,7 +141,16 @@ $(window).ready(function () {
         root.nodes.forEach(function (node) {
             node.weight = 1;   
             updateColorRange(node);
-        });      
+            
+            if (node.isCentral) {
+                centralNode = node.id;
+                node.connections = root.nodes.length - 1;
+                node.positionedChilds = 0;
+                node.x = w/2;
+                node.y = (h + $('#menu').height())/2; 
+                node.fixed = true;
+            }
+        }); 
              
         updateKey(key);           
         update();  
@@ -303,6 +314,14 @@ $(window).ready(function () {
             .data(nodes, function (d) {
                 // get range of data and flows from every VISIBLE node
                 updateColorRange(d);
+                
+                //d.fixed = true;
+                
+                // a node is given a position around it's parent node
+                // this does not aply for central node
+                if (!d.isCentral)
+                    d = positionChild(d); 
+                
                 return d.id;
             });
                
@@ -395,6 +414,48 @@ $(window).ready(function () {
                 })
                 .style("fill", colorStrokes)
                 .style("font-size",nodeHeight + "px");       
+    }
+    
+    function positionChild(node) {
+        var central, parentId, x, y, a, b;
+        if (node.parent !== undefined) 
+            central = findNodeById(nodes, node.parent.id);
+        if (central === undefined) {
+            central = findNodeById(nodes, centralNode);
+        }
+        
+        parentId = central[1];            
+        central = central[0];
+        a = nodeWidth * 2.8;
+        b = nodeHeight * 4;
+
+        var amountOfChildren = central.connections;
+
+        var numberInRow = amountOfChildren;//16;
+        if (amountOfChildren > 16)
+            numberInRow = 16;
+
+        if (central.positionedChilds > 16) {
+            a = nodeWidth * 5, b = nodeHeight * 6;//a = 350, b = 190;
+            numberInRow = 24;
+        }
+        if (central.positionedChilds > 39) {
+            a = nodeWidth * 7, b = nodeHeight * 8;//a = 400, b = 260;
+            numberInRow = 36;
+        }
+
+        var slice = 2 * Math.PI / numberInRow;
+        nodes[parentId].positionedChilds += 1;
+
+        var angle = slice * central.positionedChilds;
+        /*var i = 1;
+        if (d.hasChildren && d.double)
+            i = 2;*/
+
+        node.x = central.x + /*i */ 200 * Math.cos(angle);
+        node.y = central.y + /*i */ 200 * Math.sin(angle);
+
+        return node;
     }
     
     function pullNode(clickedNode) {
@@ -530,7 +591,11 @@ $(window).ready(function () {
         stops.exit().remove();
     }
     
-    // Get amount of hidden children for each node
+    /**
+     * Get amount of hidden children for each node. The function is used for determination of height of 'collapsible button shadow'
+     * @param {type} d node whose children are counted
+     * @returns {Number|d.children.length|jsonMenu.nodeSize|data.nodeSize|d._children.length} the normalized height of collapsible button
+     */
     function computeHeight(d) {
         var height,
             norm,
@@ -995,6 +1060,12 @@ $(window).ready(function () {
         }
     }
     
+    /**
+     * 
+     * @param {type} actualNodes an array in which the node should be searched for
+     * @param {type} id an id of the node we are looking for
+     * @returns {Array} first element of the return value is the node, second is it's index in given array
+     */
     function findNodeById(actualNodes, id) {
         if (actualNodes !== undefined) {
             for (var i = 0; i < actualNodes.length; i++) {
@@ -1024,12 +1095,16 @@ $(window).ready(function () {
                 async: false,
                 success: function(data){
                     node.hasChildren = true;
+                    node.positionedChilds = 0;
                     var childrenNodes = data.nodes;
                     var childrenEdges = data.edges;
+                    node.connections = childrenNodes.length;
                     childrenNodes.forEach(function(nChild) { 
                         //if nChild node is not central and is not visible 
                         if(findNodeById(nodes, nChild.id) === undefined) {
+                            nChild.parent = node;
                             nChild.weight = 1;
+                            //console.log(node);
 
                             if(!node._children) {
                                 node._children = [];
@@ -1042,6 +1117,7 @@ $(window).ready(function () {
                         else if(node.id === nChild.id) {
                             node.data = nChild.data;
                             node.flows = nChild.flows;
+                            console.log(node.id);
                         }
                         
                         var child = findNodeById(allChildrenNodes, nChild.id);
@@ -1089,6 +1165,7 @@ $(window).ready(function () {
         for (var i = 0; i < nodes.length; i++) {
                     nodes[i].fixed = false;
         }
+        force.resume();
     }
     
     // fix position of any node on dragstart and enable dragging
