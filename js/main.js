@@ -1117,7 +1117,6 @@ $(window).ready(function () {
                         else if(node.id === nChild.id) {
                             node.data = nChild.data;
                             node.flows = nChild.flows;
-                            console.log(node.id);
                         }
                         
                         var child = findNodeById(allChildrenNodes, nChild.id);

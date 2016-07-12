@@ -686,7 +686,41 @@ $(document).ready(function() {
   $('#colorScheme4').click(function() {
     Menu.setColorScheme("#ECECEC", "#393B3D");   // sedotonova stupnice
   })
-
+  
+  $('#colorSchemeCustom').click(function() {
+      
+    var colorOptions = {
+        autoOpen: false,
+        height: 221,
+        width: 310,
+        resizable: false,
+        modal: false,
+        dialogClass: 'colorScheme',
+        position: { at: "left bottom" , my: "left top", of: "#colorSchemeCustom"},
+        buttons: [{
+            text: "zrušit",
+            click: function() {
+              $( this ).dialog( "close" );
+            }
+            },{
+            text: "použít",
+            click: function() {
+                console.log("color");
+            }
+            }]
+        };   
+        
+    $( "#colorpicker" ).dialog(colorOptions).dialog( "open" );
+    
+    $('body').bind('click', function(e) {
+            if($('#colorpicker').dialog('isOpen')
+                && !$(e.target).is('span.ui-button-text')
+                && !$(e.target).closest('.ui-dialog').length
+            ) {
+                $('#colorpicker').dialog('close');                            
+            }
+        });  
+  });
 
   // ********** S L I D E R / Flow num ***********
   $('#slider-flows').slider({

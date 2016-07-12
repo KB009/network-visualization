@@ -160,3 +160,15 @@ h3 {
   height: 192px;
   /*border: 1px solid black;*/
 }
+
+.colorScheme .ui-dialog-titlebar {
+    display: none;
+}
+
+.colorScheme .ui-dialog-buttonset {
+    width: 90%;
+}
+
+.colorScheme button {
+    width: 40%;
+}
