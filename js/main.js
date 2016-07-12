@@ -286,7 +286,8 @@ $(window).ready(function () {
                 .attr("id", function(d) {
                     return convertIp(d.from)+"-"+convertIp(d.to);
                 })
-                .style({"stroke-width": lineSize+0.7, "stroke": "#000"});
+                .style({"stroke-width": lineSize+0.7, "stroke": "#000"})
+                .style("opacity", setOpacity);
         
         // add border to every link
         vis.selectAll(".link").append("line")
@@ -340,6 +341,7 @@ $(window).ready(function () {
                     else return "node";
                 })
                 .attr("id", function (d) { return convertIp(d.id);})
+                .style("opacity", setOpacity)
                 .call(drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -536,8 +538,25 @@ $(window).ready(function () {
         }
         
         if (number < range[0] || number > range[1])
-            return "#D1D1D1";
+            return "#a5a5a5";
         else return "#000";
+    }
+    
+    function setOpacity(d) {
+        var number, range;
+        if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
+            number = d.data;
+            range = dataRange;
+        }       
+        // else if d has nodeAttribute or linkAttribute 1
+       else {
+            number = d.flows; 
+            range = flowsRange;           
+        }
+        
+        if (number < range[0] || number > range[1])
+            return "0.7";
+        else return "1";
     }
     
     function updateKey() {
@@ -1401,7 +1420,8 @@ $(window).ready(function () {
                             collapsible = d3.select("#" + convertIp(d.id) + " .filter-nodes"),
                             collapsibleText = d3.select("#" + convertIp(d.id) + " text.filter-nodes"),
                             collapsibleIndicator = d3.select("#" + convertIp(d.id) + " .filter-nodes-indicator"),
-                            label = d3.select("#" + convertIp(d.id) + " .label");
+                            label = d3.select("#" + convertIp(d.id) + " .label"),
+                            opacity = d3.select("#" + convertIp(d.id));
                             
                         collapsible.style("stroke", colorStrokes(d));
                         collapsibleText.style("fill", colorStrokes(d));
@@ -1409,7 +1429,8 @@ $(window).ready(function () {
                         node.style("fill", color(d));
                         node.style("stroke",colorStrokes(d));
                         central.style("stroke",colorStrokes(d));
-                        label.style("fill", colorStrokes(d));
+                        label.style("fill", colorStrokes(d));                        
+                        opacity.style("opacity", setOpacity(d)); 
                 });               
             }
             
@@ -1421,7 +1442,9 @@ $(window).ready(function () {
                             
                         l.style("fill", color(d));                    
                         l.style("stroke",colorStrokes(d));
+                        l.style("opacity",setOpacity(d));
                         lb.style("stroke",colorStrokes(d));
+                        lb.style("opacity", setOpacity(d)); 
                         c.style("stroke", color(d));
                 });               
             }
