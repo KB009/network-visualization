@@ -689,10 +689,10 @@ $(document).ready(function() {
   
   $('#colorSchemeCustom').click(function() {
       
-    var colorOptions = {
+    var dialogOptions = {
         autoOpen: false,
-        height: 221,
-        width: 310,
+        height: 101,
+        width: 100,
         resizable: false,
         modal: false,
         dialogClass: 'colorScheme',
@@ -705,21 +705,57 @@ $(document).ready(function() {
             },{
             text: "použít",
             click: function() {
-                console.log("color");
+                var from = '#' + $('.cp').first().attr('id'),
+                    to = '#' + $('.cp').last().attr('id');
+                Menu.setColorScheme(from, to);
+                $( this ).dialog( "close" );
             }
             }]
-        };   
-        
-    $( "#colorpicker" ).dialog(colorOptions).dialog( "open" );
+    }; 
     
-    $('body').bind('click', function(e) {
-            if($('#colorpicker').dialog('isOpen')
-                && !$(e.target).is('span.ui-button-text')
-                && !$(e.target).closest('.ui-dialog').length
-            ) {
-                $('#colorpicker').dialog('close');                            
+    (function($) {
+    $('.cp').each(function(o) {
+        var colorPicker = $(this);
+        $(this).ColorPicker({
+            color: '#0000ff',
+            onShow: function (colpkr) {
+                $(colpkr).fadeIn(500);
+                return false;
+            },
+            onHide: function (colpkr) {
+                $(colpkr).fadeOut(500);
+                return false;
+            },
+            onChange: function (hsb, hex, rgb) {
+                $(colorPicker).css('backgroundColor', '#' + hex);
+                $(colorPicker).attr('id', hex);
+            },
+            onSubmit: function (hsb, hex, rgb) {
+                $(colorPicker).ColorPickerHide();
             }
-        });  
+        })
+    });
+}) (jQuery)
+       /*
+    $('#cpFocus1').ColorPicker({
+	color: '#0000ff',
+	onShow: function (colpkr) {
+            $(colpkr).fadeIn(500);
+            return false;
+	},
+	onHide: function (colpkr) {
+            $(colpkr).fadeOut(500);
+	    return false;
+	},
+	onChange: function (hsb, hex, rgb) {
+            $('#cpFocus1').css('backgroundColor', '#' + hex);
+        },
+        onSubmit: function (hsb, hex, rgb) {
+            $('#cpFocus1').ColorPickerHide();
+        }
+    });*/
+        
+    $( "#colorpicker" ).dialog(dialogOptions).dialog( "open" );    
   });
 
   // ********** S L I D E R / Flow num ***********

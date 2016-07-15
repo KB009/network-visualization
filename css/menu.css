@@ -170,5 +170,54 @@ h3 {
 }
 
 .colorScheme button {
-    width: 40%;
+    width: 45%;
+}
+
+.colorScheme .ui-dialog-buttonpane {
+    padding: 0;
+}
+
+.colorpicker {
+    z-index: 101;
+    background-image: url(../images/custom_background.png);
+}
+
+.colorpicker_rgb_r {
+    background-image: url(../images/custom_rgb_r.png);
+}
+
+.colorpicker_rgb_g {
+    background-image: url(../images/custom_rgb_g.png);
+}
+
+.colorpicker_rgb_b {
+    background-image: url(../images/custom_rgb_b.png);
+}
+
+.colorpicker_hsb_h {
+    background-image: url(../images/custom_hsb_h.png);
+}
+
+.colorpicker_hsb_s {
+    background-image: url(../images/custom_hsb_s.png);
+}
+
+.colorpicker_hsb_b {
+    background-image: url(../images/custom_hsb_b.png);
+}
+
+.colorpicker_hex {
+    background-image: url(../images/custom_hex.png);
+}
+
+.colorpicker_submit {
+    background-image: url(../images/custom_submit.png);
+}
+
+.cp {
+    width: 28px;
+    float: left;
+    margin: 0% 12.05%;
+    height: 28px;
+    background: url(../images/select2.png) center;
 }

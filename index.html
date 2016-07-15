@@ -10,15 +10,16 @@ and open the template in the editor.
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="images/favicon.png" rel="icon" type="image/png" />
+        <link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" />
+        <link rel="stylesheet" href="js/lib/jquery-ui-1.11.4.custom/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
         <link rel="stylesheet" type="text/css" href="css/menu.css">
-        <link rel="stylesheet" href="js/lib/jquery-ui-1.11.4.custom/jquery-ui.css">
 
         <script type="text/javascript" src="js/lib/jquery-2.2.1.min.js"></script>
         <script type="text/javascript" src="js/lib/jquery-ui.min.js"></script>
         <script type="text/javascript" src="js/lib/d3.v3.min.js" charset="utf-8"></script>
-
+        <script type="text/javascript" src="js/lib/colorpicker.js"></script>
         <!-- <script type="text/javascript" src="js/main.js"></script> -->
         <script type="text/javascript" src="js/numberFormatter.js"></script>
         <script type="text/javascript" src="js/menu.js"></script>
@@ -29,7 +30,10 @@ and open the template in the editor.
         <div id="menu"></div>
 
         <script type="text/javascript" src="js/main.js"></script>
-        <div id="colorpicker"></div>
+        <div id="colorpicker">
+            <div class="cp" id="ffffff"><!--value="#dbeef3"--></div>
+            <div class="cp" id="ffffff"><!--value="#dbeef3"--></div>
+        </div>
         <div id="dialog">
             <div class="contents"></div>
         </div>
