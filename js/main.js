@@ -60,13 +60,13 @@ $(window).ready(function () {
     var force = d3.layout.force()
         .on("tick", tick)
         .on("end", end)
-        .friction(0.1)
-        .charge(function (d) {return d.children ? -5000 : -2000 ;})
+        .friction(0.2)
+        .charge(function (d) {return d.children ? -5000 : -5000 ;})
         .gravity(0)
         .linkDistance(function (d) {
-            //TODO for not central
             var movement = ((d.source.children !== undefined && d.source.children.length > 0)
-            && d.source.parent === undefined && d.target.id === centralNode);
+            && ((d.source.parent === undefined && d.target.id === centralNode)
+            || (d.source.parent !== undefined && d.target.id === d.source.parent.id)));
     
             if (movement && !d.source.moved) {
                 d.source.moved = true;
@@ -330,7 +330,7 @@ $(window).ready(function () {
                     d.positioned = true;
                     d = positionChild(d); 
                 }
-                
+                               
                 return d.id;
             });
                
@@ -369,23 +369,86 @@ $(window).ready(function () {
                 .on("mouseout", mouseOut);
             
         // ip address of node
-        groupNodes.append("text")
+        var text = groupNodes.append("text")
                 .attr("class","label")
                 .attr("dx", nodeHeight/5)
                 .attr("dy", nodeHeight - nodeHeight/3)
-                .text(function(d) {
-                    if (useDomainNames && d.dnsName != undefined)
-                        return d.dnsName.substring(0,10) + "...";
-                    else
-                        return d.id;
-                })
                 .style("font-size",nodeHeight/2.2 + "px")
                 .style("fill", colorStrokes)
                 .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
                 .on("mouseout", mouseOut);
+                     
+        // append text in dependence of domain names usage
+        node.each(function (d) {
+            if ((useDomainNames && d.dnsName === undefined && d.id.length > 22) || 
+                            (!useDomainNames && d.id.length > 22) || 
+                            (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
+                svg.select("#" + convertIp(d.id) + " text")
+                        .append("tspan")
+                            .attr("class", "tspan-1")
+                            .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
+                            .attr("x","0")
+                            .attr("y", nodeHeight*nodeSize*(-1/4.5));
+                    
+                svg.select("#" + convertIp(d.id) + " text")    
+                        .append("tspan")
+                            .attr("class", "tspan-2")
+                            .attr("x","5")
+                            .attr("y", nodeHeight*nodeSize/(1.15))
+                            .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
+            }
+            else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
+                svg.select("#" + convertIp(d.id) + " text")
+                        .append("tspan")
+                            .attr("class", "tspan-1")
+                            .text(d.dnsName);
+                
+                svg.select("#" + convertIp(d.id) + " text")
+                        .append("tspan")
+                            .attr("class", "tspan-2")
+                            .text("");
+                }
+            else {
+                svg.select("#" + convertIp(d.id) + " text")
+                        .append("tspan")
+                            .attr("class", "tspan-1")
+                            .text((useDomainNames && d.dnsName !== undefined)? d.dnsName : d.id);
+                
+                svg.select("#" + convertIp(d.id) + " text")
+                        .append("tspan")
+                            .attr("class", "tspan-2")
+                            .text("");
+            }
+        });   
         
+        
+        node.each(function (d) {
+                        if ((!useDomainNames && d.id.length > 22) || (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                        .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
+                                        .attr("x","0")
+                                        .attr("y", nodeHeight*nodeSize*(-1/4.5));
+                                
+                            svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                        .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
+                        }
+                        else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                        .text(d.dnsName)
+                                        .attr("x","0")
+                                        .attr("y", "0");
+                            svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                    .text("");
+                            }
+                        else        
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                    .text((useDomainNames && d.dnsName !== undefined)? d.dnsName : d.id)
+                                    .attr("x","0")
+                                    .attr("y", "0");
+                    });
+                    
         // find only collapsible nodes
         var collapsible = vis.selectAll("g.collapsible");
           
@@ -1058,7 +1121,7 @@ $(window).ready(function () {
     
     //helper for converting ip address into string without periods, with letters on beginning
     function convertIp(name) {
-        return ("ip-" + name.replace(/\./g, '-'));
+        return ("ip-" + name.replace(/[.:]/g, '-'));
     } 
     
     function end() {
@@ -1088,6 +1151,9 @@ $(window).ready(function () {
             if (node.hasChildren === undefined) {
                 node.hasChildren = false;
                 nodeData(node);
+                
+                //used for checking IP version (in case of IPv6 the nodes must be longer)
+                setNodeWidth(node);
             }
         });
         
@@ -1158,6 +1224,12 @@ $(window).ready(function () {
                     });
                 }
             });         
+        }
+        
+        function setNodeWidth(node) {
+            if (node.id.indexOf(":") !== -1) {
+                nodeWidth = 142;
+            }
         }
     }   
     
@@ -1338,7 +1410,34 @@ $(window).ready(function () {
                     useDomainNames = true;
                 
                 if (nodes != undefined) {
-                    nodes.forEach(function (d) {
+                    node.each(function (d) {
+                        if ((useDomainNames && d.dnsName === undefined && d.id.length > 22) || 
+                            (!useDomainNames && d.id.length > 22) || 
+                            (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                        .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
+                                        .attr("x","0")
+                                        .attr("y", nodeHeight*nodeSize*(-1/4.5));
+                                
+                            svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                        .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
+                        }
+                        else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                        .text(d.dnsName)
+                                        .attr("x","0")
+                                        .attr("y", "0");
+                            svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                    .text("");
+                            }
+                        else        
+                            svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                    .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,11)+"..." : d.id)
+                                    .attr("x","0")
+                                    .attr("y", "0");
+                    }); 
+                    
+                    /*nodes.forEach(function (d) {
                         var l = d3.select("#"+ convertIp(d.id) + " .label");
                         l.transition()
                             .duration(10)
@@ -1348,7 +1447,7 @@ $(window).ready(function () {
                                 else
                                     return d.id;
                             });
-                    });              
+                    }); */             
                 }
                 break;
             case 'setColorScheme':
