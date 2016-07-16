@@ -215,9 +215,15 @@ h3 {
 }
 
 .cp {
-    width: 28px;
+    width: 27px;
     float: left;
     margin: 0% 12.05%;
     height: 28px;
     background: url(../images/select2.png) center;
+}
+
+#colorpicker span {
+    width: 27px;
+    float: left;
+    margin: 2% 12.05%;
 }
