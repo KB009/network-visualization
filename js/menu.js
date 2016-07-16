@@ -609,7 +609,7 @@ Menu.render = function() {
 
 Menu.pin = function() {
   var pinButton = $('<div/>', { 'id':'div-button-pin' })
-    .append($('<button/>', { 'id':'button-pin' }).html("Pin"));
+    .append($('<button/>', { 'id':'button-pin' }).html("Autohide"));
 
   return pinButton;
 }
@@ -620,6 +620,7 @@ $(document).ready(function() {
 
   $('#menu').append(Menu.render())
   $('#menu').append(Menu.pin());
+  var pinnedMenu = true;
 
 
   // ********* R A D I O / Map COLOR to **********
@@ -695,10 +696,10 @@ $(document).ready(function() {
   $('#colorScheme4').click(function() {
     Menu.setColorScheme("#ECECEC", "#393B3D");   // sedotonova stupnice
   })
-  
+        
   $('#colorSchemeCustom').click(function() {
-      
-    var dialogOptions = {
+    var tempPinnedMenu = false,  
+    dialogOptions = {
         autoOpen: false,
         height: 110,
         width: 100,
@@ -706,10 +707,20 @@ $(document).ready(function() {
         modal: false,
         dialogClass: 'colorScheme',
         position: { at: "left bottom" , my: "left top", of: "#colorSchemeCustom"},
+        open: function( event, ui ) {
+            tempPinnedMenu = pinnedMenu;
+            pinnedMenu = true;
+        },
         buttons: [{
             text: "zrušit",
+            class: 'cancel',
             click: function() {
               $( this ).dialog( "close" );
+              
+              if (!tempPinnedMenu) {
+                  pinnedMenu = false;
+                  $('#topmenu').slideToggle(10);
+              }
             }
             },{
             text: "použít",
@@ -718,6 +729,11 @@ $(document).ready(function() {
                     to = '#' + $('.cp').last().attr('id');
                 Menu.setColorScheme(from, to);
                 $( this ).dialog( "close" );
+                
+                if (!tempPinnedMenu) {
+                  pinnedMenu = false;
+                  $('#topmenu').slideToggle(10);
+              }
             }
             }]
     }; 
@@ -746,6 +762,10 @@ $(document).ready(function() {
         
     $( "#colorpicker" ).dialog(dialogOptions).dialog( "open" );    
   });
+  
+  // serves for hiding custom color schemes on document(ready)
+  $('#colorSchemeCustom').trigger('click');
+  $('.colorScheme .cancel').trigger('click');
 
   // ********** S L I D E R / Flow num ***********
   $('#slider-flows').slider({
@@ -803,24 +823,29 @@ $(document).ready(function() {
   $('#button-balance').button();
   $('#button-pin').button();
 
-
   $(function () {
-    function runEffect() {
-      // $('#topmenu').hide('slide', {direction: 'up'}, 1000, callback );
-      $('#topmenu').slideToggle();
+    function runEffect(autohide) {
+      autohide ? pinnedMenu = false : pinnedMenu = true;
     };
 
-    function callback() {
-      setTimeout(function() {
-        $('#topmenu').removeAttr( 'style' ).hide().fadeIn();
-      }, 1000);
-    };
-
-    $( '#button-pin' ).click(function() {
-      runEffect();
+    $( '#button-pin' ).click(function(d) {
+       if (d.target.innerText === 'Pin') {
+            d.target.innerText = 'Autohide';
+           $(this).css('width','70px');
+            runEffect(false);
+       }
+       else {
+           d.target.innerText = 'Pin';
+           $(this).css('width','40px');
+           runEffect(true);
+       }
       return false;
     });
   });
-
-
-})
+  
+  $('#menu').hover(function() {
+      if (!pinnedMenu) {
+          $('#topmenu').slideToggle(10);
+      }
+  });
+});
