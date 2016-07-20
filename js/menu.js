@@ -50,6 +50,17 @@ var Menu = {
     return jsonMenu.mapColorTo;
   },
 
+  // -------- MAP TO LINK WIDTH  ----------------------------------------
+  /*setMapToLinkWidth: function(newValue) {
+    jsonMenu.setMapToLinkWidth = newValue;
+
+    var evt = new CustomEvent('menuUpdate', { detail: 'linkWidth'});
+    document.getElementById("menu").dispatchEvent(evt);
+  }, 
+  getMapToLinkWidth: function() {
+    return jsonMenu.mapToLinkWidth;
+  },
+*/
   // -------- MAP NODE TO  ----------------------------------------------
   setMapNodeTo: function(newValue) {
     jsonMenu.mapNodeTo = newValue;
@@ -71,18 +82,25 @@ var Menu = {
 
   // ---------- MAP TO -------------------------------------------------
   setMapTo: function(newValue) {
+    console.log("V setMapTo " + newValue);
     jsonMenu.mapTo = newValue;
 
-    if (newValue[0] == 'nodes' || newValue[1] == 'nodes') {
+    if (newValue[0] == 'nodes' || newValue[1] == 'nodes' || newValue[2] == 'nodes') {
       document.getElementById('check1').checked = true;
     } else {
       document.getElementById('check1').checked = false;
     }
 
-    if (newValue[0] == 'links' || newValue[1] == 'links') {
+    if (newValue[0] == 'links' || newValue[1] == 'links' || newValue[2] == 'links') {
       document.getElementById('check2').checked = true;
     } else {
       document.getElementById('check2').checked = false;
+    }
+
+    if (newValue[0] == 'linkWidth' || newValue[1] == 'linkWidth' || newValue[2] == 'linkWidth') {
+      document.getElementById('check3').checked = true;
+    } else {
+      document.getElementById('check3').checked = false;
     }
 
     var evt = new CustomEvent('menuUpdate', { detail: 'mapTo'});
@@ -521,6 +539,14 @@ Menu.render = function() {
       'id':'check2'
     }))
     .append($('<label/>', { 'for':'check2' }).html("Spojnice"))
+    .append($('<br>'))
+    .append($('<input/>', {
+      'type':'checkbox',
+      'name':'check',
+      'id':'check3',
+      'disabled':'true'
+    }).css({ 'margin-left': '20px'}))
+    .append($('<label/>', { 'for':'check3' }).html("Šířku spojnic"))
     .append($('<br>'));
 
   var column2Wrap = $('<div/>', { 'class':'buttonset-column'}).append(column2);
@@ -658,10 +684,19 @@ $(document).ready(function() {
   // ********** C H E C K  / Map to **************
   var checkOpt = document.getElementsByName('check');
 
+  console.log(checkOpt);
+  var toNodes = document.getElementById('check1');
+  var toLinks = document.getElementById('check2');
+  var toLinkWidth = document.getElementById('check3');
+
+  
   for (var i = 0; i < checkOpt.length; i++) {
     checkOpt[i].onclick = function() {
-      var toNodes = document.getElementById('check1');
-      var toLinks = document.getElementById('check2');
+      $(toLinkWidth).attr("disabled", !toLinks.checked);
+      if (toLinkWidth.disabled) {
+        toLinkWidth.checked = false;
+      }
+      
 
       var arg = [];
 
@@ -670,11 +705,24 @@ $(document).ready(function() {
       }
       if (toLinks.checked) {
         arg.push('links');
+       
+        if (!toLinkWidth.disabled && toLinkWidth.checked) {
+          arg.push('linkWidth');
+        }
       }
+      
+      console.log(arg);
 
       Menu.setMapTo(arg);
+
     }
   }
+
+  // toLinks.onclick = function() {
+  //     $(toLinkWidth).attr("disabled", !toLinks.checked);
+  //     console.log("Ma se z(ne)aktivnit");
+  // }
+
 
 
   // ********* B U T T O N S / colorSchemes **********
