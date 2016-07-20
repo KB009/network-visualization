@@ -623,7 +623,11 @@ Menu.render = function() {
     .append($('<br>'))
     .append($('<button/>', { 'id':'button-balance' }).css({
       'width':'120px'
-    }).html("Vyvážit"))
+  }).html("Vyvážit"))
+    .append($('<br>'))
+    .append($('<button/>', { 'id':'button-central-focus' }).css({
+      'width':'120px'
+  }).html("Vycentrovat"))
     .append($('<br>'));
 
 
@@ -869,6 +873,7 @@ $(document).ready(function() {
   // ********* B U T T O N S / Others **********
   $('#button-stop').button();
   $('#button-balance').button();
+  $('#button-central-focus').button();
   $('#button-pin').button();
 
   $(function () {
