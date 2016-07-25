@@ -286,8 +286,8 @@ $(window).ready(function () {
                 .attr("id", function(d) {
                     return convertIp(d.from)+"-"+convertIp(d.to);
                 })
-                .style({"stroke-width": lineSize+0.7, "stroke": "#000"})
-                .style("opacity", setOpacity);
+                .style({"stroke-width": lineSize+0.7, "stroke": "#000"});
+                //.style("opacity", setOpacity);
         
         // add border to every link
         vis.selectAll(".link").append("line")
@@ -341,7 +341,7 @@ $(window).ready(function () {
                     else return "node";
                 })
                 .attr("id", function (d) { return convertIp(d.id);})
-                .style("opacity", setOpacity)
+                //.style("opacity", setOpacity)
                 .call(drag);
         
         // finds central node and adds special border (rectangle) to it
@@ -553,11 +553,11 @@ $(window).ready(function () {
         
         //the 'd' element is node and nodes should not be mapped
         if (d.id !== undefined && propertyMapping.indexOf("nodes") === -1)
-                return "F0F0F0";
+                return "#F0F0F0";
             
         //the 'd' element is link and links should not be mapped    
         if (d.id === undefined && propertyMapping.indexOf("links") === -1)
-                return "F0F0F0";    
+                return "#F0F0F0";    
             
         var number, norm;
         // if d is node and has nodeAttribute 0 at the same time / or is link (= does not have an id) and has linkAttribute 0
@@ -566,7 +566,7 @@ $(window).ready(function () {
             
             //node is out of data range (filtering is enabled)
             if (number < dataRange[0] || number > dataRange[1])
-                return "F0F0F0";
+                return "#F0F0F0";
             
             norm = (number - dataRange[0]) / (dataRange[1] - dataRange[0]);
             if (norm > 1 || (isNaN(norm) && number === fullDataRange[0])) norm = 1;
@@ -578,7 +578,7 @@ $(window).ready(function () {
             number = d.flows; 
             
             if (number < flowsRange[0] || number > flowsRange[1])
-                return "F0F0F0";
+                return "#F0F0F0";
             
             norm = (number - flowsRange[0]) / ((flowsRange[1] - flowsRange[0]));
             if (norm > 1 || (isNaN(norm) && number === fullFlowsRange[0])) norm = 1;
@@ -605,7 +605,7 @@ $(window).ready(function () {
         else return "#000";
     }
     
-    function setOpacity(d) {
+    /*function setOpacity(d) {
         var number, range;
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             number = d.data;
@@ -620,7 +620,7 @@ $(window).ready(function () {
         if (number < range[0] || number > range[1])
             return "0.7";
         else return "1";
-    }
+    }*/
     
     function updateKey() {
         // Update label
@@ -648,7 +648,7 @@ $(window).ready(function () {
             {offset: "100%", color: colorRange[1]}
         ];
         
-        var stops = d3.select('lineargradient').selectAll('stop')
+        var stops = d3.select('linearGradient').selectAll('stop')
             .data(data); 
 
         stops.enter().append('stop');
@@ -1519,8 +1519,8 @@ $(window).ready(function () {
                             collapsible = d3.select("#" + convertIp(d.id) + " .filter-nodes"),
                             collapsibleText = d3.select("#" + convertIp(d.id) + " text.filter-nodes"),
                             collapsibleIndicator = d3.select("#" + convertIp(d.id) + " .filter-nodes-indicator"),
-                            label = d3.select("#" + convertIp(d.id) + " .label"),
-                            opacity = d3.select("#" + convertIp(d.id));
+                            label = d3.select("#" + convertIp(d.id) + " .label");
+                            //opacity = d3.select("#" + convertIp(d.id));
                             
                         collapsible.style("stroke", colorStrokes(d));
                         collapsibleText.style("fill", colorStrokes(d));
@@ -1529,7 +1529,7 @@ $(window).ready(function () {
                         node.style("stroke",colorStrokes(d));
                         central.style("stroke",colorStrokes(d));
                         label.style("fill", colorStrokes(d));                        
-                        opacity.style("opacity", setOpacity(d)); 
+                        //opacity.style("opacity", setOpacity(d)); 
                 });               
             }
             
@@ -1541,9 +1541,9 @@ $(window).ready(function () {
                             
                         l.style("fill", color(d));                    
                         l.style("stroke",colorStrokes(d));
-                        l.style("opacity",setOpacity(d));
+                        //l.style("opacity",setOpacity(d));
                         lb.style("stroke",colorStrokes(d));
-                        lb.style("opacity", setOpacity(d)); 
+                        //lb.style("opacity", setOpacity(d)); 
                         c.style("stroke", color(d));
                 });               
             }
