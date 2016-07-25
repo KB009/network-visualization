@@ -15,8 +15,10 @@ $(window).ready(function () {
         linkAttribute = 1, // mapping colors on links - 0 for data, 1 for flows
         nodeAttribute = 1, // mapping colors on nodes - 0 for data, 1 for flows
         colorRange = ["#FAFA4B", "#0096FF"], //color range in format: [from[R,G,B], to[R,G,B]] 
-        fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links data
-        fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for data (nodes) TODO: add links flows
+        fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes and links)
+        fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for flows (nodes and links) 
+        linkDataRange = [Number.MAX_VALUE,0], //data range for links only
+        linkFlowsRange = [Number.MAX_VALUE,0], //flow range for links only
         propertyMapping = ["nodes"],
         dataRange,
         flowsRange,
@@ -183,11 +185,14 @@ $(window).ready(function () {
         // On update reload max and min node values in force
         fullDataRange = [Number.MAX_VALUE,0];
         fullFlowsRange = [Number.MAX_VALUE,0];
+        linkDataRange = [Number.MAX_VALUE,0];
+        linkFlowsRange = [Number.MAX_VALUE,0];
         
         createLinks();
         
         //load new extreme values from each link
         links.forEach(function (link) {
+            // stores the value in full ranges
             if (link.data < fullDataRange[0])
                 fullDataRange[0] = link.data;
             if (link.data > fullDataRange[1])
@@ -196,7 +201,21 @@ $(window).ready(function () {
                 fullFlowsRange[0] = link.flows;
             if (link.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = link.flows;
+            
+            // stores the value in link ranges
+            if (link.data < linkDataRange[0])
+                linkDataRange[0] = link.data;
+            if (link.data > linkDataRange[1])
+                linkDataRange[1] = link.data;
+            if (link.flows < linkFlowsRange[0])
+                linkFlowsRange[0] = link.flows;
+            if (link.flows > linkFlowsRange[1])
+                linkFlowsRange[1] = link.flows;
+            
         }); 
+        
+        console.log(flowsRange);
+        console.log(linkFlowsRange);
         
         createNodes();
         
@@ -605,7 +624,8 @@ $(window).ready(function () {
         else return "#000";
     }
     
-    /*function setOpacity(d) {
+    /*
+    function setOpacity(d) {
         var number, range;
         if ( (nodeAttribute === 0 && d.id !== undefined) || (linkAttribute === 0 && d.id === undefined)) {
             number = d.data;
@@ -632,11 +652,11 @@ $(window).ready(function () {
         });
         
         // update minimial and maximal values
-        if (nodeAttribute === 0 && dataRange != undefined) {
+        if (nodeAttribute === 0 && dataRange !== undefined) {
             $(".key .key-from").html(NumberFormatter.format(dataRange[0],true));   
             $(".key .key-to").html(NumberFormatter.format(dataRange[1],true));  
         }
-        else if (nodeAttribute === 1 && dataRange != undefined) {
+        else if (nodeAttribute === 1 && dataRange !== undefined) {
             $(".key .key-from").html(NumberFormatter.format(flowsRange[0]));   
             $(".key .key-to").html(NumberFormatter.format(flowsRange[1])); 
         }
@@ -975,6 +995,48 @@ $(window).ready(function () {
         d.fixed = false;
         update();
     } 
+    
+    // Change stroke of each line of the graph
+    function stroke(d) {
+
+        // if link-width is not mapped, return constant value
+        if (propertyMapping.indexOf("linkWidth") === -1)
+            return 2.2;
+        
+        var number, normalized, from, to, range = (nodeHeight/1.2)*nodeSize - 2.2;
+        
+        // if linkAttribute is 0 (data), we need the other property for mapping the value on line width        
+        if (linkAttribute == 0) {
+            flowsRange[0] < linkFlowsRange[0] ? from = linkFlowsRange[0] : from = flowsRange[0];                     
+            flowsRange[1] > linkFlowsRange[1] ? to = linkFlowsRange[1] : to = flowsRange[1]; 
+            
+            number = d.flows;
+            normalized = (number - from)/(to - from);
+            
+        /*console.log(linkFlowsRange);
+        console.log(from);
+        console.log(to);
+        console.log(d.flows);
+        console.log(normalized);*/
+        }
+        // else the linkAttribute is 1 (flows), so the mapping must be set for data
+        else {
+            dataRange[0] < linkDataRange[0] ? from = linkDataRange[0] : from = dataRange[0];                     
+            dataRange[1] > linkDataRange[1] ? to = linkDataRange[1] : to = dataRange[1]; 
+            
+            number = d.data;
+            normalized = (number - from)/(to - from);
+        }              
+        
+        if (normalized > nodeHeight*nodeSize) 
+            normalized = nodeHeight*nodeSize;    
+        else if (normalized == 0)
+            normalized = 2.2;
+        else 
+            normalized = (normalized * range)/1.6 + 2.2;
+        
+        return normalized;
+    }
     
    /**
      * Checks whether there are children for each node that match some given node. 
@@ -1459,7 +1521,7 @@ $(window).ready(function () {
                 nodeWidth = 92 * nodeSize,
                 nodeHeight = 25 * nodeSize;
                 
-                if (nodes != undefined ) {
+                if (nodes != undefined ) 
                     nodes.forEach(function (d) {
                         // all node parts must be found separately 
                         var node = d3.select("#" + convertIp(d.id) + " .background"),
@@ -1499,8 +1561,13 @@ $(window).ready(function () {
                         
                         // tick is called to adjust link positions according to nodes
                         tick();
-                    });               
-                }
+                    });                
+                
+                if (links !== undefined) 
+                    links.forEach(function (link) {
+                        setStroke(link); 
+                    });
+                
                 break;
             case 'mapTo':
                 //get the new mapping value
@@ -1528,7 +1595,7 @@ $(window).ready(function () {
                         node.style("fill", color(d));
                         node.style("stroke",colorStrokes(d));
                         central.style("stroke",colorStrokes(d));
-                        label.style("fill", colorStrokes(d));                        
+                        label.style("fill", colorStrokes(d));  
                         //opacity.style("opacity", setOpacity(d)); 
                 });               
             }
@@ -1545,6 +1612,7 @@ $(window).ready(function () {
                         lb.style("stroke",colorStrokes(d));
                         //lb.style("opacity", setOpacity(d)); 
                         c.style("stroke", color(d));
+                        setStroke(d);
                 });               
             }
             
@@ -1561,12 +1629,20 @@ $(window).ready(function () {
             colorTransition();
         }
         
+        function setStroke(d) {
+            d3.select(".link-line#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke-width", stroke(d));
+            d3.select(".link-border#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke-width", stroke(d)+0.5);
+            d3.select("circle#" + convertIp(d.from) + "-" +  convertIp(d.to)).attr("r", stroke(d) < 7 ? 5 : stroke(d)/1.5);
+                    
+        }
+         
         /**
          * Sets mapping of data or flow amount on links and nodes
          * @param {type} newMapping the new requested mapping (array with size at most 2, containing String values "links" or "nodes")
          */
         function setPropertyMapping(newMapping) {  
             var iterateNodes = false, 
+                changeLinkWidth = false,    
                 iterateLinks = false;
         
             // links should be mapped but they are not mapped yet, 
@@ -1574,19 +1650,28 @@ $(window).ready(function () {
             if((newMapping.indexOf("links") !== -1 && propertyMapping.indexOf("links") === -1) || 
                (newMapping.indexOf("links") === -1 && propertyMapping.indexOf("links") !== -1)) 
                 iterateLinks = true;
+            
+            if((newMapping.indexOf("linkWidth") !== -1 && propertyMapping.indexOf("linkWidth") === -1) || 
+               (newMapping.indexOf("linkWidth") === -1 && propertyMapping.indexOf("linkWidth") !== -1)) {
+                iterateLinks = true;
+                changeLinkWidth = true;
+            }
 
             //nodes shold be mapped but they are not mapped yet and vice versa 
             if((newMapping.indexOf("nodes") !== -1 && propertyMapping.indexOf("nodes") === -1) || 
                (newMapping.indexOf("nodes") === -1 && propertyMapping.indexOf("nodes") !== -1)) 
-               iterateNodes = true;                  
-            
+               iterateNodes = true;  
+                       
             //update array with mapping properties
             propertyMapping = newMapping;
             
             if (iterateLinks) 
                 links.forEach(function (d) {
-                   d3.select(".link-line#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke", color(d));
-                   d3.select("circle#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("fill", color(d));
+                    if (changeLinkWidth) 
+                        setStroke(d);
+                        
+                    d3.select(".link-line#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke", color(d));
+                    d3.select("circle#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("fill", color(d));
                 });
             
             if (iterateNodes)
