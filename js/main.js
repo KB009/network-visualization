@@ -33,9 +33,8 @@ $(window).ready(function () {
         root,
         centralNode,
         relatedEventName = null,
-        relatedNodes,
-        relatedlinks,
-        relatedCircles;
+        relatedChildrenLinks,
+        allRelatedChildrenNodes;
                                        
     this.getLinks = function () {
         return links;
@@ -218,9 +217,6 @@ $(window).ready(function () {
             
         }); 
         
-        console.log(flowsRange);
-        console.log(linkFlowsRange);
-        
         createNodes();
         
         //load new extreme values from each node
@@ -386,7 +382,8 @@ $(window).ready(function () {
                 //.attr("rx", 0)
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
-                .style({"fill": color, "stroke-width": 0.7, "stroke": colorStrokes})
+                .style({"fill": function (d) { 
+                        return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true)}, "stroke-width": 0.7, "stroke": colorStrokes})
                 .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
@@ -576,11 +573,11 @@ $(window).ready(function () {
     function color(d, toGray) {
         
         //the 'd' element is node and nodes should not be mapped
-        if ((d.id !== undefined && propertyMapping.indexOf("nodes") === -1) || toGray === true)
+        if ((d.id !== undefined && propertyMapping.indexOf("nodes") === -1) || (toGray === true && !d.related))
                 return "#F0F0F0";
             
         //the 'd' element is link and links should not be mapped    
-        if (d.id === undefined && propertyMapping.indexOf("links") === -1)
+        if ((d.id === undefined && propertyMapping.indexOf("links") === -1) || (toGray === true && !d.related))
                 return "#F0F0F0";    
             
         var number, norm;
@@ -1032,7 +1029,7 @@ $(window).ready(function () {
             }
         }
         
-        function colorOriginals(toGray) {
+        function decolorOriginals(toGray) {
             nodes.forEach(function (d) {
                 var node = d3.select("#" + convertIp(d.id) + " .background");
                 node.style("fill", color(d, toGray));
@@ -1045,7 +1042,60 @@ $(window).ready(function () {
                 circle.style("fill", color(d, toGray));                    
                 link.style("stroke", color(d, toGray));
             }); 
-    }
+        }
+        
+        function getRelatedJsonData(dataName){
+            d3.json("data/" + dataName + ".json", function (json) {
+                var root2 = json;
+                root2.fixed = true;
+                root2.x = w / 2;
+                root2.y = h / 2 - 80;
+                
+                getJsonData(root2.nodes, true);
+        
+                root2.nodes.forEach(function (node) {
+                    node.weight = 1;  
+                    node.related = true;
+                    updateColorRange(node);
+                    
+                    for (var i = 0; i < root.nodes.length; i++) {
+                       if (root.nodes[i].id === node.id) {
+                           node.found = true;
+                           root.nodes[i].related = true;
+                           root.nodes[i].formerData =  root.nodes[i].data;
+                           root.nodes[i].data = root.nodes[i].data + node.data;
+                           root.nodes[i].formerFlows =  root.nodes[i].flows;
+                           root.nodes[i].flows = root.nodes[i].flows + node.flows;
+                           break;
+                       } 
+                    };
+                    
+                    if (!node.found)
+                        root.nodes.push(node);
+                });
+            
+                root2.edges.forEach(function (link) {
+                    link.related = true;
+
+                    for (var i = 0; i < root.edges.length; i++) {
+                       if ((root.edges[i].from === link.from) && (root.edges[i].to === link.to)) {
+                           link.found = true;
+                           root.edges[i].related = true;
+                           root.edges[i].formerData =  root.edges[i].data;
+                           root.edges[i].data = root.edges[i].data + link.data;
+                           root.edges[i].formerFlows =  root.edges[i].flows;
+                           root.edges[i].flows = root.edges[i].flows + link.flows;
+                           break;
+                       } 
+                    };
+                    if (!link.found)
+                        root.edges.push(link);
+                });
+ 
+                update();
+            });
+            
+        }
         
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {           
@@ -1058,15 +1108,16 @@ $(window).ready(function () {
                     || ($(radio).prop("checked") && eventName === 'none' && relatedEventName !== null)) {
                     relatedEventName = null; 
                     // color all original nodes and links into their original colors
-                    colorOriginals(false);
-
+                    decolorOriginals(false);
+                    //todo
+                    
                 }       
                 // if the actual radio is checked and is not visualized, it will be added into the force
                 if ($(radio).prop("checked") && relatedEventName !== eventName && eventName !== 'none') {
                     relatedEventName = eventName;
                     // color all original nodes and links into gray scale, the new ones will gain the original colors 
-                    colorOriginals(true);
-
+                    getRelatedJsonData(eventName);
+                    decolorOriginals(true);
                     //todo              
                 }
                 
@@ -1320,10 +1371,10 @@ $(window).ready(function () {
         }
     }
     
-    function getJsonData(nodes) {
+    function getJsonData(nodes, intoRelated) {
         
         nodes.forEach(function (node) {
-            if (node.hasChildren === undefined) {
+            if (node.hasChildren === undefined) {              
                 node.hasChildren = false;
                 nodeData(node);
                 
@@ -1369,6 +1420,10 @@ $(window).ready(function () {
                         
                         var child = findNodeById(allChildrenNodes, nChild.id);
                         if( child === undefined) {
+                            if (intoRelated === true) {
+                                nChild.related = true;
+                                allRelatedChildrenNodes.push(nChild);
+                            }
                             allChildrenNodes.push(nChild);
                         }
                         else {
@@ -1379,7 +1434,11 @@ $(window).ready(function () {
                     });
 
                     childrenEdges.forEach(function(eChild) {
-                        childrenLinks.push(eChild);    
+                        if (intoRelated === true && allRelatedChildrenNodes.indexOf(nChild) !== -1) {
+                            eChild.related = true;
+                            relatedChildrenLinks.push(eChild);
+                        }
+                        childrenLinks.push(eChild); 
                     });
                 },
                 error: function() {
@@ -1393,7 +1452,6 @@ $(window).ready(function () {
                 if (node._children) {
                     $.each(node._children, function (i, cc){
                         var child = findNodeById(allChildrenNodes, cc);
-                        
                         if (child !== undefined)
                             node._children[i] = child[0];
                     });
@@ -1610,19 +1668,7 @@ $(window).ready(function () {
                                     .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,11)+"..." : d.id)
                                     .attr("x","0")
                                     .attr("y", "0");
-                    }); 
-                    
-                    /*nodes.forEach(function (d) {
-                        var l = d3.select("#"+ convertIp(d.id) + " .label");
-                        l.transition()
-                            .duration(10)
-                            .text(function(d) {
-                                if (useDomainNames && d.dnsName != undefined)
-                                    return d.dnsName.substring(0,10) + "...";
-                                else
-                                    return d.id;
-                            });
-                    }); */             
+                    });                               
                 }
                 break;
             case 'setColorScheme':
@@ -1702,10 +1748,12 @@ $(window).ready(function () {
                             label = d3.select("#" + convertIp(d.id) + " .label");
                             //opacity = d3.select("#" + convertIp(d.id));
                             
+                        node.style("fill", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });
                         collapsible.style("stroke", colorStrokes(d));
                         collapsibleText.style("fill", colorStrokes(d));
                         collapsibleIndicator.style("stroke", colorStrokes(d));
-                        node.style("fill", color(d));
                         node.style("stroke",colorStrokes(d));
                         central.style("stroke",colorStrokes(d));
                         label.style("fill", colorStrokes(d));  
@@ -1719,12 +1767,16 @@ $(window).ready(function () {
                             lb = d3.select(".link-border#"+ convertIp(d.from) + "-" + convertIp(d.to)),
                             l = d3.select(".link-line#"+ convertIp(d.from) + "-" + convertIp(d.to));
                             
-                        c.style("fill", color(d));                    
+                        c.style("fill", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });                    
                         c.style("stroke",colorStrokes(d));
                         //l.style("opacity",setOpacity(d));
                         lb.style("stroke",colorStrokes(d));
                         //lb.style("opacity", setOpacity(d)); 
-                        l.style("stroke", color(d));
+                        l.style("stroke", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });
                         setStroke(d);
                 });               
             }
@@ -1783,13 +1835,19 @@ $(window).ready(function () {
                     if (changeLinkWidth) 
                         setStroke(d);
                         
-                    d3.select(".link-line#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke", color(d));
-                    d3.select("circle#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("fill", color(d));
+                    d3.select(".link-line#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("stroke", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });
+                    d3.select("circle#" + convertIp(d.from) + "-" +  convertIp(d.to)).style("fill", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });
                 });
             
             if (iterateNodes)
                 nodes.forEach(function (d) {
-                    d3.select("#" + convertIp(d.id) + " .background").style("fill", color(d));
+                    d3.select("#" + convertIp(d.id) + " .background").style("fill", function (d) { 
+                                return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
+                        });
                 });
         }       
     });
