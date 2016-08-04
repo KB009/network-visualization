@@ -360,6 +360,7 @@ $(window).ready(function () {
                     else return "node";
                 })
                 .attr("id", function (d) { return convertIp(d.id);})
+                .on("contextmenu", function (d) {d.isCentral ? getRelatedEvents(d) : null;})
                 //.style("opacity", setOpacity)
                 .call(drag);
         
@@ -960,7 +961,58 @@ $(window).ready(function () {
             });
         }      
     }
-    
+       
+    // right mouse click on central node will open a window with related events +-10 minutes
+    function getRelatedEvents(centralNode) {
+        d3.event.preventDefault();
+        console.log(centralNode);
+        
+        var options = {
+            autoOpen: false,
+            height: 'auto',
+            width: 218,
+            resizable: false,
+            modal: true,
+            dialogClass: 'children-selector',
+            position: { at: "right bottom+" + nodeHeight * 1.2, my: "left top", of: "#"+convertIp(centralNode.id) }          
+        };   
+        
+        $( "#dialog" ).dialog(options).dialog( "open" );
+        
+        // bind dialog closing when clicking outside the dialog
+        $('body').bind('click', function(e) {
+            if($('#dialog').dialog('isOpen')
+                && !$(e.target).is('.ui-dialog, a')
+                && !$(e.target).closest('.ui-dialog').length
+            ) {
+                $('#dialog').dialog('close');                
+                vis.selectAll(".filter-nodes").attr("fill","black");               
+            }
+        });
+        
+        //clear previous content
+        $(".contents").empty();
+        
+        //append new content
+        $(".contents").append("<p style='text-align: center;'>Související útoky +-10 minut:</p><form id='getEvents'>");
+        $(".contents").append("<table class='related-events'>");
+        
+        listEvents();
+        
+        $(".contents").append("</table>");
+        $(".contents").append('<button style="margin: 5px auto;display: block;" type="submit" id="submit" name="submit">Zobrazit vybraný útok</button>');
+        
+        //creates rows wit available events
+        function listEvents(){
+            for (var i = 1; i < 6; i++) {
+                var radio = '<td><input type="radio" id="radio-' + i + '" name="radio-events"></td>';
+                var td = "<td><label for='radio-" + i + "'> Event " + i + "</label></td>";
+                
+                $(".contents table").append("<tr>" + radio + td + "</tr>");
+                
+            }
+        }
+    }
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();

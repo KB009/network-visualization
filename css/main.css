@@ -107,3 +107,11 @@ body {
 #dialog label {
     cursor: pointer;
 }
+
+#dialog .contents .related-events {
+   height: auto !important; 
+   overflow-y: hidden;
+   border: 0px;
+   width: 180px;
+   padding: 0 10px;
+}
