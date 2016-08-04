@@ -31,7 +31,11 @@ $(window).ready(function () {
         sortingType = 2,
         useDomainNames = false,
         root,
-        centralNode;
+        centralNode,
+        relatedEventName = null,
+        relatedNodes,
+        relatedlinks,
+        relatedCircles;
                                        
     this.getLinks = function () {
         return links;
@@ -569,10 +573,10 @@ $(window).ready(function () {
         node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});  
     }
 
-    function color(d) {
+    function color(d, toGray) {
         
         //the 'd' element is node and nodes should not be mapped
-        if (d.id !== undefined && propertyMapping.indexOf("nodes") === -1)
+        if ((d.id !== undefined && propertyMapping.indexOf("nodes") === -1) || toGray === true)
                 return "#F0F0F0";
             
         //the 'd' element is link and links should not be mapped    
@@ -1002,16 +1006,73 @@ $(window).ready(function () {
         $(".contents").append("</table>");
         $(".contents").append('<button style="margin: 5px auto;display: block;" type="submit" id="submit" name="submit">Zobrazit vybraný útok</button>');
         
-        //creates rows wit available events
+        //creates rows with available events
         function listEvents(){
+            // Here should  be recieved the data containing information about related events. 
+            var radio, td;
+            // We should have an option 'none', that disables any related event
+            if (relatedEventName === null)
+                radio = '<td><input type="radio" id="none" name="radio-events" checked></td>';
+            else 
+                radio = '<td><input type="radio" id="none" name="radio-events"></td>';
+            
+            td = "<td><label for='none'> Žádná událost </label></td>";
+            $(".contents table").append("<tr>" + radio + td + "</tr>");
+            
+            // Then it will be listed into the table, where id should contain name of the particular event 
             for (var i = 1; i < 6; i++) {
-                var radio = '<td><input type="radio" id="radio-' + i + '" name="radio-events"></td>';
-                var td = "<td><label for='radio-" + i + "'> Event " + i + "</label></td>";
+                if (relatedEventName === ('sample_' + i))
+                    radio = '<td><input type="radio" id="sample_' + i + '" name="radio-events" checked></td>';
+                else 
+                    radio = '<td><input type="radio" id="sample_' + i + '" name="radio-events"></td>';
+                td = "<td><label for='sample_" + i + "'> sample_" + i + "</label></td>";
                 
                 $(".contents table").append("<tr>" + radio + td + "</tr>");
                 
             }
         }
+        
+        function colorOriginals(toGray) {
+            nodes.forEach(function (d) {
+                var node = d3.select("#" + convertIp(d.id) + " .background");
+                node.style("fill", color(d, toGray));
+            });
+
+            links.forEach(function (d) {
+                var circle = d3.select(".info#"+ convertIp(d.from) + "-" + convertIp(d.to)),
+                    link = d3.select(".link-line#"+ convertIp(d.from) + "-" + convertIp(d.to));
+
+                circle.style("fill", color(d, toGray));                    
+                link.style("stroke", color(d, toGray));
+            }); 
+    }
+        
+        // on click on submit button update force with new nodes
+        $("#dialog #submit").click(function() {           
+            $('#dialog table :radio').each(function(i, radio) {
+                var eventName = $(radio).attr('id');
+                
+                // if is the actual radio isn't checked but it was checked before
+                // or the actual radio option is 'none' and wasn't 'none' before
+                if (($(radio).prop("checked") && relatedEventName === eventName) 
+                    || ($(radio).prop("checked") && eventName === 'none' && relatedEventName !== null)) {
+                    relatedEventName = null; 
+                    // color all original nodes and links into their original colors
+                    colorOriginals(false);
+
+                }       
+                // if the actual radio is checked and is not visualized, it will be added into the force
+                if ($(radio).prop("checked") && relatedEventName !== eventName && eventName !== 'none') {
+                    relatedEventName = eventName;
+                    // color all original nodes and links into gray scale, the new ones will gain the original colors 
+                    colorOriginals(true);
+
+                    //todo              
+                }
+                
+                $('#dialog').dialog('close'); 
+            });
+        });
     }
     // Toggle specific children on click 
     function toggleNodes(d) {
@@ -1654,16 +1715,16 @@ $(window).ready(function () {
             
             if (links != undefined ) {
                 links.forEach(function (d) {
-                        var l = d3.select(".info#"+ convertIp(d.from) + "-" + convertIp(d.to)),
+                        var c = d3.select(".info#"+ convertIp(d.from) + "-" + convertIp(d.to)),
                             lb = d3.select(".link-border#"+ convertIp(d.from) + "-" + convertIp(d.to)),
-                            c = d3.select(".link-line#"+ convertIp(d.from) + "-" + convertIp(d.to));
+                            l = d3.select(".link-line#"+ convertIp(d.from) + "-" + convertIp(d.to));
                             
-                        l.style("fill", color(d));                    
-                        l.style("stroke",colorStrokes(d));
+                        c.style("fill", color(d));                    
+                        c.style("stroke",colorStrokes(d));
                         //l.style("opacity",setOpacity(d));
                         lb.style("stroke",colorStrokes(d));
                         //lb.style("opacity", setOpacity(d)); 
-                        c.style("stroke", color(d));
+                        l.style("stroke", color(d));
                         setStroke(d);
                 });               
             }
