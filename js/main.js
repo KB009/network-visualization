@@ -31,10 +31,9 @@ $(window).ready(function () {
         sortingType = 2,
         useDomainNames = false,
         root,
+        relatedEvents = [],
         centralNode,
-        relatedEventName = null,
-        relatedChildrenLinks,
-        allRelatedChildrenNodes;
+        relatedEventName = null;
                                        
     this.getLinks = function () {
         return links;
@@ -1017,7 +1016,7 @@ $(window).ready(function () {
             $(".contents table").append("<tr>" + radio + td + "</tr>");
             
             // Then it will be listed into the table, where id should contain name of the particular event 
-            for (var i = 1; i < 6; i++) {
+            for (var i = 1; i < 4; i++) {
                 if (relatedEventName === ('sample_' + i))
                     radio = '<td><input type="radio" id="sample_' + i + '" name="radio-events" checked></td>';
                 else 
@@ -1091,38 +1090,149 @@ $(window).ready(function () {
                     if (!link.found)
                         root.edges.push(link);
                 });
- 
+                relatedEvents.push([]);
+                relatedEvents[relatedEvents.length - 1].push(relatedEvents);   
+                relatedEvents[relatedEvents.length - 1].push(root2);   
                 update();
             });
             
         }
         
+        /**
+         * This function iterates trought both nodes and links and removes all 
+         * the nodes that belong to the related-events. Nodes which are also in 
+         * any event but belong to the original set as well, have only their 
+         * properties deleted.
+         */
+        function hideRelatedJsonData() {
+            
+            // the reladed-event values must be only deleted at first, 
+            // otherwise the indexes wouldn't match and some elements could be skipped 
+            root.nodes.forEach(function (node, i) {
+                // if the node exists only in related-event data (we only need to 
+                // check e.g. the 'formerData', property as they do exist both 
+                // /data and flows/ or none of them)
+                if (node.related === true && node.formerData === undefined)
+                    delete root.nodes[i];
+                // else, the event may belong also to the original data, so we 
+                // cannot delete it completely
+                else if (node.related && node.formerData !== undefined) {
+                    root.nodes[i].data = root.nodes[i].formerData;
+                    root.nodes[i].flows = root.nodes[i].formerFlows;
+                    delete root.nodes[i].formerData;
+                    delete root.nodes[i].formerFlows;
+                    delete root.nodes[i].related;
+                }
+            });
+            
+            root.edges.forEach(function (link, i) {
+                if (link.related === true && link.formerData === undefined)
+                    delete root.edges[i];
+                else if (link.related && link.formerData !== undefined) {
+                    root.edges[i].data = root.edges[i].formerData;
+                    root.edges[i].flows = root.edges[i].formerFlows;
+                    delete root.edges[i].formerData;
+                    delete root.edges[i].formerFlows;
+                    delete root.edges[i].related;
+                }
+            });
+           
+            // both arrays are re-checked again, all the deleted places can be 
+            // now reindexed (there mustn't be any 'empty' space)
+            root.nodes = root.nodes.filter(function(node) {
+                return node !== undefined;
+            });
+            
+            root.edges = root.edges.filter(function(link) {
+                return link !== undefined;
+            });
+            
+            update();
+        }
+        
+        function loadRelatedJsonData(dataName) {
+            var root2;
+            relatedEvents.forEach(function (event) {
+               if (event[0] === dataName)
+                   root2 = event[1];
+            });
+            
+            if (root2 === undefined)
+                return null;
+            
+            root2.nodes.forEach(function (node) {
+                    updateColorRange(node);
+                    
+                    for (var i = 0; i < root.nodes.length; i++) {
+                       if (root.nodes[i].id === node.id) {
+                           node.found = true;
+                           root.nodes[i].related = true;
+                           root.nodes[i].formerData =  root.nodes[i].data;
+                           root.nodes[i].data = root.nodes[i].data + node.data;
+                           root.nodes[i].formerFlows =  root.nodes[i].flows;
+                           root.nodes[i].flows = root.nodes[i].flows + node.flows;
+                           break;
+                       } 
+                    };
+                    
+                    if (!node.found)
+                        root.nodes.push(node);
+                });
+            
+                root2.edges.forEach(function (link) {
+                    for (var i = 0; i < root.edges.length; i++) {
+                       if ((root.edges[i].from === link.from) && (root.edges[i].to === link.to)) {
+                           root.edges[i].related = true;
+                           root.edges[i].formerData =  root.edges[i].data;
+                           root.edges[i].data = root.edges[i].data + link.data;
+                           root.edges[i].formerFlows =  root.edges[i].flows;
+                           root.edges[i].flows = root.edges[i].flows + link.flows;
+                           break;
+                       } 
+                    };
+                    if (!link.found)
+                        root.edges.push(link);
+                });
+                
+                update();
+        }
+        
         // on click on submit button update force with new nodes
         $("#dialog #submit").click(function() {           
+            // the old event must be deleted first
             $('#dialog table :radio').each(function(i, radio) {
                 var eventName = $(radio).attr('id');
                 
+                // if the checked event hasn't changed, we can end without checking anything else
+                if ($(radio).prop("checked") && 
+                    (relatedEventName === eventName || (relatedEventName === null && eventName === 'none'))) 
+                    return false;
+             
                 // if is the actual radio isn't checked but it was checked before
                 // or the actual radio option is 'none' and wasn't 'none' before
-                if (($(radio).prop("checked") && relatedEventName === eventName) 
+                if ((!$(radio).prop("checked") && relatedEventName === eventName) 
                     || ($(radio).prop("checked") && eventName === 'none' && relatedEventName !== null)) {
                     relatedEventName = null; 
+                    hideRelatedJsonData();
                     // color all original nodes and links into their original colors
-                    decolorOriginals(false);
-                    //todo
-                    
+                    decolorOriginals(false);                   
                 }       
+            });
+            // then, a new event can be appended to the original graph
+            $('#dialog table :radio').each(function(i, radio) {
+                var eventName = $(radio).attr('id');
+                
                 // if the actual radio is checked and is not visualized, it will be added into the force
                 if ($(radio).prop("checked") && relatedEventName !== eventName && eventName !== 'none') {
                     relatedEventName = eventName;
                     // color all original nodes and links into gray scale, the new ones will gain the original colors 
-                    getRelatedJsonData(eventName);
-                    decolorOriginals(true);
-                    //todo              
-                }
-                
-                $('#dialog').dialog('close'); 
+                    decolorOriginals(true); 
+                    var eventRoot = loadRelatedJsonData(eventName);  
+                    if (eventRoot === null) getRelatedJsonData(eventName);      
+                }          
             });
+            
+            $('#dialog').dialog('close'); 
         });
     }
     // Toggle specific children on click 
@@ -1371,7 +1481,7 @@ $(window).ready(function () {
         }
     }
     
-    function getJsonData(nodes, intoRelated) {
+    function getJsonData(nodes, inRelated) {
         
         nodes.forEach(function (node) {
             if (node.hasChildren === undefined) {              
@@ -1400,43 +1510,49 @@ $(window).ready(function () {
                     node.connections = childrenNodes.length;
                     childrenNodes.forEach(function(nChild) { 
                         //if nChild node is not central and is not visible 
-                        if(findNodeById(nodes, nChild.id) === undefined) {
+                        if (findNodeById(nodes, nChild.id) === undefined) {
                             nChild.parent = node;
                             nChild.weight = 1;
                             //console.log(node);
 
-                            if(!node._children) {
+                            if (!node._children) {
                                 node._children = [];
                                 node.children = [];
                             }
 
                             node._children.push(nChild.id);
-                        }
+                        }                         
                         //if nChild is central node for this json
-                        else if(node.id === nChild.id) {
+                        else if (node.id === nChild.id) {
                             node.data = nChild.data;
                             node.flows = nChild.flows;
                         }
                         
+                        if (inRelated) {
+                            nChild.related = true;
+                        }
+                        
                         var child = findNodeById(allChildrenNodes, nChild.id);
-                        if( child === undefined) {
-                            if (intoRelated === true) {
-                                nChild.related = true;
-                                allRelatedChildrenNodes.push(nChild);
-                            }
+                        if (child === undefined) {
                             allChildrenNodes.push(nChild);
                         }
                         else {
-                            allChildrenNodes[child[1]].data += nChild.data;
-                            allChildrenNodes[child[1]].data += nChild.flows;
-                            
+                            if (inRelated) {
+                                allChildrenNodes[child[1]].formerData = allChildrenNodes[child[1]].data;
+                                allChildrenNodes[child[1]].data += nChild.data;
+                                allChildrenNodes[child[1]].formerFlows = allChildrenNodes[child[1]].flows;
+                                allChildrenNodes[child[1]].data += nChild.flows;
+                            }
+                            else {
+                                allChildrenNodes[child[1]].data += nChild.data;
+                                allChildrenNodes[child[1]].flows += nChild.flows;
+                            }            
                         }
                     });
 
                     childrenEdges.forEach(function(eChild) {
-                        if (intoRelated === true && allRelatedChildrenNodes.indexOf(nChild) !== -1) {
+                        if (inRelated === true) {
                             eChild.related = true;
-                            relatedChildrenLinks.push(eChild);
                         }
                         childrenLinks.push(eChild); 
                     });
