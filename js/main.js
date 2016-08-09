@@ -30,6 +30,7 @@ $(window).ready(function () {
         allChildrenNodes = [],
         sortingType = 2,
         useDomainNames = false,
+        focused,
         root,
         relatedEvents = [],
         centralNode,
@@ -229,25 +230,81 @@ $(window).ready(function () {
             if (node.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = node.flows;
         }); 
-                                         
-        // bind zoom on Alt + mousewheel 
-        $(window).keydown(function (event) {
-            if(event.altKey){
-                event.preventDefault();
+        
+        // bind keydown events to force
+        $(window).keydown(function (evt) {
+            
+            // bind zoom on Alt + mousewheel 
+            if(evt.altKey){
+                evt.preventDefault();
                 svg.call(zoom)
                     .on("dblclick.zoom", null)
                     .on("mousewheel.zoom", zoom);
             }
+            
+            // bind tooltip copying on Ctrl + C
+            var evtobj = window.event? event : evt;
+            if (evtobj.keyCode === 67 && evtobj.ctrlKey) {
+                // this variable will contain all the data which are available 
+                // for given element. These will be coppied to clipboard
+                if (focused != undefined || focused != null) {
+                    var dataToCopy = getTooltipData(focused);
+                    copyToClipboard(dataToCopy);
+                }
+
+                // for Firefox
+                function copyToClipboardFF(text) {
+                  window.prompt ("Copy to clipboard: Ctrl C, Enter", text);
+                }
+
+                /**
+                 * This function ensures, that the actual node information will be coppied to clipboard.
+                 * @param {type} text is the text we want to have in the clipboard
+                 */
+                function copyToClipboard(text) {
+                    var success = true,
+                        range = document.createRange(),
+                        selection;
+
+                    // for IE
+                    if (window.clipboardData) {
+                        window.clipboardData.setData("Text", text);        
+                    } else {
+                        // a temporary element off screen must be created
+                        var tmpElem = $('<div>');
+                        // add the input value to the temporary element
+                        tmpElem.html(text);
+                        $("body").append(tmpElem);
+                        // select temporary element
+                        range.selectNodeContents(tmpElem.get(0));
+                        selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        try { 
+                          success = document.execCommand ("copy", false, null);
+                        }
+                        catch(e) {
+                          copyToClipboardFF(text);
+                        }
+                        if (success) {
+                          // remove temporary element
+                          tmpElem.remove();
+                        }
+                    }
+                }
+            }
+   
         });
         // unbind zoom if Alt is released
-        $(window).keyup(function (event) {
-            if(!event.altKey){
-                event.preventDefault();
+        $(window).keyup(function (evt) {
+            if(!evt.altKey){
+                evt.preventDefault();
                 svg.call(zoom)
                     .on("dblclick.zoom", null)
                     .on("wheel.zoom", scroll)
                     .on("mousewheel.zoom", scroll);
             }
+            
         });
         
         // start simulation
@@ -326,6 +383,8 @@ $(window).ready(function () {
                 .attr("cy", 100)
                 .attr("r", 5)
                 .style({"fill": color, "stroke-width": 0.7, "stroke": "#000"})
+                .on("mousedown", function (d) { focused = d; })
+                .on("mouseup", function () { focused = null; })
                 .on("dblclick", linkClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
@@ -383,6 +442,8 @@ $(window).ready(function () {
                 .attr("height", nodeHeight)
                 .style({"fill": function (d) { 
                         return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true)}, "stroke-width": 0.7, "stroke": colorStrokes})
+                .on("mousedown", function (d) { focused = d; })
+                .on("mouseup", function () { focused = null; })
                 .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
@@ -395,6 +456,8 @@ $(window).ready(function () {
                 .attr("dy", nodeHeight - nodeHeight/3)
                 .style("font-size",nodeHeight/2.2 + "px")
                 .style("fill", colorStrokes)
+                .on("mousedown", function (d) { focused = d; })
+                .on("mouseup", function () { focused = null; })
                 .on("dblclick", nodeClick)
                 .on("mouseover", mouseOver)
                 .on("mousemove", nodeMouseMove)
@@ -441,33 +504,32 @@ $(window).ready(function () {
                             .attr("class", "tspan-2")
                             .text("");
             }
-        });   
-        
+        });          
         
         node.each(function (d) {
-                        if ((!useDomainNames && d.id.length > 22) || (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                        .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
-                                        .attr("x","0")
-                                        .attr("y", nodeHeight*nodeSize*(-1/4.5));
-                                
-                            svg.select("#" + convertIp(d.id) + " .tspan-2")
-                                        .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
-                        }
-                        else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                        .text(d.dnsName)
-                                        .attr("x","0")
-                                        .attr("y", "0");
-                            svg.select("#" + convertIp(d.id) + " .tspan-2")
-                                    .text("");
-                            }
-                        else        
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                    .text((useDomainNames && d.dnsName !== undefined)? d.dnsName : d.id)
-                                    .attr("x","0")
-                                    .attr("y", "0");
-                    });
+            if ((!useDomainNames && d.id.length > 22) || (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
+                svg.select("#" + convertIp(d.id) + " .tspan-1")
+                            .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
+                            .attr("x","0")
+                            .attr("y", nodeHeight*nodeSize*(-1/4.5));
+
+                svg.select("#" + convertIp(d.id) + " .tspan-2")
+                            .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
+            }
+            else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
+                svg.select("#" + convertIp(d.id) + " .tspan-1")
+                            .text(d.dnsName)
+                            .attr("x","0")
+                            .attr("y", "0");
+                svg.select("#" + convertIp(d.id) + " .tspan-2")
+                        .text("");
+                }
+            else        
+                svg.select("#" + convertIp(d.id) + " .tspan-1")
+                        .text((useDomainNames && d.dnsName !== undefined)? d.dnsName : d.id)
+                        .attr("x","0")
+                        .attr("y", "0");
+        });
                     
         // find only collapsible nodes
         var collapsible = vis.selectAll("g.collapsible");
@@ -730,7 +792,7 @@ $(window).ready(function () {
                 vis.selectAll(".filter-nodes").attr("fill","black");               
             }
         });
-        
+             
         //clear previous content
         $(".contents").empty();
         
@@ -1582,6 +1644,28 @@ $(window).ready(function () {
         }
     }   
     
+    function getTooltipData(d) {
+        var tooltipText;
+        if (d.from === undefined && d.to === undefined && d.dnsName !== undefined) {
+            tooltipText = "<b>Info o uzlu <br>" + d.id + 
+                         ":</b><br>Toky: " + NumberFormatter.format(d.flows) + 
+                         "<br>Data: " + NumberFormatter.format(d.data, true) + 
+                         "<br>Doménové jméno: " + d.dnsName;
+        }
+        else if (d.from === undefined && d.to === undefined && d.dnsName === undefined) {
+            tooltipText = "<b>Info o uzlu <br>" + d.id + 
+                         ":</b><br>Toky: " + NumberFormatter.format(d.flows) + 
+                         "<br>Data: " + NumberFormatter.format(d.data, true);
+        }
+        else {
+            tooltipText = "<b>Info o lince<br> z " + d.from + " do " + d.to + 
+                         "</b><br>Toky: " + NumberFormatter.format(d.flows) + 
+                         "<br>Data: " + NumberFormatter.format(d.data, true);
+        } 
+        
+        return tooltipText;
+    }
+    
     /***************************************************************************
      * 
      * Manipulation functions
@@ -1700,31 +1784,13 @@ $(window).ready(function () {
             tooltip.transition().delay(600).duration(500).style("opacity", 1);
     }
 
-    function mouseOut() {
+    function mouseOut() {      
         tooltip.transition().delay(600).duration(100).style("opacity", 0);
     }
 
     function nodeMouseMove(d) {
-        //var node = d3.select("#" + convertIp(d.id) + "");
-        //console.log(d);
-        if (d.from === undefined && d.to === undefined && d.dnsName !== undefined) {
-            tooltip.html("<b>Info o uzlu <br>" + d.id + 
-                         ":</b><br>Toky: " + NumberFormatter.format(d.flows) + 
-                         "<br>Data: " + NumberFormatter.format(d.data, true) + 
-                         "<br>Doménové jméno: " + d.dnsName)
-                .style("left", (d3.event.layerX) + 5 + "px").style("top", (d3.event.layerY) + 5 + "px");
-        }
-        else if (d.from === undefined && d.to === undefined && d.dnsName === undefined) {
-            tooltip.html("<b>Info o uzlu <br>" + d.id + 
-                         ":</b><br>Toky: " + NumberFormatter.format(d.flows) + 
-                         "<br>Data: " + NumberFormatter.format(d.data, true))
-                .style("left", (d3.event.layerX) + 5 + "px").style("top", (d3.event.layerY) + 5 + "px");
-        }
-        else {
-            tooltip.html("<b>Info o lince<br> z " + d.from + " do " + d.to + 
-                         "</b><br>Toky: " + NumberFormatter.format(d.flows) + 
-                         "<br>Data: " + NumberFormatter.format(d.data, true))
-                .style("left", (d3.event.layerX) + 5 + "px").style("top", (d3.event.layerY) + 5 + "px");}       
+        tooltip.html(getTooltipData(d))
+               .style("left", (d3.event.layerX) + 5 + "px").style("top", (d3.event.layerY) + 5 + "px");    
     }
        
     /***************************************************************************
