@@ -55,7 +55,7 @@ $(window).ready(function () {
      **************************************************************************/
     
     var zoom = d3.behavior.zoom()
-        .center([w / 2, h / 2])
+        .center([w / 2, (h + $('#menu').height())/2])
         .scaleExtent([0.3, 3])
         .on("zoom", zoom);
     
@@ -1569,6 +1569,9 @@ $(window).ready(function () {
                             nChild.parent = node;
                             nChild.weight = 1;
                             
+                            // if node doesn't have _children (this implies the 
+                            // fact that it doesn't have also children), both 
+                            // arrays must be created
                             if (!node._children) {
                                 node._children = [];
                                 node.children = [];
@@ -1617,6 +1620,7 @@ $(window).ready(function () {
             }); 
         }     
         
+        // in this phase the actual children must be set (not only ids)
         function setChildren(nodes){         
             nodes.forEach( function(node) {
                 if (node._children) {
@@ -1675,14 +1679,24 @@ $(window).ready(function () {
     function centerGraph(centerId) {             
         // the canvas must be centered (for zooming or scrolling or canvas dragging)
         force.scale = force.scale === undefined ?  1 : force.scale;
-
-        force.translate = [0,0];
-          
+        //force.translate = [0,0]; // - only puts the force's central node in the middle of the canvas
+        
+        var bb = $('.svg')[0].getBBox();
+        var dx = bb.width,
+        dy = bb.height;
+        x = (2*bb.x + bb.width) / 2,
+        y = (2*bb.y + bb.height) / 2;
+        
+        force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
+        force.scale = Math.min(1.2, 0.9 / Math.max(dx / w, dy / h)),
+ 
+        // the zoom properties must be set, in odrer not to 
         zoom.translate([force.translate[0], force.translate[1]]);
+        zoom.scale(force.scale);
         
         vis.attr("transform", "translate(" + force.translate + 
                                  ")scale(" + force.scale + ")");
-                         
+               
         // the force itself must be centered as well (in case the force position has changed - dragging)
         var x, y;
         var vertical = (w/2) / force.scale,
@@ -1691,7 +1705,7 @@ $(window).ready(function () {
         // central node must be found, it's position is changed and relative 
         // coordinates for the rest of nodes are computed
         nodes.forEach(function (node) {
-            if (node.isCentral) {
+            if (node.id === centerId) {
                 x = node.x - vertical;
                 y = node.y - horizontal;
                 node.x = vertical;
@@ -1700,21 +1714,27 @@ $(window).ready(function () {
                 node.py = horizontal;
             }
         });
-               
+         
+        var unique = {};
         // all nodes except the central node are moved according to the x,y coodrinates
-        nodes.forEach(function (node, i) {
-            if (!node.isCentral) {
-                node.x -= x;
-                node.px -= x;
-                node.y -= y;
-                node.py -= y;
+        nodes.forEach(function (node) {
+            if(!unique.hasOwnProperty(node.id)) {
+                if (node.id !== centerId) {
+                    unique[node.id] = 1;
+                    
+                    node.x -= x;
+                    node.px -= x;
+                    node.y -= y;
+                    node.py -= y;
+                }
             }
         });
         
+        force.resume();
         }
     
     // fix position of any node on dragstart and enable dragging
-    function dragstart(d) {     
+    function dragstart(d) {   
         d3.event.sourceEvent.stopPropagation();
         d.fixed = true;
         d3.select(this).classed("fixed", true);
@@ -1722,7 +1742,7 @@ $(window).ready(function () {
     }
     
     // on drag of specific nodes, positioning of their children is affected 
-    function drag(d) {      
+    function drag(d) { 
         mouseOut();
         
         d.px += d3.event.dx;
@@ -1788,7 +1808,7 @@ $(window).ready(function () {
             force.translate = d3.event.translate;
         }
         vis.attr("transform", "translate(" + d3.event.translate + 
-                                 ")scale(" + d3.event.scale + ")");        
+                                 ")scale(" + d3.event.scale + ")");      
     }
     
     function nodeClick(){
