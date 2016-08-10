@@ -55,6 +55,7 @@ $(window).ready(function () {
      **************************************************************************/
     
     var zoom = d3.behavior.zoom()
+        .center([w / 2, h / 2])
         .scaleExtent([0.3, 3])
         .on("zoom", zoom);
     
@@ -298,7 +299,6 @@ $(window).ready(function () {
         // unbind zoom if Alt is released
         $(window).keyup(function (evt) {
             if(!evt.altKey){
-                evt.preventDefault();
                 svg.call(zoom)
                     .on("dblclick.zoom", null)
                     .on("wheel.zoom", scroll)
@@ -1027,7 +1027,6 @@ $(window).ready(function () {
     // right mouse click on central node will open a window with related events +-10 minutes
     function getRelatedEvents(centralNode) {
         d3.event.preventDefault();
-        console.log(centralNode);
         
         var options = {
             autoOpen: false,
@@ -1348,12 +1347,6 @@ $(window).ready(function () {
             
             number = d.flows;
             normalized = (number - from)/(to - from);
-            
-        /*console.log(linkFlowsRange);
-        console.log(from);
-        console.log(to);
-        console.log(d.flows);
-        console.log(normalized);*/
         }
         // else the linkAttribute is 1 (flows), so the mapping must be set for data
         else {
@@ -1575,8 +1568,7 @@ $(window).ready(function () {
                         if (findNodeById(nodes, nChild.id) === undefined) {
                             nChild.parent = node;
                             nChild.weight = 1;
-                            //console.log(node);
-
+                            
                             if (!node._children) {
                                 node._children = [];
                                 node.children = [];
@@ -1680,6 +1672,47 @@ $(window).ready(function () {
         force.resume();
     }
     
+    function centerGraph(centerId) {             
+        // the canvas must be centered (for zooming or scrolling or canvas dragging)
+        force.scale = force.scale === undefined ?  1 : force.scale;
+
+        force.translate = [0,0];
+          
+        zoom.translate([force.translate[0], force.translate[1]]);
+        
+        vis.attr("transform", "translate(" + force.translate + 
+                                 ")scale(" + force.scale + ")");
+                         
+        // the force itself must be centered as well (in case the force position has changed - dragging)
+        var x, y;
+        var vertical = (w/2) / force.scale,
+            horizontal = ((h + $('#menu').height())/2) / force.scale;
+    
+        // central node must be found, it's position is changed and relative 
+        // coordinates for the rest of nodes are computed
+        nodes.forEach(function (node) {
+            if (node.isCentral) {
+                x = node.x - vertical;
+                y = node.y - horizontal;
+                node.x = vertical;
+                node.y = horizontal;
+                node.px = vertical;
+                node.py = horizontal;
+            }
+        });
+               
+        // all nodes except the central node are moved according to the x,y coodrinates
+        nodes.forEach(function (node, i) {
+            if (!node.isCentral) {
+                node.x -= x;
+                node.px -= x;
+                node.y -= y;
+                node.py -= y;
+            }
+        });
+        
+        }
+    
     // fix position of any node on dragstart and enable dragging
     function dragstart(d) {     
         d3.event.sourceEvent.stopPropagation();
@@ -1701,18 +1734,8 @@ $(window).ready(function () {
     } 
     
     function setNodePosition(node, event) {
-        /*var skip = false;
-        
-        //V2: node is visible but not connected
-        if (nodes.indexOf(node) === -1 && node.children !== undefined && node.children.length > 0) {
-            node.children.forEach(function (ch) {
-                if (nodes.indexOf(ch) !== -1)
-                    skip = true;
-            });
-        }*/
-        
         // Node has visible children for moving
-        if (node.children /*&& !skip*/) {
+        if (node.children) {
             node.children.forEach(function (ch) {
                 setNodePosition(ch, event);
                 ch.px += event.dx;
@@ -1720,7 +1743,7 @@ $(window).ready(function () {
             });
         }
         // node has hidden children that need to have their positions changed as well
-        if (node._children /*&& !skip*/) {
+        if (node._children) {
             node._children.forEach(function (ch) {
                 setNodePosition(ch, event);
                 ch.px += event.dx;
@@ -1730,7 +1753,7 @@ $(window).ready(function () {
         // node is central, so every other node is treated like it's child
         else if (node.isCentral) {
             // in uniqueVals are stored ids of all nodes which have been moved
-            // otherwise would nodes with two or more parents be moved multiple times
+            // otherwise, the nodes with two or more parents would be moved multiple times
             var uniqueVals = [];
             nodes.forEach(function (ch) {
                 if (ch.id !== node.id && uniqueVals.indexOf(ch.id) === -1) {
@@ -1805,115 +1828,20 @@ $(window).ready(function () {
                 setFlowRange();
                 break;
             case 'mapColorTo':
-                var mapping = Menu.getMapColorTo();
-                if (mapping === 'volume') {
-                    nodeAttribute = 0;
-                    linkAttribute = 0;
-                    setDataRange();
-                }
-                else {
-                    nodeAttribute = 1;
-                    linkAttribute = 1;
-                    setFlowRange();
-                }
+                setColorMapping();
                 break;
             case 'mapNodeTo':
-                var nodeMapping = Menu.getMapNodeTo();
-                if (nodeMapping === "ip")
-                    useDomainNames = false;
-                else
-                    useDomainNames = true;
-                
-                if (nodes != undefined) {
-                    node.each(function (d) {
-                        if ((useDomainNames && d.dnsName === undefined && d.id.length > 22) || 
-                            (!useDomainNames && d.id.length > 22) || 
-                            (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                        .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
-                                        .attr("x","0")
-                                        .attr("y", nodeHeight*nodeSize*(-1/4.5));
-                                
-                            svg.select("#" + convertIp(d.id) + " .tspan-2")
-                                        .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
-                        }
-                        else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                        .text(d.dnsName)
-                                        .attr("x","0")
-                                        .attr("y", "0");
-                            svg.select("#" + convertIp(d.id) + " .tspan-2")
-                                    .text("");
-                            }
-                        else        
-                            svg.select("#" + convertIp(d.id) + " .tspan-1")
-                                    .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,11)+"..." : d.id)
-                                    .attr("x","0")
-                                    .attr("y", "0");
-                    });                               
-                }
+                setDomainNameShowing();
                 break;
             case 'setColorScheme':
                 colorRange = Menu.getColorScheme();
                 colorTransition();
                 break;
             case 'nodeSize':
-                nodeSize = Menu.getNodeSize();
-                nodeWidth = 92 * nodeSize,
-                nodeHeight = 25 * nodeSize;
-                
-                if (nodes != undefined ) 
-                    nodes.forEach(function (d) {
-                        // all node parts must be found separately 
-                        var node = d3.select("#" + convertIp(d.id) + " .background"),
-                            centralNode = d3.select("#" + convertIp(d.id) + " .central"),
-                            label = d3.select("#" + convertIp(d.id) + " .label"),
-                            filterButton = d3.select("#" + convertIp(d.id) + " rect.filter-nodes"),
-                            filterButtonIn = d3.select("#" + convertIp(d.id) + " rect.filter-nodes-indicator"),
-                            filterSign = d3.select("#" + convertIp(d.id) + " text.filter-nodes");
-
-                        node.attr("width", nodeWidth)
-                            .attr("height", nodeHeight);
-                    
-                        centralNode
-                            .attr("width", nodeWidth+6)
-                            .attr("height", nodeHeight+6);    
-
-                        label.attr("dx", nodeHeight/5)
-                             .attr("dy", nodeHeight - nodeHeight/3)
-                             .style("font-size",nodeHeight/2.2 + "px");
-
-                        filterButton
-                                .attr("x", nodeWidth - 1)
-                                .attr("width", 25 * nodeSize)
-                                .attr("height", 25 * nodeSize); 
-
-                        filterButtonIn
-                                .attr("width", nodeHeight)
-                                .attr("height", computeHeight)
-                                .attr("x", nodeWidth - 1)
-                                .attr("y", function(d) { return nodeHeight - computeHeight(d);})
-                                .style("stroke-dasharray", 0+","+nodeHeight+","+nodeHeight*3);
-
-                        filterSign
-                                .attr("dx", nodeWidth + nodeHeight/7 - 1)
-                                .attr("dy", nodeHeight - nodeHeight/5)
-                                .style("font-size",nodeHeight + "px");
-                        
-                        // tick is called to adjust link positions according to nodes
-                        tick();
-                    });                
-                
-                if (links !== undefined) 
-                    links.forEach(function (link) {
-                        setStroke(link); 
-                    });
-                
+                setNodeSize();
                 break;
             case 'mapTo':
-                //get the new mapping value
-                var mapping = Menu.getMapTo();
-                setPropertyMapping(mapping);   
+                setPropertyMapping();   
                 break;    
             default:
                 break;
@@ -1966,6 +1894,58 @@ $(window).ready(function () {
             updateKey(key); 
         }
         
+        function setColorMapping() {
+            var mapping = Menu.getMapColorTo();
+            if (mapping === 'volume') {
+                nodeAttribute = 0;
+                linkAttribute = 0;
+                setDataRange();
+            }
+            else {
+                nodeAttribute = 1;
+                linkAttribute = 1;
+                setFlowRange();
+            }
+        }
+        
+        function setDomainNameShowing() {
+            var nodeMapping = Menu.getMapNodeTo();
+            
+            if (nodeMapping === "ip")
+                useDomainNames = false;
+            else
+                useDomainNames = true;
+                
+            if (nodes !== undefined) {
+                node.each(function (d) {
+                    if ((useDomainNames && d.dnsName === undefined && d.id.length > 22) || 
+                        (!useDomainNames && d.id.length > 22) || 
+                        (d.id.length > 22 && useDomainNames && d.dnsName !== undefined && d.dnsName.length > 22)) {
+                        svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                    .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,22)+ "..." : d.id.substring(0,22))
+                                    .attr("x","0")
+                                    .attr("y", nodeHeight*nodeSize*(-1/4.5));
+
+                        svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                    .text((useDomainNames && d.dnsName !== undefined)? "" : d.id.substring(23,d.id.length));    
+                    }
+                    else if (d.id.indexOf(":") !== -1 && useDomainNames && d.dnsName !== undefined && d.dnsName.length <= 22) {
+                        svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                    .text(d.dnsName)
+                                    .attr("x","0")
+                                    .attr("y", "0");
+                        svg.select("#" + convertIp(d.id) + " .tspan-2")
+                                .text("");
+                        }
+                    else        
+                        svg.select("#" + convertIp(d.id) + " .tspan-1")
+                                .text((useDomainNames && d.dnsName !== undefined)? d.dnsName.substring(0,11)+"..." : d.id)
+                                .attr("x","0")
+                                .attr("y", "0");
+                });                               
+            }
+        }
+        
         function setDataRange() {
             dataRange = [Menu.getDataVolumeDisplayFrom(), Menu.getDataVolumeDisplayTo()];
             colorTransition();
@@ -1974,6 +1954,59 @@ $(window).ready(function () {
         function setFlowRange() {
             flowsRange = [Menu.getFlowNumDisplayFrom(), Menu.getFlowNumDisplayTo()];
             colorTransition();
+        }
+        
+        function setNodeSize() {
+            nodeSize = Menu.getNodeSize();
+            nodeWidth = 92 * nodeSize,
+            nodeHeight = 25 * nodeSize;
+                
+            if (nodes !== undefined ) 
+                nodes.forEach(function (d) {
+                    // all node parts must be found separately 
+                    var node = d3.select("#" + convertIp(d.id) + " .background"),
+                        centralNode = d3.select("#" + convertIp(d.id) + " .central"),
+                        label = d3.select("#" + convertIp(d.id) + " .label"),
+                        filterButton = d3.select("#" + convertIp(d.id) + " rect.filter-nodes"),
+                        filterButtonIn = d3.select("#" + convertIp(d.id) + " rect.filter-nodes-indicator"),
+                        filterSign = d3.select("#" + convertIp(d.id) + " text.filter-nodes");
+
+                    node.attr("width", nodeWidth)
+                        .attr("height", nodeHeight);
+
+                    centralNode
+                        .attr("width", nodeWidth+6)
+                        .attr("height", nodeHeight+6);    
+
+                    label.attr("dx", nodeHeight/5)
+                         .attr("dy", nodeHeight - nodeHeight/3)
+                         .style("font-size",nodeHeight/2.2 + "px");
+
+                    filterButton
+                            .attr("x", nodeWidth - 1)
+                            .attr("width", 25 * nodeSize)
+                            .attr("height", 25 * nodeSize); 
+
+                    filterButtonIn
+                            .attr("width", nodeHeight)
+                            .attr("height", computeHeight)
+                            .attr("x", nodeWidth - 1)
+                            .attr("y", function(d) { return nodeHeight - computeHeight(d);})
+                            .style("stroke-dasharray", 0+","+nodeHeight+","+nodeHeight*3);
+
+                    filterSign
+                            .attr("dx", nodeWidth + nodeHeight/7 - 1)
+                            .attr("dy", nodeHeight - nodeHeight/5)
+                            .style("font-size",nodeHeight + "px");
+
+                    // tick is called to adjust link positions according to nodes
+                    tick();
+                });                
+
+            if (links !== undefined) 
+                links.forEach(function (link) {
+                    setStroke(link); 
+                });
         }
         
         function setStroke(d) {
@@ -1985,9 +2018,12 @@ $(window).ready(function () {
          
         /**
          * Sets mapping of data or flow amount on links and nodes
-         * @param {type} newMapping the new requested mapping (array with size at most 2, containing String values "links" or "nodes")
          */
-        function setPropertyMapping(newMapping) {  
+        function setPropertyMapping() {
+            // newMapping contains the new requested mapping (it is an array 
+            // with size at most 2, containing String values "links" or "nodes")
+            var newMapping = Menu.getMapTo();
+            
             var iterateNodes = false, 
                 changeLinkWidth = false,    
                 iterateLinks = false;
@@ -2036,6 +2072,10 @@ $(window).ready(function () {
     
     $('#button-balance').click(function() {
             balanceGraph();
+    });
+    
+    $('#button-central-focus').click(function() {
+            centerGraph(centralNode);
     });
     
     $('#button-stop').click(function() {
