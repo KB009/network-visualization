@@ -973,8 +973,12 @@ $(window).ready(function () {
                 }
             });
             d.fixed = false;
+            $('#dialog').dialog('close'); 
+            
             update(d);
-           $('#dialog').dialog('close'); 
+            
+            if (d.children.length !== 0)
+                centerNode(d);
         });
         
         //get new sorting type for list of nodes on change of radio buttons
@@ -1329,6 +1333,9 @@ $(window).ready(function () {
         });
         d.fixed = false;
         update();
+        
+        if (d.children.length !== 0)
+            centerNode(d);
     } 
     
     // Change stroke of each line of the graph
@@ -1676,62 +1683,53 @@ $(window).ready(function () {
         force.resume();
     }
     
-    function centerGraph(centerId) {             
-        // the canvas must be centered (for zooming or scrolling or canvas dragging)
+    /**
+     * This function computes coordinates at which the force should be placed
+     * (translation), it also adjusts the zooming (scale).
+     */
+    function centerGraph() { 
         force.scale = force.scale === undefined ?  1 : force.scale;
-        //force.translate = [0,0]; // - only puts the force's central node in the middle of the canvas
         
-        var bb = $('.svg')[0].getBBox();
-        var dx = bb.width,
-        dy = bb.height;
+        // bounding box of the whole force
+        var bb = $('.svg')[0].getBBox(),
+        dx = bb.width,
+        dy = bb.height,
         x = (2*bb.x + bb.width) / 2,
         y = (2*bb.y + bb.height) / 2;
-        
-        force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
-        force.scale = Math.min(1.2, 0.9 / Math.max(dx / w, dy / h)),
- 
-        // the zoom properties must be set, in odrer not to 
-        zoom.translate([force.translate[0], force.translate[1]]);
+        force.scale = Math.min(1.2, 0.9 / Math.max(dx / w, dy / h));
         zoom.scale(force.scale);
         
-        vis.attr("transform", "translate(" + force.translate + 
-                                 ")scale(" + force.scale + ")");
-               
-        // the force itself must be centered as well (in case the force position has changed - dragging)
-        var x, y;
-        var vertical = (w/2) / force.scale,
-            horizontal = ((h + $('#menu').height())/2) / force.scale;
+        // the bounding box must be achieved twice, since the coordinates might have changed with scaling
+        bb = $('.svg')[0].getBBox(),
+        x = (2*bb.x + bb.width) / 2,
+        y = (2*bb.y + bb.height) / 2;
+        force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
+        zoom.translate([force.translate[0], force.translate[1]]);
+           
+        var transform = "translate(" + force.translate + ") scale(" + force.scale + ")";
+        vis.transition().duration(600).attr("transform", transform);
+   
+        force.resume();
+    }
     
-        // central node must be found, it's position is changed and relative 
-        // coordinates for the rest of nodes are computed
-        nodes.forEach(function (node) {
-            if (node.id === centerId) {
-                x = node.x - vertical;
-                y = node.y - horizontal;
-                node.x = vertical;
-                node.y = horizontal;
-                node.px = vertical;
-                node.py = horizontal;
-            }
-        });
-         
-        var unique = {};
-        // all nodes except the central node are moved according to the x,y coodrinates
-        nodes.forEach(function (node) {
-            if(!unique.hasOwnProperty(node.id)) {
-                if (node.id !== centerId) {
-                    unique[node.id] = 1;
-                    
-                    node.x -= x;
-                    node.px -= x;
-                    node.y -= y;
-                    node.py -= y;
-                }
-            }
-        });
+    /**
+     * A new position is computed for given node (in the middle of the canvas)
+     * @param {type} node the node which should be placed in the middle of the graph
+     */
+    function centerNode(node) {
+        force.scale = force.scale === undefined ?  1 : force.scale;
+   
+        var x = node.x + ((nodeWidth * nodeSize) * 2),
+            y = node.y + (nodeHeight * nodeSize);
+    
+        force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
+        zoom.translate([force.translate[0], force.translate[1]]);
+        
+        var transform = "translate(" + force.translate + ") scale(" + force.scale + ")";
+        vis.transition().delay(1000).duration(1000).attr("transform", transform);
         
         force.resume();
-        }
+    }
     
     // fix position of any node on dragstart and enable dragging
     function dragstart(d) {   
