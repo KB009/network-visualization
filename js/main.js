@@ -1718,8 +1718,23 @@ $(window).ready(function () {
      */
     function centerNode(node) {
         force.scale = force.scale === undefined ?  1 : force.scale;
+        var canvas = $('.svg').attr("transform"),
+            bb = $('#' + convertIp(node.id))[0].getBBox();
+    
+        // the requested canvas position values will be on index 2 (x) and 4 (y)
+        if (canvas !== undefined) 
+            canvas = canvas.split(/(translate\(|\)scale\(.*|\,)/);
+        else 
+            canvas = [null,null,'0',null,'0'];
+         
+        // if the node position, width/height and the canvas width/height sum isn't 
+        // larger than the window size * 0.8, the node transition will be canceled
+        if (!((node.x + bb.width + Number(canvas[2]))*force.scale > w * 0.8) && 
+            !((node.y + bb.height + Number(canvas[4]))*force.scale  > h * 0.8))
+            return;
+        
    
-        var x = node.x + ((nodeWidth * nodeSize) * 2),
+        var x = node.x + (nodeWidth * nodeSize),
             y = node.y + (nodeHeight * nodeSize);
     
         force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
