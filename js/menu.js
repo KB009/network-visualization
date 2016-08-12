@@ -746,7 +746,7 @@ $(document).ready(function() {
     Menu.setColorScheme("#FCCD6D", "#5E3C99");   // oranzovo-fialova
   })
   $('#colorScheme4').click(function() {
-    Menu.setColorScheme("#ECECEC", "#393B3D");   // sedotonova stupnice
+    Menu.setColorScheme("#ECECEC", "#525558");   // sedotonova stupnice
   })
         
   $('#colorSchemeCustom').click(function() {

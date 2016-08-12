@@ -631,14 +631,14 @@ $(window).ready(function () {
         node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")";});  
     }
 
-    function color(d, toGray) {
+    function color(d, toGrayScale) {
         
         //the 'd' element is node and nodes should not be mapped
-        if ((d.id !== undefined && propertyMapping.indexOf("nodes") === -1) || (toGray === true && !d.related))
+        if (d.id !== undefined && propertyMapping.indexOf("nodes") === -1)
                 return "#F0F0F0";
             
         //the 'd' element is link and links should not be mapped    
-        if ((d.id === undefined && propertyMapping.indexOf("links") === -1) || (toGray === true && !d.related))
+        if (d.id === undefined && propertyMapping.indexOf("links") === -1)
                 return "#F0F0F0";    
             
         var number, norm;
@@ -667,6 +667,11 @@ $(window).ready(function () {
             if (norm < 0 || (isNaN(norm) && number === fullFlowsRange[1])) norm = 0;
             
         }
+        
+        // if there is any related event, the original node should be in scale of gray 
+        if (toGrayScale && !d.related)
+            return d3.interpolateRgb("#ECECEC", "#525558") (norm);
+        
         return d3.interpolateRgb(colorRange[0], colorRange[1])(norm);
     }
     
