@@ -83,6 +83,15 @@ $(window).ready(function () {
         })
         .size([w, h - 160]);
 
+    // layer with "Loading..." text, which appears while loading new data with ajax
+    d3.select("body")
+            .append("div")
+            .attr("class", "overlay")
+            .style({"width": w, "height":h})
+            .append("div")
+            .style("transform", "translate("+ w/2 + "px,"+ h/2 +"px)")
+            .text("Loading...");
+    
     var svg = d3.select("body").append("svg")
         .attr("width", w)
         .attr("height", h)
@@ -150,10 +159,8 @@ $(window).ready(function () {
         root = json;
         root.fixed = true;
         root.x = w / 2;
-        root.y = h / 2 - 80; 
-        
-        getJsonData(root.nodes);
-        
+        root.y = h / 2 - 80;         
+       
         root.nodes.forEach(function (node) {
             node.weight = 1;   
             updateColorRange(node);
@@ -167,11 +174,11 @@ $(window).ready(function () {
                 node.fixed = true;
             }
         }); 
-             
+        
         updateKey(key);           
-        update();  
+        update();   
     });
-    
+          
     /***************************************************************************
      * Update is called everytime the graph is changed (more data is gathered).
      * If we want a change to be propagated visually, we must call this function.
@@ -180,10 +187,10 @@ $(window).ready(function () {
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
-        
+  
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
-        
+
         getJsonData(nodes);
                                            
         // On update reload max and min node values in force
@@ -191,9 +198,9 @@ $(window).ready(function () {
         fullFlowsRange = [Number.MAX_VALUE,0];
         linkDataRange = [Number.MAX_VALUE,0];
         linkFlowsRange = [Number.MAX_VALUE,0];
-        
+
         createLinks();
-        
+
         //load new extreme values from each link
         links.forEach(function (link) {
             // stores the value in full ranges
@@ -205,7 +212,7 @@ $(window).ready(function () {
                 fullFlowsRange[0] = link.flows;
             if (link.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = link.flows;
-            
+
             // stores the value in link ranges
             if (link.data < linkDataRange[0])
                 linkDataRange[0] = link.data;
@@ -215,11 +222,11 @@ $(window).ready(function () {
                 linkFlowsRange[0] = link.flows;
             if (link.flows > linkFlowsRange[1])
                 linkFlowsRange[1] = link.flows;
-            
+
         }); 
-        
+
         createNodes();
-        
+
         //load new extreme values from each node
         nodes.forEach(function (node) { 
             if (node.data < fullDataRange[0])
@@ -231,10 +238,10 @@ $(window).ready(function () {
             if (node.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = node.flows;
         }); 
-        
+
         // bind keydown events to force
         $(window).keydown(function (evt) {
-            
+
             // bind zoom on Alt + mousewheel 
             if(evt.altKey){
                 evt.preventDefault();
@@ -242,7 +249,7 @@ $(window).ready(function () {
                     .on("dblclick.zoom", null)
                     .on("mousewheel.zoom", zoom);
             }
-            
+
             // bind tooltip copying on Ctrl + C
             var evtobj = window.event? event : evt;
             if (evtobj.keyCode === 67 && evtobj.ctrlKey) {
@@ -294,7 +301,7 @@ $(window).ready(function () {
                     }
                 }
             }
-   
+
         });
         // unbind zoom if Alt is released
         $(window).keyup(function (evt) {
@@ -304,9 +311,9 @@ $(window).ready(function () {
                     .on("wheel.zoom", scroll)
                     .on("mousewheel.zoom", scroll);
             }
-            
+
         });
-        
+
         // start simulation
         force.nodes(nodes)
                 .links(links)
@@ -410,7 +417,7 @@ $(window).ready(function () {
                                
                 return d.id;
             });
-               
+                           
         // create group of nodes
         var groupNodes = node.enter().append("g")
                 .attr("class", function(d) {
@@ -421,7 +428,7 @@ $(window).ready(function () {
                 .on("contextmenu", function (d) {d.isCentral ? getRelatedEvents(d) : null;})
                 //.style("opacity", setOpacity)
                 .call(drag);
-        
+                
         // finds central node and adds special border (rectangle) to it
         groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
                 .attr("class", "central")
@@ -435,9 +442,8 @@ $(window).ready(function () {
         // Enter any new nodes and show them as rectangles
         groupNodes.append("rect")
                 .attr("class", "background")
-                .attr("x", 0)//function(d) { return d.x; })
-                .attr("y", 0)//function(d) { return d.y; })
-                //.attr("rx", 0)
+                .attr("x", 0)
+                .attr("y", 0)
                 .attr("width", nodeWidth)
                 .attr("height", nodeHeight)
                 .style({"fill": function (d) { 
@@ -632,7 +638,7 @@ $(window).ready(function () {
     }
 
     function color(d, toGrayScale) {
-        
+                    
         //the 'd' element is node and nodes should not be mapped
         if (d.id !== undefined && propertyMapping.indexOf("nodes") === -1)
                 return "#F0F0F0";
@@ -950,7 +956,7 @@ $(window).ready(function () {
         });  
         
         // on click on submit button update force with new nodes
-        $("#dialog #submit").click(function() {           
+        $("#dialog #submit").click(function() {  
             $('#dialog table :checkbox').each(function(i, box) {
                 var nodeId = $(box).attr('id').replace('checkbox-ip-','').replace(/\-/g,'.');
                 // we find actual node in hidden or visible children
@@ -1550,9 +1556,12 @@ $(window).ready(function () {
     
     function getJsonData(nodes, inRelated) {
         
+        var allNodes = 0,
+            allProcessedNodes = 0;
+        
         nodes.forEach(function (node) {
             if (node.hasChildren === undefined) {              
-                node.hasChildren = false;
+                allNodes++;
                 nodeData(node);
                 
                 //used for checking IP version (in case of IPv6 the nodes must be longer)
@@ -1560,16 +1569,33 @@ $(window).ready(function () {
             }
         });
         
-        setChildren(nodes);
-        
-        return allChildrenNodes;  
+        setChildren(nodes);  
         
         function nodeData(node){
             jQuery.ajax({
                 datatype: "json",
                 url: "data/" + node.id + ".moreData.json",
-                async: false,
-                success: function(data){
+                async: true,
+                beforeSend: function () {
+                    // if this is the first call, the overlay layer appears, in 
+                    // order to inform user about some background operation
+                    if (allProcessedNodes === 0)
+                        $(".overlay").css({"background-position" : w/2 + "px " + h/2 + "px",
+                                           "display" : "block", "opacity": "0.5", 
+                                           "width": w, "height" : h, 
+                                           "position" : "absolute"});
+                },
+                complete: function(){
+                    allProcessedNodes++;
+                    // as soon as all nodes are called, the overlay layer can be 
+                    // hidden again. We also can call 'update()' once again, so 
+                    // that the force can be updated with the new values
+                    if (allProcessedNodes === allNodes) {
+                        $(".overlay").css({"opacity": "0", "display" : "none"});
+                        update();
+                    }
+                },
+                success: function(data){  
                     node.hasChildren = true;
                     node.positionedChilds = 0;
                     var childrenNodes = data.nodes;
@@ -1624,15 +1650,15 @@ $(window).ready(function () {
                             eChild.related = true;
                         }
                         childrenLinks.push(eChild); 
-                    });
+                    });    
                 },
                 error: function() {
-                    nodes.hasChildren = false;
+                    node.hasChildren = false;
                 }
-            }); 
+            });
         }     
         
-        // in this phase the actual children must be set (not only ids)
+        // in this phase all actual children must be set (not only their ids)
         function setChildren(nodes){         
             nodes.forEach( function(node) {
                 if (node._children) {
@@ -1642,7 +1668,7 @@ $(window).ready(function () {
                             node._children[i] = child[0];
                     });
                 }
-            });         
+            }); 
         }
         
         function setNodeWidth(node) {
@@ -1894,7 +1920,6 @@ $(window).ready(function () {
                             collapsibleText = d3.select("#" + convertIp(d.id) + " text.filter-nodes"),
                             collapsibleIndicator = d3.select("#" + convertIp(d.id) + " .filter-nodes-indicator"),
                             label = d3.select("#" + convertIp(d.id) + " .label");
-                            //opacity = d3.select("#" + convertIp(d.id));
                             
                         node.style("fill", function (d) { 
                                 return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
@@ -1905,11 +1930,10 @@ $(window).ready(function () {
                         node.style("stroke",colorStrokes(d));
                         central.style("stroke",colorStrokes(d));
                         label.style("fill", colorStrokes(d));  
-                        //opacity.style("opacity", setOpacity(d)); 
                 });               
             }
             
-            if (links != undefined ) {
+            if (links !== undefined ) {
                 links.forEach(function (d) {
                         var c = d3.select(".info#"+ convertIp(d.from) + "-" + convertIp(d.to)),
                             lb = d3.select(".link-border#"+ convertIp(d.from) + "-" + convertIp(d.to)),
@@ -1919,9 +1943,7 @@ $(window).ready(function () {
                                 return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
                         });                    
                         c.style("stroke",colorStrokes(d));
-                        //l.style("opacity",setOpacity(d));
                         lb.style("stroke",colorStrokes(d));
-                        //lb.style("opacity", setOpacity(d)); 
                         l.style("stroke", function (d) { 
                                 return (d.related !== true && relatedEventName === null) ? color(d) :  color(d, true);
                         });

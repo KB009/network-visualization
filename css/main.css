@@ -115,3 +115,9 @@ body {
    width: 180px;
    padding: 0 10px;
 }
+
+.overlay {
+    background-color: #dedede;
+    font-weight: bold;
+    position : absolute;
+}
