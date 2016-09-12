@@ -65,7 +65,7 @@ $(window).ready(function () {
     var drag = d3.behavior.drag()
         .on("dragstart", dragstart)
         .on("drag", drag);
-        
+
     // D3 force (graph)
     var force = d3.layout.force()
         .on("tick", tick)
@@ -166,8 +166,8 @@ $(window).ready(function () {
         root = json;
         root.fixed = true;
         root.x = w / 2;
-        root.y = h / 2 - 80;         
-       
+        root.y = h / 2 - 80; 
+        
         root.nodes.forEach(function (node) {
             node.weight = 1;   
             updateColorRange(node);
@@ -181,11 +181,11 @@ $(window).ready(function () {
                 node.fixed = true;
             }
         }); 
-        
+             
         updateKey(key);           
-        update();   
+        update();  
     });
-          
+    
     /***************************************************************************
      * Update is called everytime the graph is changed (more data is gathered).
      * If we want a change to be propagated visually, we must call this function.
@@ -194,10 +194,10 @@ $(window).ready(function () {
     function update() {
         nodes = flatten(root.nodes);
         links = root.edges;
-  
+        
         vis.selectAll(".link").remove();
         vis.selectAll(".node").remove();
-
+        
         getJsonData(nodes);
                                            
         // On update reload max and min node values in force
@@ -205,9 +205,9 @@ $(window).ready(function () {
         fullFlowsRange = [Number.MAX_VALUE,0];
         linkDataRange = [Number.MAX_VALUE,0];
         linkFlowsRange = [Number.MAX_VALUE,0];
-
+        
         createLinks();
-
+        
         //load new extreme values from each link
         links.forEach(function (link) {
             // stores the value in full ranges
@@ -219,7 +219,7 @@ $(window).ready(function () {
                 fullFlowsRange[0] = link.flows;
             if (link.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = link.flows;
-
+            
             // stores the value in link ranges
             if (link.data < linkDataRange[0])
                 linkDataRange[0] = link.data;
@@ -229,11 +229,11 @@ $(window).ready(function () {
                 linkFlowsRange[0] = link.flows;
             if (link.flows > linkFlowsRange[1])
                 linkFlowsRange[1] = link.flows;
-
+            
         }); 
-
+        
         createNodes();
-
+        
         //load new extreme values from each node
         nodes.forEach(function (node) { 
             if (node.data < fullDataRange[0])
@@ -245,10 +245,10 @@ $(window).ready(function () {
             if (node.flows > fullFlowsRange[1])
                 fullFlowsRange[1] = node.flows;
         }); 
-
+        
         // bind keydown events to force
         $(window).keydown(function (evt) {
-
+            
             // bind zoom on Alt + mousewheel 
             if(evt.altKey){
                 evt.preventDefault();
@@ -256,7 +256,7 @@ $(window).ready(function () {
                     .on("dblclick.zoom", null)
                     .on("mousewheel.zoom", zoom);
             }
-
+            
             // bind tooltip copying on Ctrl + C
             var evtobj = window.event? event : evt;
             if (evtobj.keyCode === 67 && evtobj.ctrlKey) {
@@ -308,7 +308,7 @@ $(window).ready(function () {
                     }
                 }
             }
-
+   
         });
         // unbind zoom if Alt is released
         $(window).keyup(function (evt) {
@@ -318,9 +318,9 @@ $(window).ready(function () {
                     .on("wheel.zoom", scroll)
                     .on("mousewheel.zoom", scroll);
             }
-
+            
         });
-
+        
         // start simulation
         force.nodes(nodes)
                 .links(links)
@@ -358,8 +358,8 @@ $(window).ready(function () {
         });
                
         childrenLinks.forEach(function(childLink) {
-           if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
-               if(linkIds.indexOf(childLink.from + ", " + childLink.to) === -1)
+            if(nodeIds.indexOf(childLink.from) !== -1 && nodeIds.indexOf(childLink.to) !== -1) {
+                if(linkIds.indexOf(childLink.from + ", " + childLink.to) === -1)
                     linkIds.push(childLink.source.id + ", " + childLink.target.id);
                     links.push(childLink);
             } 
@@ -424,7 +424,7 @@ $(window).ready(function () {
                                
                 return d.id;
             });
-                           
+               
         // create group of nodes
         var groupNodes = node.enter().append("g")
                 .attr("class", function(d) {
@@ -435,7 +435,7 @@ $(window).ready(function () {
                 .on("contextmenu", function (d) {d.isCentral ? getRelatedEvents(d) : null;})
                 //.style("opacity", setOpacity)
                 .call(drag);
-                
+        
         // finds central node and adds special border (rectangle) to it
         groupNodes.filter(function(d) { return d.isCentral; }).append("rect")
                 .attr("class", "central")
@@ -645,7 +645,7 @@ $(window).ready(function () {
     }
 
     function color(d, toGrayScale) {
-                    
+        
         //the 'd' element is node and nodes should not be mapped
         if (d.id !== undefined && propertyMapping.indexOf("nodes") === -1)
                 return "#F0F0F0";
@@ -963,7 +963,7 @@ $(window).ready(function () {
         });  
         
         // on click on submit button update force with new nodes
-        $("#dialog #submit").click(function() {  
+        $("#dialog #submit").click(function() {           
             $('#dialog table :checkbox').each(function(i, box) {
                 var nodeId = $(box).attr('id').replace('checkbox-ip-','').replace(/\-/g,'.');
                 // we find actual node in hidden or visible children
@@ -1168,15 +1168,15 @@ $(window).ready(function () {
                     link.related = true;
 
                     for (var i = 0; i < root.edges.length; i++) {
-                       if ((root.edges[i].from === link.from) && (root.edges[i].to === link.to)) {
-                           link.found = true;
-                           root.edges[i].related = true;
-                           root.edges[i].formerData =  root.edges[i].data;
-                           root.edges[i].data = root.edges[i].data + link.data;
-                           root.edges[i].formerFlows =  root.edges[i].flows;
-                           root.edges[i].flows = root.edges[i].flows + link.flows;
-                           break;
-                       } 
+                        if ((root.edges[i].from === link.from) && (root.edges[i].to === link.to)) {
+                            link.found = true;
+                            root.edges[i].related = true;
+                            root.edges[i].formerData =  root.edges[i].data;
+                            root.edges[i].data = root.edges[i].data + link.data;
+                            root.edges[i].formerFlows =  root.edges[i].flows;
+                            root.edges[i].flows = root.edges[i].flows + link.flows;
+                            break;
+                        } 
                     };
                     if (!link.found)
                         root.edges.push(link);
@@ -1218,7 +1218,9 @@ $(window).ready(function () {
             });
             
             root.edges.forEach(function (link, i) {
-                if (link.related === true && link.formerData === undefined)
+                if (link.formerData === undefined && (link.related ||
+                   (link.source.related && link.source.formerData === undefined) ||     
+                   (link.target.related && link.target.formerData === undefined)))
                     delete root.edges[i];
                 else if (link.related && link.formerData !== undefined) {
                     root.edges[i].data = root.edges[i].formerData;
@@ -1591,7 +1593,7 @@ $(window).ready(function () {
             }
         });
         
-        setChildren(nodes);  
+        setChildren(nodes);
         
         function nodeData(node){
             jQuery.ajax({
@@ -1617,7 +1619,7 @@ $(window).ready(function () {
                         update();
                     }
                 },
-                success: function(data){  
+                success: function(data){
                     node.hasChildren = true;
                     node.positionedChilds = 0;
                     var childrenNodes = data.nodes;
@@ -1672,12 +1674,12 @@ $(window).ready(function () {
                             eChild.related = true;
                         }
                         childrenLinks.push(eChild); 
-                    });    
+                    });
                 },
                 error: function() {
                     node.hasChildren = false;
                 }
-            });
+            }); 
         }     
         
         // in this phase all actual children must be set (not only their ids)
@@ -1690,7 +1692,7 @@ $(window).ready(function () {
                             node._children[i] = child[0];
                     });
                 }
-            }); 
+            });         
         }
         
         function setNodeWidth(node) {
@@ -1742,20 +1744,25 @@ $(window).ready(function () {
      */
     function centerGraph() { 
         force.scale = force.scale === undefined ?  1 : force.scale;
+        var menuHeight = 0;
+        
+        // if the menu is pinned, the force size must be adjusted accordingly
+        if (Menu.pinnedMenu)
+            menuHeight = $('#menu').height();
         
         // bounding box of the whole force
         var bb = $('.svg')[0].getBBox(),
         dx = bb.width,
-        dy = bb.height,
+        dy = bb.height + menuHeight,
         x = (2*bb.x + bb.width) / 2,
-        y = (2*bb.y + bb.height) / 2;
+        y = (2*bb.y + bb.height - menuHeight) / 2;
         force.scale = Math.min(1.2, 0.9 / Math.max(dx / w, dy / h));
         zoom.scale(force.scale);
         
         // the bounding box must be achieved twice, since the coordinates might have changed with scaling
         bb = $('.svg')[0].getBBox(),
         x = (2*bb.x + bb.width) / 2,
-        y = (2*bb.y + bb.height) / 2;
+        y = (2*bb.y + bb.height - menuHeight) / 2;
         force.translate = [w / 2 - force.scale * x, h / 2 - force.scale * y];
         zoom.translate([force.translate[0], force.translate[1]]);
            

@@ -650,7 +650,7 @@ $(document).ready(function() {
 
   $('#menu').append(Menu.render())
   $('#menu').append(Menu.pin());
-  var pinnedMenu = true;
+  Menu.pinnedMenu = true;
 
 
   // ********* R A D I O / Map COLOR to **********
@@ -760,8 +760,8 @@ $(document).ready(function() {
         dialogClass: 'colorScheme',
         position: { at: "left bottom" , my: "left top", of: "#colorSchemeCustom"},
         open: function( event, ui ) {
-            tempPinnedMenu = pinnedMenu;
-            pinnedMenu = true;
+            tempPinnedMenu = Menu.pinnedMenu;
+            Menu.pinnedMenu = true;
         },
         buttons: [{
             text: "zrušit",
@@ -770,7 +770,7 @@ $(document).ready(function() {
               $( this ).dialog( "close" );
               
               if (!tempPinnedMenu) {
-                  pinnedMenu = false;
+                  Menu.pinnedMenu = false;
                   $('#topmenu').slideToggle(10);
               }
             }
@@ -783,7 +783,7 @@ $(document).ready(function() {
                 $( this ).dialog( "close" );
                 
                 if (!tempPinnedMenu) {
-                  pinnedMenu = false;
+                  Menu.pinnedMenu = false;
                   $('#topmenu').slideToggle(10);
               }
             }
@@ -802,6 +802,10 @@ $(document).ready(function() {
             onHide: function (colpkr) {
                 $(colpkr).fadeOut(500);
                 return false;
+            },
+            onChange: function (hsb, hex, rgb) {
+		$(colorPicker).css('backgroundColor', '#' + hex);
+                $(colorPicker).attr('id', hex);
             },
             onSubmit: function (hsb, hex, rgb) {
                 $(colorPicker).css('backgroundColor', '#' + hex);
@@ -878,7 +882,7 @@ $(document).ready(function() {
 
   $(function () {
     function runEffect(autohide) {
-      autohide ? pinnedMenu = false : pinnedMenu = true;
+      autohide ? Menu.pinnedMenu = false : Menu.pinnedMenu = true;
     };
 
     $( '#button-pin' ).click(function(d) {
@@ -897,7 +901,7 @@ $(document).ready(function() {
   });
   
   $('#menu').hover(function() {
-      if (!pinnedMenu) {
+      if (!Menu.pinnedMenu) {
           $('#topmenu').slideToggle(10);
       }
   });
