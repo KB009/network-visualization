@@ -5,36 +5,37 @@
 /* global d3, Menu, NumberFormatter */
 
 $(window).ready(function () {
-    var w = $(window).width(),
-        h = $(window).height() - 3,
+    var initialData = "data/sample.json",       // this variable should contain a path to the data, which should be visualized by the graph
+        w = $(window).width(),                  // window width
+        h = $(window).height() - 3,             // window height
+        linkAttribute = 1,                      // mapping colors on links - 0 for data, 1 for flows
+        nodeAttribute = 1,                      // mapping colors on nodes - 0 for data, 1 for flows
+        colorRange = ["#FAFA4B", "#0096FF"],    // color range in format: [from[R,G,B], to[R,G,B]] 
+        fullDataRange = [Number.MAX_VALUE,0],   // maximal range for data (nodes and links)
+        fullFlowsRange = [Number.MAX_VALUE,0],  // maximal range for flows (nodes and links) 
+        linkDataRange = [Number.MAX_VALUE,0],   // data range for links only
+        linkFlowsRange = [Number.MAX_VALUE,0],  // flow range for links only
+        propertyMapping = ["nodes"],            // a set of items, can contain values ["nodes", "links", "linkWidth"]
+        dataRange,                              // actual data range for all mapped properties (nodes, links)
+        flowsRange,                             // actual flow range for all mapped properties (nodes, links)
+        lineSize = 2.2,                         // initial link width 
+        nodeSize = 1,                           // size of node, from 0.5 do 1.7
+        nodeWidth = 92 * nodeSize,              // node width, which is dependent on node size
+        nodeHeight = 25 * nodeSize,             // node height, which is dependent on node size
+        sortingType = 2,                        // used in nodes filtering window - it stores the information about current type of nodes sorting (0 - flows, 1 - data, 2 - prefix)
+        useDomainNames = false,                 // an information about usage of domain names
+        centralNode,                            // this node is set according to the initial data json ("isCentral": true)
+        relatedEventName = null,                // a name of some additional selected event. If there isn't an event selected to be visualized, it is equal to null 
+        childrenLinks = [],
+        allChildrenNodes = [],
+        focused,
+        relatedEvents = [],                     // array with all relevant events for given data
+        root,
         link,
         links,
         circle, 
         node,
-        nodes,
-        linkAttribute = 1, // mapping colors on links - 0 for data, 1 for flows
-        nodeAttribute = 1, // mapping colors on nodes - 0 for data, 1 for flows
-        colorRange = ["#FAFA4B", "#0096FF"], //color range in format: [from[R,G,B], to[R,G,B]] 
-        fullDataRange = [Number.MAX_VALUE,0], //maximal range for data (nodes and links)
-        fullFlowsRange = [Number.MAX_VALUE,0], //maximal range for flows (nodes and links) 
-        linkDataRange = [Number.MAX_VALUE,0], //data range for links only
-        linkFlowsRange = [Number.MAX_VALUE,0], //flow range for links only
-        propertyMapping = ["nodes"],
-        dataRange,
-        flowsRange,
-        lineSize = 2.2,
-        nodeSize = 1,
-        nodeWidth = 92 * nodeSize,
-        nodeHeight = 25 * nodeSize,
-        childrenLinks = [],
-        allChildrenNodes = [],
-        sortingType = 2,
-        useDomainNames = false,
-        focused,
-        root,
-        relatedEvents = [],
-        centralNode,
-        relatedEventName = null;
+        nodes;
                                        
     this.getLinks = function () {
         return links;
@@ -54,15 +55,18 @@ $(window).ready(function () {
      * 
      **************************************************************************/
     
+    // zooming behavior
     var zoom = d3.behavior.zoom()
         .center([w / 2, (h + $('#menu').height())/2])
         .scaleExtent([0.3, 3])
         .on("zoom", zoom);
     
+    // dragging behavior
     var drag = d3.behavior.drag()
         .on("dragstart", dragstart)
         .on("drag", drag);
-
+        
+    // D3 force (graph)
     var force = d3.layout.force()
         .on("tick", tick)
         .on("end", end)
@@ -92,6 +96,7 @@ $(window).ready(function () {
             .style("transform", "translate("+ w/2 + "px,"+ h/2 +"px)")
             .text("Loading...");
     
+    // SVG layer which contains the rest of components (graph, key)
     var svg = d3.select("body").append("svg")
         .attr("width", w)
         .attr("height", h)
@@ -155,7 +160,9 @@ $(window).ready(function () {
       .attr("offset", function(d) { return d.offset; })
       .attr("stop-color", function(d) { return d.color; });
 
-    d3.json("data/sample.json", function (json) {
+    // in this point the visualisation starts loading the initial data. 
+    // The file name should contain a path to the data set.
+    d3.json(initialData, function (json) {
         root = json;
         root.fixed = true;
         root.x = w / 2;
@@ -1039,7 +1046,8 @@ $(window).ready(function () {
         }      
     }
        
-    // right mouse click on central node will open a window with related events +-10 minutes
+    // Right mouse click on central node will open a window with related events +-10 minutes.
+    // Any data retrieval manner wasn't specified - so far this function only gathers all the data from files sample_X.json
     function getRelatedEvents(centralNode) {
         d3.event.preventDefault();
         
@@ -1080,7 +1088,10 @@ $(window).ready(function () {
         
         //creates rows with available events
         function listEvents(){
-            // Here should  be recieved the data containing information about related events. 
+            
+            // TODO: Here should be recieved the data containing information about related events names. The names should be then stored in the array below
+            var events = ['sample_1', 'sample_2', 'sample_3'];
+            
             var radio, td;
             // We should have an option 'none', that disables any related event
             if (relatedEventName === null)
@@ -1092,12 +1103,12 @@ $(window).ready(function () {
             $(".contents table").append("<tr>" + radio + td + "</tr>");
             
             // Then it will be listed into the table, where id should contain name of the particular event 
-            for (var i = 1; i < 4; i++) {
-                if (relatedEventName === ('sample_' + i))
-                    radio = '<td><input type="radio" id="sample_' + i + '" name="radio-events" checked></td>';
+            for (var i = 0; i < events.length; i++) {
+                if (relatedEventName === events[i])
+                    radio = '<td><input type="radio" id="' + events[i] + '" name="radio-events" checked></td>';
                 else 
-                    radio = '<td><input type="radio" id="sample_' + i + '" name="radio-events"></td>';
-                td = "<td><label for='sample_" + i + "'> sample_" + i + "</label></td>";
+                    radio = '<td><input type="radio" id="' + events[i] + '" name="radio-events"></td>';
+                td = "<td><label for='" + events[i] + "'> " + events[i] + "</label></td>";
                 
                 $(".contents table").append("<tr>" + radio + td + "</tr>");
                 
@@ -1119,6 +1130,10 @@ $(window).ready(function () {
             }); 
         }
         
+        /*
+         * This function acquires all the data of the selected related event
+         * @param {type} dataName is the name of json file with the requested event
+         */
         function getRelatedJsonData(dataName){
             d3.json("data/" + dataName + ".json", function (json) {
                 var root2 = json;
@@ -1166,6 +1181,7 @@ $(window).ready(function () {
                     if (!link.found)
                         root.edges.push(link);
                 });
+                
                 relatedEvents.push([]);
                 relatedEvents[relatedEvents.length - 1].push(relatedEvents);   
                 relatedEvents[relatedEvents.length - 1].push(root2);   
@@ -1226,6 +1242,12 @@ $(window).ready(function () {
             update();
         }
         
+        /*
+         * If the requested event was visualized before, we don't need to load 
+         * all the data remotely - it is stored for later usage and this function 
+         * takes care for the data loading
+         * @param {type} dataName  dataName is the name of json file with the requested event
+         */
         function loadRelatedJsonData(dataName) {
             var root2;
             relatedEvents.forEach(function (event) {
