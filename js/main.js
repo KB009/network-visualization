@@ -109,8 +109,6 @@ $(window).ready(function () {
 
     var tooltip = d3.select("body").append("div")
             .attr("class", "tooltip")
-            //.on("mouseover", mouseOver)
-            //.on("mouseout", mouseOut)
             .style("opacity", 0);
     
     // key for actual data/flow amount    
@@ -189,7 +187,6 @@ $(window).ready(function () {
     /***************************************************************************
      * Update is called everytime the graph is changed (more data is gathered).
      * If we want a change to be propagated visually, we must call this function.
-     * 
      **************************************************************************/    
     function update() {
         nodes = flatten(root.nodes);
@@ -260,6 +257,7 @@ $(window).ready(function () {
             // bind tooltip copying on Ctrl + C
             var evtobj = window.event? event : evt;
             if (evtobj.keyCode === 67 && evtobj.ctrlKey) {
+                
                 // this variable will contain all the data which are available 
                 // for given element. These will be coppied to clipboard
                 if (focused != undefined || focused != null) {
@@ -328,7 +326,7 @@ $(window).ready(function () {
     }
     
     /***************************************************************************
-     * 
+     * Links creation
      **************************************************************************/
     function createLinks() {
         var nodeIds = [], 
@@ -406,7 +404,7 @@ $(window).ready(function () {
     }
     
     /***************************************************************************
-     * 
+     * Nodes creation
      **************************************************************************/
     function createNodes() {
         // Update the nodes…
@@ -463,7 +461,7 @@ $(window).ready(function () {
                 .on("mouseout", mouseOut);
             
         // ip address of node
-        var text = groupNodes.append("text")
+        groupNodes.append("text")
                 .attr("class","label")
                 .attr("dx", nodeHeight/5)
                 .attr("dy", nodeHeight - nodeHeight/3)
@@ -599,16 +597,16 @@ $(window).ready(function () {
 
         var amountOfChildren = central.connections;
 
-        var numberInRow = amountOfChildren;//16;
+        var numberInRow = amountOfChildren;;
         if (amountOfChildren > 16)
             numberInRow = 16;
 
         if (central.positionedChilds > 16) {
-            a = nodeWidth * 5, b = nodeHeight * 6;//a = 350, b = 190;
+            a = nodeWidth * 5, b = nodeHeight * 6;
             numberInRow = 24;
         }
         if (central.positionedChilds > 39) {
-            a = nodeWidth * 7, b = nodeHeight * 8;//a = 400, b = 260;
+            a = nodeWidth * 7, b = nodeHeight * 8;
             numberInRow = 36;
         }
 
@@ -616,12 +614,9 @@ $(window).ready(function () {
         nodes[parentId].positionedChilds += 1;
 
         var angle = slice * central.positionedChilds;
-        /*var i = 1;
-        if (d.hasChildren && d.double)
-            i = 2;*/
 
-        node.x = central.x + /*i */ 200 * Math.cos(angle);
-        node.y = central.y + /*i */ 200 * Math.sin(angle);
+        node.x = central.x + 200 * Math.cos(angle);
+        node.y = central.y + 200 * Math.sin(angle);
         
         return node;
     }  
@@ -742,7 +737,6 @@ $(window).ready(function () {
             $(".key .key-to").html(NumberFormatter.format(flowsRange[1])); 
         }
 
-        
         // update color range          
         var data = [
             {offset: "0%", color: colorRange[0]},
@@ -784,7 +778,6 @@ $(window).ready(function () {
 
     // Filter children on double click.
     function filterNodes(d) {
-        //var node = d3.select("#" + convertIp(d.id) + "");
 
         var options = {
             autoOpen: false,
@@ -857,8 +850,9 @@ $(window).ready(function () {
         else
             allChildren.sort(function(a, b){return compareIPs(a[0].id, b[0].id) });
         
-        /*This function compares IPs for retrieval of their positions in sorted array. 
-         * It also contains comparsion of IPv4 and IPv6. */
+        /* This function compares IPs for retrieval of their positions in sorted array. 
+         * It also contains comparsion of IPv4 and IPv6. 
+         */
         function compareIPs(a, b){
             // both addresses are IPv4
             if (a.indexOf('.') !== -1 && b.indexOf('.') !== -1) {
@@ -947,7 +941,7 @@ $(window).ready(function () {
                 $('#dialog #selectAll').prop('checked',false);
             }
                       
-            // standard Shift multiselect
+            // standard Shift multiselect - disabled
             /*if(!lastChecked) {
                 lastChecked = this;
                 return;
@@ -1089,7 +1083,8 @@ $(window).ready(function () {
         //creates rows with available events
         function listEvents(){
             
-            // TODO: Here should be recieved the data containing information about related events names. The names should be then stored in the array below
+            // TODO: Here should be recieved the data containing information about related events names. 
+            // The names should be then stored in the array below.
             var events = ['sample_1', 'sample_2', 'sample_3'];
             
             var radio, td;
@@ -1115,6 +1110,10 @@ $(window).ready(function () {
             }
         }
         
+        /*
+         * This function ensures that the original force nodes and links will be (de)colored 
+         * @param {type} toGray is true if we want the original nodes to turn gray. Otherwise it will give them colors
+         */
         function decolorOriginals(toGray) {
             nodes.forEach(function (d) {
                 var node = d3.select("#" + convertIp(d.id) + " .background");
@@ -1335,6 +1334,7 @@ $(window).ready(function () {
             $('#dialog').dialog('close'); 
         });
     }
+    
     // Toggle specific children on click 
     function toggleNodes(d) {
         d3.event.preventDefault();
@@ -1475,7 +1475,7 @@ $(window).ready(function () {
     }
     
     /***************************************************************************
-     * Helper :
+     * Helper functions
      **************************************************************************/
     
     // Returns a list of all nodes under the root.   
@@ -1564,7 +1564,7 @@ $(window).ready(function () {
     }
     
     /**
-     * 
+     * Finds some node by its id and returns more informations about it
      * @param {type} actualNodes an array in which the node should be searched for
      * @param {type} id an id of the node we are looking for
      * @returns {Array} first element of the return value is the node, second is it's index in given array
@@ -1725,9 +1725,7 @@ $(window).ready(function () {
     }
     
     /***************************************************************************
-     * 
      * Manipulation functions
-     * 
      **************************************************************************/
     
     function balanceGraph() {
