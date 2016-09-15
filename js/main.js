@@ -10,7 +10,9 @@ $(window).ready(function () {
         h = $(window).height() - 3,             // window height
         linkAttribute = 1,                      // mapping colors on links - 0 for data, 1 for flows
         nodeAttribute = 1,                      // mapping colors on nodes - 0 for data, 1 for flows
-        colorRange = ["#FAFA4B", "#0096FF"],    // color range in format: [from[R,G,B], to[R,G,B]] 
+        isColorRangeData = true,                // actual color range, if set to true, the data range is set, false is for flows 
+        dataColorRange = ["#FAFA4B", "#0096FF"],// data color range in format: [from[R,G,B], to[R,G,B]] 
+        flowColorRange = ["#FAFA4B", "#0096FF"],// flows color range in format: [from[R,G,B], to[R,G,B]] 
         fullDataRange = [Number.MAX_VALUE,0],   // maximal range for data (nodes and links)
         fullFlowsRange = [Number.MAX_VALUE,0],  // maximal range for flows (nodes and links) 
         linkDataRange = [Number.MAX_VALUE,0],   // data range for links only
@@ -26,10 +28,10 @@ $(window).ready(function () {
         useDomainNames = false,                 // an information about usage of domain names
         centralNode,                            // this node is set according to the initial data json ("isCentral": true)
         relatedEventName = null,                // a name of some additional selected event. If there isn't an event selected to be visualized, it is equal to null 
+        relatedEvents = [],                     // array with all relevant events for given data
         childrenLinks = [],
         allChildrenNodes = [],
         focused,
-        relatedEvents = [],                     // array with all relevant events for given data
         root,
         link,
         links,
@@ -680,7 +682,10 @@ $(window).ready(function () {
         if (toGrayScale && !d.related)
             return d3.interpolateRgb("#ECECEC", "#525558") (norm);
         
-        return d3.interpolateRgb(colorRange[0], colorRange[1])(norm);
+        if (isColorRangeData === true)
+            return d3.interpolateRgb(dataColorRange[0], dataColorRange[1])(norm);
+        else
+            return d3.interpolateRgb(flowColorRange[0], flowColorRange[1])(norm);
     }
     
     function colorStrokes(d) {
@@ -737,11 +742,20 @@ $(window).ready(function () {
             $(".key .key-to").html(NumberFormatter.format(flowsRange[1])); 
         }
 
-        // update color range          
-        var data = [
-            {offset: "0%", color: colorRange[0]},
-            {offset: "100%", color: colorRange[1]}
-        ];
+        // update color range
+        var data;
+        if (isColorRangeData === true) {
+            data = [
+                {offset: "0%", color: dataColorRange[0]},
+                {offset: "100%", color: dataColorRange[1]}
+            ];
+        }
+        else {
+            data = [
+                {offset: "0%", color: flowColorRange[0]},
+                {offset: "100%", color: flowColorRange[1]}
+            ];
+        }
         
         var stops = d3.select('linearGradient').selectAll('stop')
             .data(data); 
@@ -1925,7 +1939,11 @@ $(window).ready(function () {
                 setDomainNameShowing();
                 break;
             case 'setColorScheme':
-                colorRange = Menu.getColorScheme();
+                if (isColorRangeData === true)
+                    dataColorRange = Menu.getColorScheme();
+                else
+                    flowColorRange = Menu.getColorScheme();
+                
                 colorTransition();
                 break;
             case 'nodeSize':
@@ -1986,11 +2004,13 @@ $(window).ready(function () {
             if (mapping === 'volume') {
                 nodeAttribute = 0;
                 linkAttribute = 0;
+                isColorRangeData = true;
                 setDataRange();
             }
             else {
                 nodeAttribute = 1;
                 linkAttribute = 1;
+                isColorRangeData = false;
                 setFlowRange();
             }
         }

@@ -121,3 +121,7 @@ body {
     font-weight: bold;
     position : absolute;
 }
+
+.ui-button-text-only .ui-button-text {
+    padding: 0.4em 0em;
+}
